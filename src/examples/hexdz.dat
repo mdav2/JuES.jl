@@ -1,0 +1,9 @@
+	Searching PubChem database for hexane (single best match returned)
+	Found 1 result(s)
+nocc 50
+nvir 258
+constructing Hamiltonian 
+Hamiltonian constructed in 7849 milliseconds
+Hamiltonian iteratively solved in 33230 milliseconds
+Hamiltonian diagonalized exactly in 130628 milliseconds
+[0.37019416709200603, 0.37019416709200603]

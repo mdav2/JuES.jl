@@ -1,0 +1,10 @@
+	Searching PubChem database for propane (single best match returned)
+	Found 1 result(s)
+nocc 26
+nvir 138
+constructing Hamiltonian 
+Hamiltonian constructed in 607 milliseconds
+Hamiltonian iteratively solved in 8802 milliseconds
+Hamiltonian diagonalized exactly in 3342 milliseconds
+[0.37022782788285347, 0.3702278278828559]
+
