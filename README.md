@@ -15,7 +15,7 @@ julia > Pkg.test("JuES")
 ### Integral backends
 This project uses other electronic structure programs to compute basic quantities like the one- and two-electron Hamiltonian integrals, as well as their counterparts for other operators. There is currently no intention of writing an integrals code specifically for JuES.
 
-As of version `alpha1` there is an interface to the Psi4 programs via the `psi4numpy` interface. This is simply the interface that I know the best, and should be extended in the future. There are plans for interfacing with the PySCF project and the NWChem project. If someone with knowledge wants to implement an interface to other programs e.g. Q-Chem, CFOUR, ORCA, Turbomole, or MOLPRO, they are very welcome. It is intended that the most robust interfaces should be to free and/or open source programs. Specifically, no interface should be implemented that encourages the use of the Gaussian suite, in the interest of not enabling a software monopoly and for their generally unpleasant practices and attitude. 
+As of version `alpha1` there is an interface to the Psi4 programs via the `psi4numpy` interface. This is simply the interface that I know the best, and should be extended in the future. There are plans for interfacing with the PySCF project and the NWChem project. If someone with knowledge wants to implement an interface to other programs e.g. Q-Chem, CFOUR, ORCA, Turbomole, or MOLPRO, they are very welcome. It is intended that the most robust interfaces should be to free and/or open source programs. 
 
 ### Naming
 It is customary for Julia modules and data structures to have CamelCase names, such as `Wavefunction.jl`. Please follow this aesthetically pleasing convention! 
