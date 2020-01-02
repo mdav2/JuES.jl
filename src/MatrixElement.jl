@@ -8,6 +8,9 @@ syntax --> <nparticle>Electron_<matrix>d<ndiff>
 	   --> 	OneElectron_Hd1
 """
 
+using JuES.Determinant
+using JuES.Wavefunction
+
 function OneElectron_Hd0(a::SlaterDeterminant,b::SlaterDeterminant,ref::Wfn)
 end
 function TwoElectron_Hd0(a::SlaterDeterminant,b::SlaterDeterminant,ref::Wfn)

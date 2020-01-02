@@ -6,8 +6,7 @@ Currently only RHF reference supported
 """
 
 using IterativeSolvers
-using Wavefunction
-using Davidson
+using JuES.Wavefunction
 using PyCall
 using LinearAlgebra 
 using Dates
@@ -69,6 +68,7 @@ end
 
 
 function do_CIS(refWfn::Wfn,nroots,algo="lobpcg",doprint=false)
+	println("in do_CIS")
 	nocc = 2*refWfn.nalpha
 	nvir = 2*refWfn.nvira
 	so_eri = refWfn.pqrs

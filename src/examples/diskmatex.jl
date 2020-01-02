@@ -1,4 +1,4 @@
-using DiskTensors
+using JuES.DiskTensors
 using BenchmarkTools
 
 N = 1000

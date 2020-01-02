@@ -17,7 +17,7 @@ usage --> methods should be defined like do_<r/u><method> and take in
 	  --> via multiple dispatch
 """
 
-using Wavefunction
+using JuES.Wavefunction
 using Base.Threads
 using LinearAlgebra
 using Dates

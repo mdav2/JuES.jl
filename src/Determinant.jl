@@ -1,7 +1,7 @@
 module Determinant
 "Module for creating and working with Slater determinants."
 
-using Wavefunction
+using JuES.Wavefunction
 export SlaterDeterminant
 export norbdiff
 export orbdiff
