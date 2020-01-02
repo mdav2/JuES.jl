@@ -1,6 +1,8 @@
 # JuES : Documentation
 ## Overview and Motivations
-JuES (pronounced like "juice") is a programming environment for writing arbitrary electronic structure and quantum chemical computations in the Julia programming language. Julia shows a lot of promise as a language for scientific computing, with many fields writing domain specific applications in Julia. This project is intended to demonstrate some ways of working in this language, and showcase a proposed style of programming for expansion into a complete set of electronic structure programs.
+JuES (pronounced like "juice") is a resource for writing arbitrary electronic structure and quantum chemical computations in the Julia programming language. Julia shows a lot of promise as a language for scientific computing, with many fields writing domain specific applications in Julia. This project is intended to start this process for molecular quantum mechanics, demonstrate some ways of working in this language, and showcase a proposed style of programming for expansion into a complete set of electronic structure programs.
+
+The objective of this project is a powerful, extensible electronic structure code that makes use of Julia's parallel, distributed, and GPU accelerated capabilities. 
 ## Tests
 Running tests is done like 
 ```bash
