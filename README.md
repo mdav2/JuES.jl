@@ -1,25 +1,21 @@
 # JuES : Documentation
 ## Overview and Motivations
-JuES (pronounced like "juice") is a resource for writing arbitrary electronic structure and quantum chemical computations in the Julia programming language. Julia shows a lot of promise as a language for scientific computing, with many fields writing domain specific applications in Julia. This project is intended to start this process for molecular quantum mechanics, demonstrate some ways of working in this language, and showcase a proposed style of programming for expansion into a complete set of electronic structure programs.
+> **(!)** This project is preliminary. I'm still quite new to Julia, and any feedback (including recommending a complete refactoring!) is very welcome! 
 
-The objective of this project is a powerful, extensible electronic structure code that makes use of Julia's parallel, distributed, and GPU accelerated capabilities. 
+JuES (pronounced like "juice") is a programming environment for writing arbitrary electronic structure and quantum chemical computations in the Julia programming language. Julia shows a lot of promise as a language for scientific computing, with many fields writing domain specific applications in Julia. This project is intended to demonstrate some ways of working in this language, and showcase a proposed style of programming for expansion into a complete set of electronic structure programs.
 ## Tests
-Running tests is done like 
-```bash
-~/dev/esmethods/Julia$ julia JuESTest.jl 
-Test Summary: | Pass  Total
-Wavefunction  |    4      4
-Test Summary: | Pass  Total
-CISingles     |    1      1
-Test Summary:  | Pass  Total
-CoupledCluster |    1      1
+Once installed, running tests is done like 
+```
+$ julia
+julia > import Pkg
+julia > Pkg.test("JuES")
 ```
 
 ## Design
 ### Integral backends
 This project uses other electronic structure programs to compute basic quantities like the one- and two-electron Hamiltonian integrals, as well as their counterparts for other operators. There is currently no intention of writing an integrals code specifically for JuES.
 
-As of version `alpha1` there is an interface to the Psi4 programs via the `psi4numpy` interface. This is simply the interface that I know the best, and should be extended in the future. There are plans for interfacing with the PySCF project and the NWChem project. If someone with knowledge wants to implement an interface to other programs e.g. Q-Chem, CFOUR, ORCA, Turbomole, or MOLPRO, they are very welcome. It is intended that the most robust interfaces should be to free and/or open source programs. Specifically, no interface should be implemented that encourages the use of the Gaussian suite, in the interest of not enabling a software monopoly and for their generally unpleasant practices and attitude. 
+As of version `alpha1` there is an interface to the Psi4 programs via the `psi4numpy` interface. This is simply the interface that I know the best, and should be extended in the future. There are plans for interfacing with the PySCF project and the NWChem project. If someone with knowledge wants to implement an interface to other programs e.g. Q-Chem, CFOUR, ORCA, Turbomole, or MOLPRO, they are very welcome. It is intended that the most robust interfaces should be to free and/or open source programs. 
 
 ### Naming
 It is customary for Julia modules and data structures to have CamelCase names, such as `Wavefunction.jl`. Please follow this aesthetically pleasing convention! 
