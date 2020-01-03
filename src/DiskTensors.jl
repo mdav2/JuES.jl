@@ -8,6 +8,8 @@ export printdv
 export dvwrite!
 export dvread
 export dvdot
+#export Base.getindex
+include("DiskVectorOps.jl")
 
 export DiskMatrix
 export dmread

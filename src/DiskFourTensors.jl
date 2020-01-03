@@ -1,3 +1,5 @@
+import Base.getindex
+import Base.setindex!
 struct DiskFourTensor
 	"""
 	Data structure for Rank 4 tensors
@@ -22,6 +24,48 @@ function DiskFourTensor(fname::String,dtype::Type,sz1::Int,sz2::Int,sz3::Int,sz4
 	end
 	DiskFourTensor(fname,"data",sz1,sz2,sz3,sz4)
 end
+# >>> overload getindex ( A[i,j,k,l] ) syntax
+function ranger(inp::Union{UnitRange{Int64},Int64})
+	if typeof(inp) == Int64
+		return UnitRange(inp:inp)
+	else
+		return inp
+	end
+end
+function getindex(dtens::DiskFourTensor,i1::UnitRange{Int64},i2::UnitRange{Int64},
+				  i3::UnitRange{Int64},i4::UnitRange{Int64})
+	h5open(dtens.fname,"r") do fid
+		fid["$dtens.dname"][i1,i2,i3,i4]
+	end
+end
+function getindex(dtens::DiskFourTensor,
+				  i1::Union{UnitRange{Int64},Int64},
+				  i2::Union{UnitRange{Int64},Int64},
+				  i3::Union{UnitRange{Int64},Int64},
+				  i4::Union{UnitRange{Int64},Int64})
+	h5open(dtens.fname,"r") do fid
+		fid["$dtens.dname"][ranger(i1),ranger(i2),ranger(i3),ranger(i4)]
+	end
+end
+# <<< 
+
+# >>> overload setindex! ( A[i,j,k,l] = 2.0 )
+function setindex!(dtens::DiskFourTensor,val,
+				   i1::UnitRange{Int64},i2::UnitRange{Int64},
+				   i3::UnitRange{Int64},i4::UnitRange{Int64})
+	h5open(dtens.fname,"r+") do fid
+		fid["$dtens.dname"][i1,i2,i3,i4] = val
+	end
+end
+function setindex!(dtens::DiskFourTensor,val,
+				  i1::Union{UnitRange{Int64},Int64},
+				  i2::Union{UnitRange{Int64},Int64},
+				  i3::Union{UnitRange{Int64},Int64},
+				  i4::Union{UnitRange{Int64},Int64})
+	h5open(dtens.fname,"r+") do fid
+		fid["$dtens.dname"][ranger(i1),ranger(i2),ranger(i3),ranger(i4)] = val
+	end
+end
 
 function blockfill!(dtens::DiskFourTensor,val)
 	"""
@@ -33,19 +77,5 @@ function blockfill!(dtens::DiskFourTensor,val)
 	h5write(dtens.fname,"$dtens.dname",A)
 end
 
-function d4read(dtens::DiskFourTensor,p1,p2,p3,p4)
-	"""
-	Read a section of a DiskFourTensor binary file.
-	"""
-	fid = h5open(dtens.fname,"r")
-	return fid["$dtens.dname"][p1,p2,p3,p4]
-end
-function d4write(dtens::DiskFourTensor,p1,p2,p3,p4,val)
-	"""
-	Write to a section of a DiskFourTensor binary file.
-	"""
-	fid = h5open(dtens.fname,"r+")
-	fid["$dtens.dname"][p1,p2,p3,p4] = val
-end
 function tensordot(dtens1::DiskFourTensor,dtens2::DiskFourTensor)
 end
