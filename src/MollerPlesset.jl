@@ -25,73 +25,87 @@ function direct_MO(gaogen,Wfn,p,q,r,s)
 	end
 end
 function transform_tei(gao::Array{Float64,4},C::Array{Float64,2})
-	# doing transform by matrix
+	# doing transform by matrix 
 	# specify p and q
 	# so all r and all s
 	norb = size(gao)[1]
+	println(norb)
+	rr = UnitRange(1,norb)
     R = collect(UnitRange(1,norb))::Array{Int64,1}
 	g1 = DiskFourTensor("/tmp/g1.h5",Float64,norb,norb,norb,norb,"w")
 	g2 = DiskFourTensor("/tmp/g2.h5",Float64,norb,norb,norb,norb,"w")
 	blockfill!(g1,0.0)
 	blockfill!(g2,0.0)
 	println("quarter transform 1...")
+	cache = zeros(norb,norb)
+	cache2 = zeros(norb,norb)
     for s in R
-        for si in R
-            for rh in R
-				cache = gao[:,:,rh,si]
-				cache2 = g1[:,:,rh,s]
+        for rh in R
+        	for si in R
+				cache[:,:] = gao[rr,rr,rh,si]
                 for nu in R
                     for mu in R
-                        #@views g1[mu,nu,rh,s] = g1[mu,nu,rh,s] + gao[mu,nu,rh,si]*C[si,s]
-						@views cache2[mu,nu] += cache[mu,nu]*C[si,s]
+                        #g1[mu,nu,rh,s] += gao[mu,nu,rh,si]*C[si,s]
+						cache2[mu,nu] += cache[mu,nu]*C[si,s]
                     end
                 end
-				g1[:,:,rh,s] = cache2
             end
+			g1[rr,rr,rh,s] = cache2[:,:]
+			cache2[:,:] = zeros(norb,norb)
         end
     end
 	println("quarter transform 2...")
     for s in R
         for r in R
             for rh in R
-				cache = g1[:,:,rh,s]
-				cache2 = g2[:,:,r,s]
+				cache[:,:] = g1[:,:,rh,s]
                 for nu in R
                     for mu in R
                         #@views g2[mu,nu,r,s] += g1[mu,nu,rh,s]*C[rh,r]
-						@views cache2[r,s] += cache[rh,s]*C[rh,r]
+						@views cache2[mu,nu] += cache[mu,nu]*C[rh,r]
                     end
                 end
-				g2[:,:,r,s] = cache2
             end
+			g2[:,:,r,s] = cache2
+			cache2[:,:] = zeros(norb,norb)
         end
     end
-	#g1[:,:,:,:] = 0.0
-	#println("quarter transform 3...")
-    #for s in R
-    #    for r in R
-    #        for q in R
-    #            for nu in R
-    #                for mu in R
-    #                    @views g1[mu,q,r,s] += g2[mu,nu,r,s]*C[nu,q]
-    #                end
-    #            end
-    #        end
-    #    end
-    #end
-	#g2[:,:,:,:] = 0.0
-	#println("quarter transform 4...")
-    #for s in R
-    #    for r in R
-    #        for q in R
-    #            for mu in R
-    #                for p in R
-    #                    @views g2[p,q,r,s] += g1[mu,q,r,s]*C[mu,p]
-    #                end
-    #            end
-    #        end
-    #    end
-    #end
+	g1[:,:,:,:] = 0.0
+	println("quarter transform 3...")
+    for s in R
+        for r in R
+			cache = g2[:,:,r,s]
+			#cache2[:,:] = 0.0
+            for q in R
+                for nu in R
+                    for mu in R
+                        #@views g1[mu,q,r,s] += g2[mu,nu,r,s]*C[nu,q]
+						cache2[mu,q] += cache[mu,nu]*C[nu,q]
+                    end
+                end
+            end
+			g1[:,:,r,s] = cache2
+			cache2[:,:] = zeros(norb,norb)
+        end
+    end
+	g2[:,:,:,:] = 0.0
+	println("quarter transform 4...")
+    for s in R
+        for r in R
+			cache = g1[:,:,r,s]
+            for q in R
+                for p in R
+                	for mu in R
+                        #@views g2[p,q,r,s] += g1[mu,q,r,s]*C[mu,p]
+						cache2[p,q] += cache[mu,q]*C[mu,p]
+                    end
+                end
+            end
+			g2[:,:,r,s] = cache2
+			cache2[:,:] = zeros(norb,norb)
+        end
+    end
+	return g2
 end
 function transform_tei2(gao::Array{Float64,4},C::Array{Float64,2})
     norb = size(gao)[1]::Int64 #indexed from 1
