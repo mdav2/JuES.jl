@@ -1,11 +1,12 @@
 module JuES
 
 greet() = print("Hello World!")
+include("DiskTensors.jl")
 include("Wavefunction.jl")
 include("CISingles.jl")
 include("Determinant.jl")
 include("CoupledCluster.jl")
 include("MatrixElement.jl")
-include("DiskTensors.jl")
+include("MollerPlesset.jl")
 
 end # module

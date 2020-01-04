@@ -22,16 +22,10 @@ function DiskFourTensor(fname::String,dtype::Type,sz1::Int,sz2::Int,sz3::Int,sz4
 	else
 		dataset = file["data"]
 	end
+	close(file)
 	DiskFourTensor(fname,"data",sz1,sz2,sz3,sz4)
 end
 # >>> overload getindex ( A[i,j,k,l] ) syntax
-function ranger(inp::Union{UnitRange{Int64},Int64})
-	if typeof(inp) == Int64
-		return UnitRange(inp:inp)
-	else
-		return inp
-	end
-end
 function getindex(dtens::DiskFourTensor,i1::UnitRange{Int64},i2::UnitRange{Int64},
 				  i3::UnitRange{Int64},i4::UnitRange{Int64})
 	h5open(dtens.fname,"r") do fid
@@ -39,10 +33,20 @@ function getindex(dtens::DiskFourTensor,i1::UnitRange{Int64},i2::UnitRange{Int64
 	end
 end
 function getindex(dtens::DiskFourTensor,
-				  i1::Union{UnitRange{Int64},Int64},
-				  i2::Union{UnitRange{Int64},Int64},
-				  i3::Union{UnitRange{Int64},Int64},
-				  i4::Union{UnitRange{Int64},Int64})
+				  i1::Int64,
+				  i2::Int64,
+				  i3::Int64,
+				  i4::Int64)
+	h5open(dtens.fname,"r") do fid
+		fid["$dtens.dname"][ranger(i1),ranger(i2),ranger(i3),ranger(i4)][1]
+	end
+end
+
+function getindex(dtens::DiskFourTensor,
+				  i1::Union{UnitRange{Int64},Int64,Colon},
+				  i2::Union{UnitRange{Int64},Int64,Colon},
+				  i3::Union{UnitRange{Int64},Int64,Colon},
+				  i4::Union{UnitRange{Int64},Int64,Colon})
 	h5open(dtens.fname,"r") do fid
 		fid["$dtens.dname"][ranger(i1),ranger(i2),ranger(i3),ranger(i4)]
 	end
@@ -58,14 +62,15 @@ function setindex!(dtens::DiskFourTensor,val,
 	end
 end
 function setindex!(dtens::DiskFourTensor,val,
-				  i1::Union{UnitRange{Int64},Int64},
-				  i2::Union{UnitRange{Int64},Int64},
-				  i3::Union{UnitRange{Int64},Int64},
-				  i4::Union{UnitRange{Int64},Int64})
+				  i1::Union{UnitRange{Int64},Int64,Colon},
+				  i2::Union{UnitRange{Int64},Int64,Colon},
+				  i3::Union{UnitRange{Int64},Int64,Colon},
+				  i4::Union{UnitRange{Int64},Int64,Colon})
 	h5open(dtens.fname,"r+") do fid
 		fid["$dtens.dname"][ranger(i1),ranger(i2),ranger(i3),ranger(i4)] = val
 	end
 end
+# <<< overload setindex!
 
 function blockfill!(dtens::DiskFourTensor,val)
 	"""

@@ -1,6 +1,9 @@
 module MollerPlesset
-using Wavefunction
+using JuES.Wavefunction
+using JuES.DiskTensors
 export do_rmp2
+export transform_tei
+export transform_tei2
 function gaogen(refWfn::Wfn)
 
 end
@@ -21,27 +24,96 @@ function direct_MO(gaogen,Wfn,p,q,r,s)
 		end
 	end
 end
+function transform_tei(gao::Array{Float64,4},C::Array{Float64,2})
+	# doing transform by matrix
+	# specify p and q
+	# so all r and all s
+	norb = size(gao)[1]
+    R = collect(UnitRange(1,norb))::Array{Int64,1}
+	g1 = DiskFourTensor("/tmp/g1.h5",Float64,norb,norb,norb,norb,"w")
+	g2 = DiskFourTensor("/tmp/g2.h5",Float64,norb,norb,norb,norb,"w")
+	blockfill!(g1,0.0)
+	blockfill!(g2,0.0)
+	println("quarter transform 1...")
+    for s in R
+        for si in R
+            for rh in R
+				cache = gao[:,:,rh,si]
+				cache2 = g1[:,:,rh,s]
+                for nu in R
+                    for mu in R
+                        #@views g1[mu,nu,rh,s] = g1[mu,nu,rh,s] + gao[mu,nu,rh,si]*C[si,s]
+						@views cache2[mu,nu] += cache[mu,nu]*C[si,s]
+                    end
+                end
+				g1[:,:,rh,s] = cache2
+            end
+        end
+    end
+	println("quarter transform 2...")
+    for s in R
+        for r in R
+            for rh in R
+				cache = g1[:,:,rh,s]
+				cache2 = g2[:,:,r,s]
+                for nu in R
+                    for mu in R
+                        #@views g2[mu,nu,r,s] += g1[mu,nu,rh,s]*C[rh,r]
+						@views cache2[r,s] += cache[rh,s]*C[rh,r]
+                    end
+                end
+				g2[:,:,r,s] = cache2
+            end
+        end
+    end
+	#g1[:,:,:,:] = 0.0
+	#println("quarter transform 3...")
+    #for s in R
+    #    for r in R
+    #        for q in R
+    #            for nu in R
+    #                for mu in R
+    #                    @views g1[mu,q,r,s] += g2[mu,nu,r,s]*C[nu,q]
+    #                end
+    #            end
+    #        end
+    #    end
+    #end
+	#g2[:,:,:,:] = 0.0
+	#println("quarter transform 4...")
+    #for s in R
+    #    for r in R
+    #        for q in R
+    #            for mu in R
+    #                for p in R
+    #                    @views g2[p,q,r,s] += g1[mu,q,r,s]*C[mu,p]
+    #                end
+    #            end
+    #        end
+    #    end
+    #end
+end
 function transform_tei2(gao::Array{Float64,4},C::Array{Float64,2})
     norb = size(gao)[1]::Int64 #indexed from 1
-    g1 = zeros(size(G))::Array{Float64,4}
-    g2 = zeros(size(G))::Array{Float64,4}
+    g1 = zeros(size(gao))::Array{Float64,4}
+    g2 = zeros(size(gao))::Array{Float64,4}
     R = collect(UnitRange(1,norb))::Array{Int64,1}
-    @inbounds @fastmath for s in R
-        @inbounds @fastmath for si in R
-            @inbounds @fastmath for rh in R
-                @inbounds @fastmath for nu in R
-                    @inbounds @fastmath @simd for mu in R
+    for s in R
+        for si in R
+            for rh in R
+                for nu in R
+                    @simd for mu in R
                         @views g1[mu,nu,rh,s] += gao[mu,nu,rh,si]*C[si,s]
                     end
                 end
             end
         end
     end
-    @inbounds @fastmath for s in R
-        @inbounds @fastmath for r in R
-            @inbounds @fastmath for rh in R
-                @inbounds @fastmath for nu in R
-                    @inbounds @fastmath @simd for mu in R
+    for s in R
+        for r in R
+            for rh in R
+                for nu in R
+                    @simd for mu in R
                         @views g2[mu,nu,r,s] += g1[mu,nu,rh,s]*C[rh,r]
                     end
                 end
@@ -49,11 +121,11 @@ function transform_tei2(gao::Array{Float64,4},C::Array{Float64,2})
         end
     end
     g1 .= 0.0
-    @inbounds @fastmath for s in R
-        @inbounds @fastmath for r in R
-            @inbounds @fastmath for q in R
-                @inbounds @fastmath for nu in R
-                    @inbounds @fastmath @simd for mu in R
+    for s in R
+        for r in R
+            for q in R
+                for nu in R
+                    @simd for mu in R
                         @views g1[mu,q,r,s] += g2[mu,nu,r,s]*C[nu,q]
                     end
                 end
@@ -61,11 +133,11 @@ function transform_tei2(gao::Array{Float64,4},C::Array{Float64,2})
         end
     end
     g2 .= 0.0
-    @inbounds @fastmath for s in R
-        @inbounds @fastmath for r in R
-            @inbounds @fastmath for q in R
-                @inbounds @fastmath for mu in R
-                    @inbounds @fastmath @simd for p in R
+    for s in R
+        for r in R
+            for q in R
+                for mu in R
+                    @simd for p in R
                         @views g2[p,q,r,s] += g1[mu,q,r,s]*C[mu,p]
                     end
                 end
@@ -74,20 +146,6 @@ function transform_tei2(gao::Array{Float64,4},C::Array{Float64,2})
     end
     return g2
 end
-#function mp2(moeri::Array{Float64,4},e::Array{Float64,1},nocc::Int64)
-#    moeri_alt = permutedims(moeri,[1,2,4,3])::Array{Float64,4}
-#    delta_mp2 = 0.0::Float64
-#    for I in 1:1:nocc
-#        for J in 1:1:nocc
-#            for A in nocc+1:1:length(e)
-#                for B in nocc+1:1:length(e)
-#                    delta_mp2 += (moeri[I,J,A,B]*(2*moeri[I,J,A,B] - moeri_alt[I,J,A,B]))/(e[I] + e[J] - e[A] - e[B])
-#                end
-#            end
-#        end
-#    end
-#    return delta_mp2
-#end
 
 function do_rmp2(refWfn::Wfn)
 	dmp2 = 0.0

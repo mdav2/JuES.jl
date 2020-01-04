@@ -40,10 +40,14 @@ tol = 1E-14
 			blockfill!(a,1.0)
 			blockfill!(b,2.0)
 			dmdot(a,b,201) - 2E6
+			a[:,:] = 2.0 #testing setindex! but keeping dot result the same
+			b[:,:] = 1.0
 			@test abs(dmdot(a,b,201) - 2E6) < tol
 		end
 		@testset "DiskFourTensor" begin
-			DiskFourTensor("/tmp/dtens1.h5",Float64,10,10,10,10,"w")
+			p = DiskFourTensor("/tmp/dtens1.h5",Float64,10,10,10,10,"w")
+			blockfill!(p,1.0)
+			p[:,:,:,:] = 2.0
 			@test true
 		end
 	end

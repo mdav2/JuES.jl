@@ -16,6 +16,7 @@ DirectWfn : constructor for DirectWfn.
 
 """
 
+using JuES.DiskTensors
 using PyCall
 #psi4 = pyimport("psi4")
 const psi4 = PyNULL()
@@ -39,14 +40,14 @@ struct Wfn{T}
     hb::Array{T,2} #Core hamiltonian
     epsa::Array{T,1} #orbital eigenvalues
     epsb::Array{T,1} #orbital eigenvalues
-    uvsr::Array{T,4} #AO basis electron repulsion integrals
+	uvsr::Union{Array{T,4},DiskFourTensor} #AO basis electron repulsion integrals
 
-    pqrs::Array{T,4} #MO basis electron repulsion integrals
-    pQrS::Array{T,4} #MO basis electron repulsion integrals
-    pQRs::Array{T,4} #MO basis electron repulsion integrals
-    PQRS::Array{T,4} #MO basis electron repulsion integrals
-    PqRs::Array{T,4} #MO basis electron repulsion integrals
-    PqrS::Array{T,4} #MO basis electron repulsion integrals
+	pqrs::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
+    pQrS::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
+    pQRs::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
+    PQRS::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
+    PqRs::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
+    PqrS::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
 end
 struct DirectWfn{T}
 	#requires the module using this struct to have properly imported

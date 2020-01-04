@@ -25,24 +25,22 @@ function DiskMatrix(fname::String,dtype::Type,szx::Int,szy::Int,mode::String="r+
 	DiskMatrix(fname,"data","data",dtype,szx,szy)
 end
 # >>> overload getindex -> A[i,j] for DiskMatrices
-function getindex(dmat::DiskMatrix,i1::UnitRange{Int64},i2::UnitRange{Int64})
+function getindex(dmat::DiskMatrix,
+				  i1::Union{UnitRange{Int64},Colon},
+				  i2::Union{UnitRange{Int64},Colon})
 	h5open(dmat.fname, "r") do fid
 		fid["$dmat.dname"][i1,i2]
 	end
 end
-function getindex(dmat::DiskMatrix,i1::Int64,i2::UnitRange{Int64})
-	getindex(dmat,UnitRange(i1:i1),i2)
-end
-function getindex(dmat::DiskMatrix,i1::UnitRange{Int64},i2::Int64)
-	getindex(dmat,i1,UnitRange(i2:i2))
-end
-function getindex(dmat::DiskMatrix,i1::Int64,i2::Int64)
-	getindex(UnitRange(i1:i1),UnitRange(i2:i2))[1]
+function getindex(dmat::DiskMatrix,
+				  i1::Union{UnitRange{Int64},Int64,Colon},
+				  i2::Union{UnitRange{Int64},Int64,Colon})
+	getindex(dmat,ranger(i1),ranger(i2))
 end
 # <<< 
 #
 # >>> overload setindex! -> A[i,j] = val for DiskMatrices
-function setindex!(dmat::DiskMatrix,val,i1::UnitRange{Int64},i2::UnitRange{Int64})
+function setindex!(dmat::DiskMatrix,val,i1::Union{UnitRange{Int64},Colon},i2::Union{UnitRange{Int64},Colon})
 	h5open(dmat.fname, "r+") do fid
 		fid["$dmat.dname"][i1,i2] = val
 	end
