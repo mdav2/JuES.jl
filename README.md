@@ -24,14 +24,14 @@ It is customary for Julia modules and data structures to have CamelCase names, s
 This section contains a description of some preliminary modules in the JuES environment. Many aspects are aspirational, and the description is not so much a description of current functionality as a statement of intent.
 ### Wavefunction.jl
 Wavefunction.jl is the foundational module of JuES. All JuES programs will make use of Wavefunction.jl at some point. This module is the point of interaction between integral backends (e.g. `psi4numpy`) and the JuES programming environment. An interface to an integral backend should produce a complete Wfn structure from the relevant sources. A Wfn structure is a representation of a reference determinant, such as a set of Hartree-Fock or DFT orbitals. 
-> **(!) Help** This module is nearly feature complete, and has a skeleton test set. Fleshing out documentation and contributing tests would be a great help!
+> **Help** This module is functioning, and has a test set. Fleshing out documentation and contributing tests would be a great help, but other modules are in greater need.
 ### Determinant.jl
 General representation of a Slater determinant. Used in modules CISingles.jl. 
 > **(!) Help** This module is severely lacking - excellent starting project for an experienced programmer.
 ### DiskTensors.jl
 This module describes a way of storing vectors, matrices, and rank four tensors on disk in a convenient way for use in electronic structure computations. 
 This module uses the HDF5 binary format for storing and accessing arrays. This was chosen for its convenient interface, support for compressed I/O, and good support in Julia. 
-> **(!) Help** This module is about halfway feature-complete, but lacks a test suite and documentation.
+> **(!) Help** This module has all intended types (rank 1,2,4 tensors) implemented but many operations (+,-,/,',...) are not defined. Test suite is reasonably complete and documentation is rough.
 ### Davidson.jl
 This module implements a simple Davidson solver, which currently has some unidentified bug. Use the IterativeSolvers.jl LOBPCG routine for in-core computations.
 > **(!) Help** Rewriting the Davidson code is probably a good idea. A routine to collapse the trial vector subspace would make this module much more functional. A generalized implementation for non-symmetric matrices is required before EOM codes can be useful. 
@@ -40,13 +40,13 @@ This module contains necessary code for integral direct computations. Currently 
 > **(!) Help** I don't yet understand how to code a reasonable integral direct program, so this will likely be neglected for some time without outside help.
 ### MatrixElement.jl
 This module defines an interface for obtaining matrix elements for CI matrices.
->**(!) Help** This is just a skeleton at this point. Contributions to this module will greatly help a functioning FCI and arbitrary order CI code. 
+>**(!) Help** This is just a skeleton at this point. Contributions to this module will greatly help a functioning FCI and arbitrary order CI code. Basic equations and citation to Szabo and Ostlund are in docstrings. 
 ### MollerPlesset.jl
 Routines for Moller-Plesset perturbation theory computations are implemented here. Currently only an in-core RMP2 implementation exists. 
->**(!) Help** Disk based RMP2, as well as UMP2 codes would be an excellent contribution. Direct MP2 is also an excellent contribution.
+>**(!) Help** Disk based RMP2, as well as UMP2 codes would be an excellent contribution. Direct MP2 is also an excellent contribution. Disk based AO->MO transformations are complete for UHF and RHF references, just need MP2 energy expression for UMP2.
 ### CISingles.jl
 Specialized routines for computing configuration-interaction singles excited state wavefunctions are defined here. Corrections such as CIS(D) and variants defined here as well. Keep seperate from general CI code. Only in-core RCIS is implemented.
 >**(!) Help** UCIS, disk-based, and direct implementations are excellent targets. 
 ### CoupledCluster.jl
 Routines for computing ground state coupled cluster energies are contained here. Currently there is only RHF-CCD implemented. RHF-CCSD should be implemented soon, and UHF-CCD sometime after.
->**(!) Help** Refining the RHF-CCD implementation, or working on CCSD codes would be greatly appreciated. Once RHF-CCSD is complete, coding a perturbative triples correction would be a straightforward addition.
+>**(!) Help** Refining the RHF-CCD implementation, or working on CCSD codes would be greatly appreciated. Once RHF-CCSD is complete, coding a perturbative triples correction would be a straightforward addition. Adapting the codes for use with DiskTensors would also be beneficial.
