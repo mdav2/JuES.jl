@@ -67,8 +67,7 @@ function setup_rcis(wfn,dt)
 end
 
 
-function do_CIS(refWfn::Wfn,nroots,algo="lobpcg",doprint=false)
-	println("in do_CIS")
+@fastmath function do_CIS(refWfn::Wfn,nroots,algo="lobpcg",doprint=false)
 	nocc = 2*refWfn.nalpha
 	nvir = 2*refWfn.nvira
 	so_eri = refWfn.pqrs
@@ -77,61 +76,28 @@ function do_CIS(refWfn::Wfn,nroots,algo="lobpcg",doprint=false)
     @inbounds @fastmath for i in r
         F[i,i] = refWfn.epsa[Int64(fld((i+1),2))]
     end
-    t0 = Dates.Time(Dates.now())
-    t1 = Dates.Time(Dates.now())
-    if doprint
-        println("constructing Hamiltonian ") 
-    end
-    t0 = Dates.Time(Dates.now())
-    H = make_H(nocc,nvir,so_eri,F)
-    t1 = Dates.Time(Dates.now())
-    if doprint
-        print("Hamiltonian constructed in ") 
-        print(convert(Dates.Millisecond,(t1 - t0)))
-        print("\n")
-    end
+    if doprint println("constructing Hamiltonian ") end
+    dt = @elapsed H = make_H(nocc,nvir,so_eri,F)
+    if doprint println("Hamiltonian constructed in $dt s") end
+
+	#branch for eigenvalue algorithm
     if algo == "lobpcg" || algo == "iter"
-        t0 = Dates.Time(Dates.now())
-        eigs = lobpcg(H,false,nroots).λ
-        t1 = Dates.Time(Dates.now())
-        if doprint
-            print("Hamiltonian iteratively solved in ") 
-            print(convert(Dates.Millisecond,(t1 - t0)))
-            print("\n")
-        end
+        dt = @elapsed eigs = lobpcg(H,false,nroots).λ
+        if doprint println("Hamiltonian iteratively solved in $dt s") end
 	elseif algo == "davidson"
 		println(size(H))
-        t0 = Dates.Time(Dates.now())
-        eigs = eigdav(H,1,4,100,1E-6)
-        t1 = Dates.Time(Dates.now())
-		if doprint
-            print("Hamiltonian iteratively solved in ") 
-            print(convert(Dates.Millisecond,(t1 - t0)))
-            print("\n")
-		end
+        dt = @elapsed eigs = eigdav(H,1,4,100,1E-6)
+		if doprint println("Hamiltonian iteratively solved in $dt s") end
 	elseif algo == "svd"
-        t0 = Dates.Time(Dates.now())
-		eigs = svdvals(H)
-		print(eigs)
-        t1 = Dates.Time(Dates.now())
-        if doprint
-            print("Hamiltonian diagonalized exactly in ") 
-            print(convert(Dates.Millisecond,(t1 - t0)))
-            print("\n")
-        end
+		dt = @elapsed eigs = svdvals(H)
+        if doprint println("Hamiltonian diagonalized exactly in $dt s") end
     elseif algo == "diag"
     	H = Symmetric(H)
-        t0 = Dates.Time(Dates.now())
-        eigs = eigvals(H,1:nroots)
-        t1 = Dates.Time(Dates.now())
-        if doprint
-            print("Hamiltonian diagonalized exactly in ") 
-            print(convert(Dates.Millisecond,(t1 - t0)))
-            print("\n")
-        end
+        dt = @elapsed eigs = eigvals(H,1:nroots)
+        if doprint println("Hamiltonian diagonalized exactly in $dt s") end
     else
         if doprint
-            println("solver ",algo," is not supported! Choose from { lobpcg, diag }")
+			println("solver ",algo," is not supported! Choose from { lobpcg (synonym iter), davidson, svd, diag }")
         end
         return false
     end

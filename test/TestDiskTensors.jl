@@ -50,8 +50,6 @@ tol = 1E-14
 			rng = randn(10,10)
 			p[:,:,1,1] = rng
 			@test p[:,:,1,1] ≈ rng
-			println(rng[1,1])
-			println(p[1,1,1,1])
 		end
 	end
 end

@@ -1,6 +1,6 @@
 using Test
 using PyCall
-using BenchmarkTools
+#using BenchmarkTools
 using JuES.Wavefunction
 using JuES.MollerPlesset
 psi4 = pyimport("psi4")
@@ -15,10 +15,17 @@ mol = psi4.geometry("""
 psi4.set_options(Dict("scf_type" => "pk","d_convergence"=>14))
 e,wfn = psi4.energy("hf/sto-3g",mol=mol,return_wfn=true)
 JuWfn = PyToJl(wfn,Float64,false)
+mol2 = psi4.geometry("""
+					 O
+					 H 1 1.1
+					 H 1 1.1 2 104.0
+					 symmetry c1
+					 """)
+e2,wfn2 = psi4.energy("hf/sto-3g",mol=mol2,return_wfn=true)
+JuWfn2 = PyToJl(wfn2,Float64,false)
 @testset "Wavefunction" begin
 	@testset "Smoke" begin
 		@testset "Attributes" begin
-			println(JuWfn.nalpha)
 			@test JuWfn.nalpha == 1 && JuWfn.nbeta == 1
 		end
 		@testset "Integrals" begin
@@ -28,15 +35,8 @@ JuWfn = PyToJl(wfn,Float64,false)
 		end
 	end
 end
-mol2 = psi4.geometry("""
-					 O
-					 H 1 1.1
-					 H 1 1.1 2 104.0
-					 symmetry c1
-					 """)
-e2,wfn2 = psi4.energy("hf/sto-3g",mol=mol2,return_wfn=true)
-JuWfn2 = PyToJl(wfn2,Float64,false)
-#println(@benchmark transform_tei(JuWfn2.uvsr,JuWfn2.Ca))
-#println(@benchmark transform_tei2(JuWfn2.uvsr,JuWfn2.Ca))
-println(transform_tei(JuWfn2.uvsr,JuWfn2.Ca)[1,1,1,1])
-println(transform_tei2(JuWfn2.uvsr,JuWfn2.Ca)[1,1,1,1])
+@testset "Integral Transformation" begin
+	disk = transform_tei(JuWfn2.uvsr,JuWfn2.Ca)
+	mem = transform_tei2(JuWfn2.uvsr,JuWfn2.Ca)
+	@test disk[:,:,:,:] == mem[:,:,:,:]
+end

@@ -28,7 +28,7 @@ function do_rccd(refWfn::Wfn)
 	#implicit maxit = 40
     return do_rccd(refWfn,40)
 end
-@fastmath @inbounds function do_rccd(refWfn::Wfn,maxit,print=false)
+@fastmath @inbounds function do_rccd(refWfn::Wfn,maxit,doprint=false)
     #goes through appropriate steps to do RCCD
 	set_zero_subnormals(true)
     nocc = refWfn.nalpha
@@ -45,25 +45,12 @@ end
 	Wabef = form_Wabef(iJaB,T2)
 	WmBeJ = form_WmBeJ(iJaB,T2)
 	WmBEj = form_WmBEj(iJaB,T2)
-    for i in UnitRange(1,maxit) #TODO: implement RMS check
-        t0 = Dates.Time(Dates.now())
+    dt = @elapsed for i in UnitRange(1,maxit) #TODO: implement RMS check
         T2 = cciter(T2,iJaB,Dijab,Fae,Fmi,Wabef,Wmnij,WmBeJ,WmBEj)
+		if doprint println("@CCD $ccenergy(T2,iJaB)") end
         t1 = Dates.Time(Dates.now())
-        #print("T2 formed in ")
-        #print(convert(Dates.Millisecond, (t1 - t0)))
-        #print("\n")
-        #t0 = Dates.Time(Dates.now())
-		if print
-        	print("@CCD ")
-        	print(ccenergy(T2,iJaB))
-			print("\n")
-		end
-        t1 = Dates.Time(Dates.now())
-        #print("\n")
-        #print("energy computed in ")
-        #print(convert(Dates.Millisecond, (t1 - t0)))
-        #print("\n")
     end
+	if doprint println("CCD energy computed in $dt s") end
 	return ccenergy(T2,iJaB)
 end
 function ccenergy(tiJaB,iJaB)

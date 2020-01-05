@@ -29,14 +29,12 @@ function transform_tei(gao::Array{Float64,4},C::Array{Float64,2})
 	# specify p and q
 	# so all r and all s
 	norb = size(gao)[1]
-	println(norb)
 	rr = UnitRange(1,norb)
     R = collect(UnitRange(1,norb))::Array{Int64,1}
 	g1 = DiskFourTensor("/tmp/g1.h5",Float64,norb,norb,norb,norb,"w")
 	g2 = DiskFourTensor("/tmp/g2.h5",Float64,norb,norb,norb,norb,"w")
 	blockfill!(g1,0.0)
 	blockfill!(g2,0.0)
-	println("quarter transform 1...")
 	cache = zeros(norb,norb)
 	cache2 = zeros(norb,norb)
     for s in R
@@ -54,7 +52,6 @@ function transform_tei(gao::Array{Float64,4},C::Array{Float64,2})
 			cache2[:,:] = zeros(norb,norb)
         end
     end
-	println("quarter transform 2...")
     for s in R
         for r in R
             for rh in R
@@ -71,7 +68,6 @@ function transform_tei(gao::Array{Float64,4},C::Array{Float64,2})
         end
     end
 	g1[:,:,:,:] = 0.0
-	println("quarter transform 3...")
     for s in R
         for r in R
 			cache = g2[:,:,r,s]
@@ -89,7 +85,6 @@ function transform_tei(gao::Array{Float64,4},C::Array{Float64,2})
         end
     end
 	g2[:,:,:,:] = 0.0
-	println("quarter transform 4...")
     for s in R
         for r in R
 			cache = g1[:,:,r,s]
