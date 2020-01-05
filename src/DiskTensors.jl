@@ -1,7 +1,17 @@
+"""
+Disk based rank 1,2, and 4 tensors. Defines functions such as +, -, dot,... 
+with buffered I/O. Uses HDF5 format for storing tensors. One tensor per file.
+"""
 module DiskTensors
+
 include("DiskVectors.jl")
 include("DiskMatrices.jl")
 include("DiskFourTensors.jl")
+
+"""
+	ranger
+converts inp::Int64 -> UnitRange(inp:inp) for use in indexing DiskTensors
+"""
 function ranger(inp::Union{UnitRange{Int64},Int64,Colon})
 	if typeof(inp) == Int64
 		return UnitRange(inp:inp)

@@ -2,6 +2,7 @@ module MollerPlesset
 using JuES.Wavefunction
 using JuES.DiskTensors
 export do_rmp2
+export do_ump2
 export transform_tei
 export transform_tei2
 function gaogen(refWfn::Wfn)
@@ -24,11 +25,92 @@ function direct_MO(gaogen,Wfn,p,q,r,s)
 		end
 	end
 end
+function transform_tei(gao::Array{Float64,4},
+					   C1::Array{Float64,2},
+					   C2::Array{Float64,2},
+					   C3::Array{Float64,2},
+					   C4::Array{Float64,2})
+	"""
+	disk based, general spin orbital transformation
+	"""
+	norb = size(C1)[1]
+	rr = UnitRange(1,norb)
+	R = collect(rr)
+	g1 = DiskFourTensor("/tmp/jues.g1.0",Float64,norb,norb,norb,norb,"w")
+	g2 = DiskFourTensor("/tmp/jues.g2.0",Float64,norb,norb,norb,norb,"w")
+	blockfill!(g1,0.0)
+	blockfill!(g2,0.0)
+	cache = zeros(norb,norb)
+	cache2 = zeros(norb,norb)
+	for s in R
+		for rh in R
+			for si in R
+				cache[:,:] = gao[rr,rr,rh,si]
+				for nu in R
+					for mu in R
+						cache2[mu,nu] += cache[mu,nu]*C1[si,s]
+					end
+				end
+			end
+			g1[rr,rr,rh,s] = cache2[:,:]
+			cache2[:,:] = zeros(norb,norb)
+		end
+	end
+    for s in R
+        for r in R
+            for rh in R
+				cache[:,:] = g1[:,:,rh,s]
+                for nu in R
+                    for mu in R
+                        #@views g2[mu,nu,r,s] += g1[mu,nu,rh,s]*C[rh,r]
+						@views cache2[mu,nu] += cache[mu,nu]*C2[rh,r]
+                    end
+                end
+            end
+			g2[:,:,r,s] = cache2
+			cache2[:,:] = zeros(norb,norb)
+        end
+    end
+	g1[:,:,:,:] = 0.0
+    for s in R
+        for r in R
+			cache = g2[:,:,r,s]
+			#cache2[:,:] = 0.0
+            for q in R
+                for nu in R
+                    for mu in R
+                        #@views g1[mu,q,r,s] += g2[mu,nu,r,s]*C[nu,q]
+						cache2[mu,q] += cache[mu,nu]*C3[nu,q]
+                    end
+                end
+            end
+			g1[:,:,r,s] = cache2
+			cache2[:,:] = zeros(norb,norb)
+        end
+    end
+	g2[:,:,:,:] = 0.0
+    for s in R
+        for r in R
+			cache = g1[:,:,r,s]
+            for q in R
+                for p in R
+                	for mu in R
+                        #@views g2[p,q,r,s] += g1[mu,q,r,s]*C[mu,p]
+						cache2[p,q] += cache[mu,q]*C4[mu,p]
+                    end
+                end
+            end
+			g2[:,:,r,s] = cache2
+			cache2[:,:] = zeros(norb,norb)
+        end
+    end
+	return g2
+end
 function transform_tei(gao::Array{Float64,4},C::Array{Float64,2})
-	# doing transform by matrix 
-	# specify p and q
-	# so all r and all s
-	norb = size(gao)[1]
+	"""
+	disk based, restricted transformation
+	"""
+	norb = size(C)[1]
 	rr = UnitRange(1,norb)
     R = collect(UnitRange(1,norb))::Array{Int64,1}
 	g1 = DiskFourTensor("/tmp/g1.h5",Float64,norb,norb,norb,norb,"w")
@@ -174,5 +256,7 @@ function do_rmp2(refWfn::Wfn)
 		end
 	end
 	return dmp2
+end
+function do_ump2(refWfn::Wfn)
 end
 end #module

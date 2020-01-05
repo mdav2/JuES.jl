@@ -2,10 +2,11 @@ using LinearAlgebra
 using HDF5
 import Base.getindex
 import Base.setindex!
+
+"""
+data structure for storing and accessing matrices on disk
+"""
 struct DiskMatrix
-	"""
-	data structure for storing and accessing matrices on disk
-	"""
 	fname::String
 	gname::String
 	dname::String
@@ -15,7 +16,6 @@ struct DiskMatrix
 end
 
 function DiskMatrix(fname::String,dtype::Type,szx::Int,szy::Int,mode::String="r+")
-	"Constructor for disk matrices"
 	file = h5open(fname,mode)
 	if (mode == "w") | (mode == "w+")
 		dataset = d_create(file,"data",datatype(dtype),dataspace(szx))
@@ -55,17 +55,17 @@ function setindex!(dmat::DiskMatrix,val,i1::Int64,i2::Int64)
 	setindex!(dmat,val,UnitRange(i1:i1),UnitRange(i2:i2))
 end
 # <<<
+"""
+Fill a DiskMatrix with a given value.
+TODO: replace with buffered I/O
+"""
 function blockfill!(dmat::DiskMatrix,val)
-	"""
-	Fill a DiskMatrix with a given value.
-	TODO: replace with buffered I/O
-	"""
 	A = zeros(Float64,dmat.szx,dmat.szy)
 	A .= val
 	h5write(dmat.fname,"$dmat.dname",A)
 end
+"""Buffered matrix matrix 'dot' product (accumulate multiply)"""
 function dmdot(dmat1::DiskMatrix,dmat2::DiskMatrix,buffsize)
-	"""Buffered matrix matrix 'dot' product (accumulate multiply)"""
 	chunks = cld(dmat1.szx,buffsize)
 	tsum = 0.0
 	for i in 1:1:dmat1.szx
@@ -79,7 +79,6 @@ function dmdot(dmat1::DiskMatrix,dmat2::DiskMatrix,buffsize)
 	return tsum
 end
 function dmdot(dmat1::DiskMatrix,dmat2::DiskMatrix)
-	"""matrix matrix 'dot' product (accumulate multiply) - very slow!"""
 	tsum = 0.0
 	for i in 1:1:dmat1.szx
 		for j in 1:1:dmat2.szy
@@ -88,13 +87,3 @@ function dmdot(dmat1::DiskMatrix,dmat2::DiskMatrix)
 	end
 	return tsum
 end
-#function dmread(dmat::DiskMatrix,posx,posy)
-#	h5open(dmat.fname, "r") do fid
-#		fid["$dmat.dname"][posx,posy]
-#	end
-#end
-#function dmwrite(dmat::DiskMatrix,posx,posy,val)
-#	h5open(dmat.fname, "r+") do fid
-#		fid["$dmat.dname"][posx,posy] = val
-#	end
-#end

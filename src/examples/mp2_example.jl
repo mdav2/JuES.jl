@@ -1,7 +1,7 @@
 using PyCall
 using BenchmarkTools
-using Wavefunction
-using MollerPlesset
+using JuES.Wavefunction
+using JuES.MollerPlesset
 psi4 = pyimport("psi4")
 np = pyimport("numpy")
 mol = psi4.geometry("""
@@ -15,4 +15,5 @@ bbasis = "sto-3g"
 psi4.set_options(Dict("scf_type" => "pk","basis" => bbasis))
 ehf,wfn = psi4.energy("hf",mol=mol,return_wfn=true)
 Wfn = PyToJl(wfn,Float64,false)
-println(do_rmp2(Wfn))
+
+#println(do_rmp2(Wfn))

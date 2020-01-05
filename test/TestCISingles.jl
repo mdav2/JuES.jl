@@ -12,7 +12,7 @@ mol = psi4.geometry("""
 					""")
 psi4.set_options(Dict("scf_type" => "pk","d_convergence"=>14))
 e,wfn = psi4.energy("hf/sto-3g",mol=mol,return_wfn=true)
-JuWfn = PyToJl(wfn,Float64,false)
+JuWfn = Wfn(wfn)
 @testset "CISingles" begin
 	@testset "Smoke" begin
 		@test do_CIS(JuWfn,1)[1] - 0.320236855893771 < tol 

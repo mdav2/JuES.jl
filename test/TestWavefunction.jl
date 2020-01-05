@@ -14,7 +14,7 @@ mol = psi4.geometry("""
 					""")
 psi4.set_options(Dict("scf_type" => "pk","d_convergence"=>14))
 e,wfn = psi4.energy("hf/sto-3g",mol=mol,return_wfn=true)
-JuWfn = PyToJl(wfn,Float64,false)
+JuWfn = Wfn(wfn)
 mol2 = psi4.geometry("""
 					 O
 					 H 1 1.1
@@ -22,7 +22,7 @@ mol2 = psi4.geometry("""
 					 symmetry c1
 					 """)
 e2,wfn2 = psi4.energy("hf/sto-3g",mol=mol2,return_wfn=true)
-JuWfn2 = PyToJl(wfn2,Float64,false)
+JuWfn2 = Wfn(wfn2)
 @testset "Wavefunction" begin
 	@testset "Smoke" begin
 		@testset "Attributes" begin
@@ -34,9 +34,4 @@ JuWfn2 = PyToJl(wfn2,Float64,false)
 			@test (JuWfn.uvsr[1,1,2,2] - 0.4780413730018048) < tol
 		end
 	end
-end
-@testset "Integral Transformation" begin
-	disk = transform_tei(JuWfn2.uvsr,JuWfn2.Ca)
-	mem = transform_tei2(JuWfn2.uvsr,JuWfn2.Ca)
-	@test disk[:,:,:,:] == mem[:,:,:,:]
 end

@@ -13,7 +13,7 @@ mol2 = psi4.geometry("""
 					 """)
 psi4.set_options(Dict("basis" => "sto-3g", "scf_type"=>"pk","d_convergence"=>14))
 e,wfn2 = psi4.energy("hf/sto-3g",mol=mol2,return_wfn=true)
-JuWfn2 = PyToJl(wfn2,Float64,false)
+JuWfn2 = Wfn(wfn2)
 @testset "CoupledCluster" begin
 	@testset "Smoke" begin
 		@test do_rccd(JuWfn2,40) - -0.07015050066089029 < tol

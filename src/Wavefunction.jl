@@ -1,5 +1,3 @@
-__precompile__()
-module Wavefunction
 """
 Module for storing and handling reference wavefunctions.
 ## Structures
@@ -8,25 +6,48 @@ Module for storing and handling reference wavefunctions.
 Wfn : holds info for disk based and in core computations.
 DirectWfn : holds info for integral direct computations.
 
-## Functions
----
-PyToJl : constructor for Wfn.
-		 > TODO: move to an appropriately named constructor
-DirectWfn : constructor for DirectWfn.
 
 """
+module Wavefunction
 
 using JuES.DiskTensors
 using PyCall
-#psi4 = pyimport("psi4")
 const psi4 = PyNULL()
 function __init__()
 	copy!(psi4,pyimport("psi4"))
 end
-export init
+
 export Wfn
 export DirectWfn
-export PyToJl
+
+"""
+	Wfn
+Data structure for storing integrals, MO coefficients, and misc information about
+a reference (HF) wavefunction.
+
+## Fields
+---
+nalpha::Int number of alpha electrons
+nbeta::Int number of beta electrons
+nvira::Int number of virtual functions of alpha spin
+nvirb::Int number of virtual functions of beta spin
+nmo::Int number of molecular orbitals
+unrestricted::Bool whether or not the alpha and beta spatial extents are required to
+be the same.
+Ca::Array{T,2} AO->MO coefficients for alpha MO's
+Cb::Array{T,2} AO->MO coefficients for beta MO's
+hao::Array{T,2} AO basis core hamiltonian (kinetic + potential)
+epsa::Array{T,1} orbital eigenvalues for alpha MO's
+epsb::Array{T,1} orbtial eigenvalues for beta MO's
+uvsr::Union{Array{T,4},DiskFourTensor} AO basis TEI
+pqrs::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case AAAA)
+pQrS::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case ABAB)
+pQRs::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case ABBA)
+PQRS::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case BBBB)
+PqRs::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case BABA)
+PqrS::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case BAAB)
+
+"""
 struct Wfn{T}
 	nalpha::Int
 	nbeta::Int
@@ -36,8 +57,7 @@ struct Wfn{T}
 	unrestricted::Bool
     Ca::Array{T,2} #AO->MO coefficients
     Cb::Array{T,2} #AO->MO coefficients
-    ha::Array{T,2} #Core hamiltonian
-    hb::Array{T,2} #Core hamiltonian
+    hao::Array{T,2} #Core hamiltonian
     epsa::Array{T,1} #orbital eigenvalues
     epsb::Array{T,1} #orbital eigenvalues
 	uvsr::Union{Array{T,4},DiskFourTensor} #AO basis electron repulsion integrals
@@ -49,6 +69,29 @@ struct Wfn{T}
     PqRs::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
     PqrS::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
 end
+
+"""
+	DirectWfn{T}
+Data structure for storing information about a wavefunction for which integral
+direct procedures will be applied. T::Union{Float32,Float64}
+
+## Fields
+---
+nalpha::Int number of alpha electrons
+nbeta::Int number of beta electrons
+nvira::Int number of virtual functions of alpha spin
+nvirb::Int number of virtual functions of beta spin
+nmo::Int number of molecular orbitals
+unrestricted::Bool whether or not the alpha and beta spatial extents are required to
+be the same.
+Ca::Array{T,2} AO->MO coefficients for alpha MO's
+Cb::Array{T,2} AO->MO coefficients for beta MO's
+hao::Array{T,2} AO basis core hamiltonian (kinetic + potential)
+epsa::Array{T,1} orbital eigenvalues for alpha MO's
+epsb::Array{T,1} orbtial eigenvalues for beta MO's
+basis::PyObject psi4.core.BasisSet object for accessing basis function info.
+mints::PyObject psi4.core.MintsHelper object for computing integrals.
+"""
 struct DirectWfn{T}
 	#requires the module using this struct to have properly imported
 	#psi4 with pycall
@@ -66,13 +109,11 @@ struct DirectWfn{T}
 	basis::PyObject
 	mints::PyObject
 end
-function PyToJl(wfn,dt,unrestricted::Bool)
-	"""Takes in a psi4 wavefunction and converts important information
-	to pure Julia objects for stability.
-	Originally used when having issues interacting with PyObjects
-	when they are passed between modules/programs.
-	
-	use for disk based and fully in core algorithms"""
+function Wfn(wfn::PyObject)
+	Wfn(wfn,Float64,false,false)
+end
+
+function Wfn(wfn,dt,unrestricted::Bool,diskbased::Bool)
     dummy2 = Array{dt}(undef,0,0) #placeholder 2D array
     dummy4 = Array{dt}(undef,0,0,0,0) #placeholder 4D array
     _Ca   = wfn.Ca() #as psi4 Matrix objects for use with MintsHelper
@@ -107,7 +148,7 @@ function PyToJl(wfn,dt,unrestricted::Bool)
     end
 	#create the Wfn object and return it!
     owfn = Wfn{dt}(nocca,noccb,nvira,nvirb,nbf,unrestricted,
-           Ca,Cb,dummy2,dummy2,
+           Ca,Cb,hao,
            epsa,epsb,
            uvsr,pqrs,pQrS,pQRs,PQRS,PqRs,PqrS)
     return owfn
