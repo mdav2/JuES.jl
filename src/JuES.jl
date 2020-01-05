@@ -8,5 +8,6 @@ include("Determinant.jl")
 include("CoupledCluster.jl")
 include("MatrixElement.jl")
 include("MollerPlesset.jl")
+include("Direct.jl")
 
 end # module

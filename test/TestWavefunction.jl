@@ -37,4 +37,6 @@ mol2 = psi4.geometry("""
 e2,wfn2 = psi4.energy("hf/sto-3g",mol=mol2,return_wfn=true)
 JuWfn2 = PyToJl(wfn2,Float64,false)
 #println(@benchmark transform_tei(JuWfn2.uvsr,JuWfn2.Ca))
-println(@benchmark transform_tei2(JuWfn2.uvsr,JuWfn2.Ca))
+#println(@benchmark transform_tei2(JuWfn2.uvsr,JuWfn2.Ca))
+println(transform_tei(JuWfn2.uvsr,JuWfn2.Ca)[1,1,1,1])
+println(transform_tei2(JuWfn2.uvsr,JuWfn2.Ca)[1,1,1,1])

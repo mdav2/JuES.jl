@@ -47,8 +47,11 @@ tol = 1E-14
 		@testset "DiskFourTensor" begin
 			p = DiskFourTensor("/tmp/dtens1.h5",Float64,10,10,10,10,"w")
 			blockfill!(p,1.0)
-			p[:,:,:,:] = 2.0
-			@test true
+			rng = randn(10,10)
+			p[:,:,1,1] = rng
+			@test p[:,:,1,1] ≈ rng
+			println(rng[1,1])
+			println(p[1,1,1,1])
 		end
 	end
 end
