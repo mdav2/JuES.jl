@@ -2320,3 +2320,57 @@ HF: DIIS                            :      0.017u      0.000s      0.011w     20
 HF: Form C                          :      0.000u      0.000s      0.001w     20 calls
 
 **************************************************************************************
+
+Host: penguin
+
+Timers On : Sun Jan  5 20:12:56 2020
+Timers Off: Sun Jan  5 20:13:05 2020
+
+Wall Time:        8.96 seconds
+
+                                                       Time (seconds)
+Module                                       User      System        Wall        Calls
+Total PK formation time             :      0.133u      0.017s      0.068w      2 calls
+HF: Form core H                     :      0.000u      0.000s      0.002w      2 calls
+HF: Form S/X                        :      0.000u      0.000s      0.000w      2 calls
+HF: Guess                           :      0.567u      0.017s      0.348w      2 calls
+SAD Guess                           :      0.533u      0.017s      0.323w      2 calls
+HF: Form G                          :      0.033u      0.000s      0.001w     22 calls
+JK: D                               :      0.017u      0.000s      0.000w     22 calls
+JK: USO2AO                          :      0.000u      0.000s      0.000w     22 calls
+JK: JK                              :      0.017u      0.000s      0.000w     22 calls
+PK computes JK                      :      0.017u      0.000s      0.000w     22 calls
+JK: AO2USO                          :      0.000u      0.000s      0.000w     22 calls
+HF: Form F                          :      0.000u      0.000s      0.000w     22 calls
+HF: Form D                          :      0.000u      0.000s      0.000w     22 calls
+HF: DIIS                            :      0.000u      0.000s      0.011w     20 calls
+DIISManager::add_entry              :      0.000u      0.000s      0.001w     20 calls
+DIISManager::extrapolate            :      0.000u      0.000s      0.002w     20 calls
+bMatrix setup                       :      0.000u      0.000s      0.001w     20 calls
+bMatrix pseudoinverse               :      0.000u      0.000s      0.001w     20 calls
+New vector                          :      0.000u      0.000s      0.000w     20 calls
+HF: Form C                          :      0.000u      0.000s      0.002w     20 calls
+
+--------------------------------------------------------------------------------------
+Total PK formation time             :      0.133u      0.017s      0.068w      2 calls
+HF: Form core H                     :      0.000u      0.000s      0.002w      2 calls
+HF: Form S/X                        :      0.000u      0.000s      0.000w      2 calls
+HF: Guess                           :      0.567u      0.017s      0.348w      2 calls
+| SAD Guess                         :      0.533u      0.017s      0.323w      2 calls
+HF: Form G                          :      0.033u      0.000s      0.001w     22 calls
+| JK: D                             :      0.017u      0.000s      0.000w     22 calls
+| JK: USO2AO                        :      0.000u      0.000s      0.000w     22 calls
+| JK: JK                            :      0.017u      0.000s      0.000w     22 calls
+| | PK computes JK                  :      0.017u      0.000s      0.000w     22 calls
+| JK: AO2USO                        :      0.000u      0.000s      0.000w     22 calls
+HF: Form F                          :      0.000u      0.000s      0.000w     22 calls
+HF: Form D                          :      0.000u      0.000s      0.000w     22 calls
+HF: DIIS                            :      0.000u      0.000s      0.011w     20 calls
+| DIISManager::add_entry            :      0.000u      0.000s      0.001w     20 calls
+| DIISManager::extrapolate          :      0.000u      0.000s      0.002w     20 calls
+| | bMatrix setup                   :      0.000u      0.000s      0.001w     20 calls
+| | bMatrix pseudoinverse           :      0.000u      0.000s      0.001w     20 calls
+| | New vector                      :      0.000u      0.000s      0.000w     20 calls
+HF: Form C                          :      0.000u      0.000s      0.002w     20 calls
+
+**************************************************************************************
