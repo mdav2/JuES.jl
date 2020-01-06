@@ -1,0 +1,14 @@
+memory 2 GB
+
+molecule {
+1 2
+O
+H 1 1.1
+H 1 1.1 2 104.0
+symmetry c1
+}
+set reference uhf
+set scf_type pk
+set mp2_type conv
+set D_CONVERGENCE 10
+energy('mp2/sto-3g')

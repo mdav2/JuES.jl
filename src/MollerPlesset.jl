@@ -258,5 +258,110 @@ function do_rmp2(refWfn::Wfn)
 	return dmp2
 end
 function do_ump2(refWfn::Wfn)
+	dmp2 = 0.0
+	unr = refWfn.unrestricted
+	rocca = 1:refWfn.nalpha
+	roccb = 1:refWfn.nbeta
+	rvira = refWfn.nalpha+1:refWfn.nmo
+	rvirb = refWfn.nbeta+1:refWfn.nmo
+	epsa = refWfn.epsa
+	epsb = refWfn.epsb
+	#spin case AAAA
+	moeri = permutedims(refWfn.pqrs,[1,3,2,4]) -
+	permutedims(refWfn.pqrs,[1,3,4,2])
+	for b in rvira
+		for a in rvira
+			for j in rocca
+				for i in rocca
+					#dmp2 += (moeri[i,j,a,b]*(2*moeri[i,j,a,b] - moeri[i,j,b,a]))/
+					dmp2 += (1/4)*moeri[i,j,a,b]*moeri[i,j,a,b]/
+					(epsa[i] + epsa[j] - epsa[a] - epsa[b])
+				end
+			end
+		end
+	end
+	#spin case ABAB
+	if !unr
+		moeri = permutedims(refWfn.pqrs,[1,3,2,4])
+	else
+		moeri = permutedims(refWfn.pQrS,[1,3,2,4])
+	end
+	for b in rvirb
+		for a in rvira
+			for j in roccb
+				for i in rocca
+					dmp2 += (1/4)*moeri[i,j,a,b]*moeri[i,j,a,b]/
+					(epsa[i] + epsb[j] - epsa[a] - epsb[b])
+				end
+			end
+		end
+	end
+	#spin case ABBA
+	if !unr
+		moeri = -permutedims(refWfn.pqrs,[1,3,4,2])
+	else
+		moeri = -permutedims(refWfn.pQRs,[1,3,4,2])
+	end
+	for b in rvira
+		for a in rvirb
+			for j in roccb
+				for i in rocca
+					dmp2 += (1/4)*moeri[i,j,a,b]*moeri[i,j,a,b]/
+					(epsa[i] + epsb[j] - epsb[a] - epsa[b])
+				end
+			end
+		end
+	end
+	##spin case BBBB
+	if !unr
+		moeri = permutedims(refWfn.pqrs,[1,3,2,4]) - 
+				permutedims(refWfn.pqrs,[1,3,4,2])
+	else
+		moeri = permutedims(refWfn.PQRS,[1,3,2,4]) - 
+				permutedims(refWfn.PQRS,[1,3,4,2])
+	end
+	for b in rvirb
+		for a in rvirb
+			for i in roccb
+				for j in roccb
+					dmp2 += (1/4)*moeri[i,j,a,b]*moeri[i,j,a,b]/
+					(epsb[i] + epsb[j] - epsb[a] - epsb[b])
+				end
+			end
+		end
+	end
+	##spin case BABA
+	if !unr
+		moeri = permutedims(refWfn.pqrs,[1,3,2,4])
+	else
+		moeri = permutedims(refWfn.PqRs,[1,3,2,4])
+	end
+	for b in rvira
+		for a in rvirb
+			for j in rocca
+				for i in roccb
+					dmp2 += (1/4)*moeri[i,j,a,b]*moeri[i,j,a,b]/
+							(epsb[i] + epsa[j] - epsb[a] - epsa[b])
+				end
+			end
+		end
+	end
+	##spin case BAAB
+	if !unr
+		moeri = -permutedims(refWfn.pqrs,[1,3,4,2])
+	else
+		moeri = -permutedims(refWfn.PqrS,[1,3,4,2])
+	end
+	for b in rvirb
+		for a in rvira
+			for j in rocca
+				for i in roccb
+					dmp2 += (1/4)*moeri[i,j,a,b]*moeri[i,j,a,b]/
+							(epsb[i] + epsa[j] - epsa[a] - epsb[b])
+				end
+			end
+		end
+	end
+	return dmp2
 end
 end #module
