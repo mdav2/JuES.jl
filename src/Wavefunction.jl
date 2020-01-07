@@ -116,24 +116,24 @@ end
 function Wfn(wfn,dt,unrestricted::Bool,diskbased::Bool)
     dummy2 = Array{dt}(undef,0,0) #placeholder 2D array
     dummy4 = Array{dt}(undef,0,0,0,0) #placeholder 4D array
-    _Ca   = wfn.Ca() #as psi4 Matrix objects for use with MintsHelper
-    _Cb   = wfn.Cb() #as psi4 Matrix objects for use with MintsHelper
+    mints = psi4.core.MintsHelper(wfn.basisset()) #to generate integrals
     nbf   = wfn.nmo()
     nocca =  wfn.nalpha()
     nvira = nbf - nocca
-    mints = psi4.core.MintsHelper(wfn.basisset()) #to generate integrals
-    epsa  = convert(Array{dt,1},wfn.epsilon_a().to_array()) #orbital eigenvalues
-    Ca    = convert(Array{Float64,2}, _Ca.to_array())
-    hao   = convert(Array{Float64,2}, wfn.H().to_array()) #core hamiltonian in AO
-    Cb    = convert(Array{dt,2},_Cb.to_array())
     noccb = wfn.nbeta()
     nvirb = nbf - noccb
+    epsa  = convert(Array{dt,1},wfn.epsilon_a().to_array()) #orbital eigenvalues
     epsb  = convert(Array{dt,1},wfn.epsilon_b().to_array()) #orbital eigenvalues
+    _Ca   = wfn.Ca() #as psi4 Matrix objects for use with MintsHelper
+    _Cb   = wfn.Cb() #as psi4 Matrix objects for use with MintsHelper
+    Ca    = convert(Array{dt,2}, _Ca.to_array())
+    Cb    = convert(Array{dt,2},_Cb.to_array())
+    hao   = convert(Array{dt,2}, wfn.H().to_array()) #core hamiltonian in AO
     uvsr  = convert(Array{dt,4},mints.ao_eri().to_array()) #AO basis integrals
     pqrs  = convert(Array{dt,4},mints.mo_eri(_Ca,_Ca,_Ca,_Ca).to_array()) #MO basis integrals
     if unrestricted #avoid making these if not an unrestricted or open shell wfn
 		#various spin cases notation --> alpha BETA
-        pQrS  = convert(Array{dt,4},mints.mo_eri(_Ca,_Cb,_Ca,_Cb).to_array())
+        pQrS  = convert(Array{dt,4},mints.mo_eri(_Ca,_Ca,_Cb,_Cb).to_array())
         pQRs  = convert(Array{dt,4},mints.mo_eri(_Ca,_Cb,_Cb,_Ca).to_array())
         PQRS  = convert(Array{dt,4},mints.mo_eri(_Cb,_Cb,_Cb,_Cb).to_array())
         PqRs  = convert(Array{dt,4},mints.mo_eri(_Cb,_Ca,_Cb,_Ca).to_array())

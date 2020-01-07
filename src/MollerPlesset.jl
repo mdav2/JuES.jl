@@ -137,11 +137,11 @@ function transform_tei(gao::Array{Float64,4},C::Array{Float64,2})
     for s in R
         for r in R
             for rh in R
-		cache[:,:] = g1[:,:,rh,s]
+		        cache[:,:] = g1[:,:,rh,s]
                 for nu in R
                     for mu in R
                         #@views g2[mu,nu,r,s] += g1[mu,nu,rh,s]*C[rh,r]
-			cache2[mu,nu] += cache[mu,nu]*C[rh,r]
+			            cache2[mu,nu] += cache[mu,nu]*C[rh,r]
                     end
                 end
             end
@@ -158,7 +158,7 @@ function transform_tei(gao::Array{Float64,4},C::Array{Float64,2})
                 for nu in R
                     for mu in R
                         #@views g1[mu,q,r,s] += g2[mu,nu,r,s]*C[nu,q]
-			cache2[mu,q] += cache[mu,nu]*C[nu,q]
+			            cache2[mu,q] += cache[mu,nu]*C[nu,q]
                     end
                 end
             end
@@ -174,11 +174,11 @@ function transform_tei(gao::Array{Float64,4},C::Array{Float64,2})
                 for p in R
                     for mu in R
                         #@views g2[p,q,r,s] += g1[mu,q,r,s]*C[mu,p]
-			cache2[p,q] += cache[mu,q]*C[mu,p]
+			            cache2[p,q] += cache[mu,q]*C[mu,p]
                     end
                 end
             end
-	    g2[:,:,r,s] = cache2
+	        g2[:,:,r,s] = cache2
             cache2[:,:] = zeros(norb,norb)
         end
     end
@@ -272,11 +272,11 @@ function do_ump2(refWfn::Wfn)
     for b in rvira
     	for a in rvira
     	    for j in rocca
-    		for i in rocca
-    		    #dmp2 += (moeri[i,j,a,b]*(2*moeri[i,j,a,b] - moeri[i,j,b,a]))/
-    		    dmp2 += (1/4)*moeri[i,j,a,b]*moeri[i,j,a,b]/
-    		    (epsa[i] + epsa[j] - epsa[a] - epsa[b])
-    		end
+    		    for i in rocca
+    		        #dmp2 += (moeri[i,j,a,b]*(2*moeri[i,j,a,b] - moeri[i,j,b,a]))/
+    		        dmp2 += (1/4)*moeri[i,j,a,b]*moeri[i,j,a,b]/
+    		        (epsa[i] + epsa[j] - epsa[a] - epsa[b])
+    		    end
     	    end
     	end
     end
@@ -289,30 +289,13 @@ function do_ump2(refWfn::Wfn)
     for b in rvirb
     	for a in rvira
     	    for j in roccb
-    		for i in rocca
-    		    dmp2 += (1/4)*moeri[i,j,a,b]*moeri[i,j,a,b]/
-    		    (epsa[i] + epsb[j] - epsa[a] - epsb[b])
-    		end
+    		    for i in rocca
+                    dmp2 += moeri[i,j,a,b]*(moeri[i,j,a,b]/(epsa[i] + epsb[j] - epsa[a] - epsb[b]))
+    		    end
     	    end
     	end
     end
-    #spin case ABBA
-    if !unr
-    	moeri = -permutedims(refWfn.pqrs,[1,3,4,2])
-    else
-    	moeri = -permutedims(refWfn.pQRs,[1,3,4,2])
-    end
-    for b in rvira
-    	for a in rvirb
-    	    for j in roccb
-    		for i in rocca
-    		    dmp2 += (1/4)*moeri[i,j,a,b]*moeri[i,j,a,b]/
-    		    (epsa[i] + epsb[j] - epsb[a] - epsa[b])
-    		end
-    	    end
-    	end
-    end
-    ##spin case BBBB
+    #spin case BBBB
     if !unr
     	moeri = permutedims(refWfn.pqrs,[1,3,2,4]) - 
     		permutedims(refWfn.pqrs,[1,3,4,2])
@@ -324,41 +307,9 @@ function do_ump2(refWfn::Wfn)
     	for a in rvirb
     	    for i in roccb
     	        for j in roccb
-    		    dmp2 += (1/4)*moeri[i,j,a,b]*moeri[i,j,a,b]/
-    		    (epsb[i] + epsb[j] - epsb[a] - epsb[b])
-    		end
-    	    end
-    	end
-    end
-    ##spin case BABA
-    if !unr
-    	moeri = permutedims(refWfn.pqrs,[1,3,2,4])
-    else
-    	moeri = permutedims(refWfn.PqRs,[1,3,2,4])
-    end
-    for b in rvira
-    	for a in rvirb
-    	    for j in rocca
-    		for i in roccb
-    		    dmp2 += (1/4)*moeri[i,j,a,b]*moeri[i,j,a,b]/
-    			    (epsb[i] + epsa[j] - epsb[a] - epsa[b])
-    		end
-    	    end
-    	end
-    end
-    ##spin case BAAB
-    if !unr
-    	moeri = -permutedims(refWfn.pqrs,[1,3,4,2])
-    else
-    	moeri = -permutedims(refWfn.PqrS,[1,3,4,2])
-    end
-    for b in rvirb
-    	for a in rvira
-    	    for j in rocca
-    		for i in roccb
-    		    dmp2 += (1/4)*moeri[i,j,a,b]*moeri[i,j,a,b]/
-    			    (epsb[i] + epsa[j] - epsa[a] - epsb[b])
-    	        end
+                    dmp2 += (1/4)*moeri[i,j,a,b]*moeri[i,j,a,b]/
+    		        (epsb[i] + epsb[j] - epsb[a] - epsb[b])
+    		    end
     	    end
     	end
     end

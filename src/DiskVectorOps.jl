@@ -14,8 +14,8 @@ function dvdot(dvec1::DiskVector,dvec2::DiskVector,buffsize)
 	chunks = cld(dvec1.size,buffsize)
 	tsum = 0.0
 	for chunk in 1:1:(chunks)
-		tsum += dot(dvread(dvec1,(chunk-1)*buffsize+1:(chunk)*buffsize),
-					dvread(dvec2,(chunk-1)*buffsize+1:(chunk)*buffsize))
+        tsum += dot(dvec1[(chunk-1)*buffsize+1:(chunk)*buffsize],
+                    dvec2[(chunk-1)*buffsize+1:(chunk)*buffsize])
 				
 	end
 	return tsum
