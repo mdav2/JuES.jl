@@ -2,7 +2,8 @@ using Test
 using PyCall
 #using BenchmarkTools
 using JuES.Wavefunction
-using JuES.MollerPlesset
+#using JuES.MollerPlesset
+using JuES.Transformation
 psi4 = pyimport("psi4")
 psi4.core.be_quiet() #turn off output
 # > setup
@@ -24,17 +25,17 @@ mol3 = psi4.geometry("""
 					 """)
 psi4.set_options(Dict("reference" => "uhf"))
 e3,wfn3 = psi4.energy("hf/sto-3g",mol=mol3,return_wfn=true)
-JuWfn3 = Wfn(wfn3)
+JuWfn3 = Wfn(wfn3,Float64,true,true,"uhf")
 @testset "Integral Transformation" begin
 	@testset "SmokeRHF" begin
-		disk = transform_tei(JuWfn2.uvsr,JuWfn2.Ca)
-		mem = transform_tei2(JuWfn2.uvsr,JuWfn2.Ca)
+		disk = disk_tei_transform(JuWfn2.uvsr,JuWfn2.Ca,"testdisk")
+		mem = mem_tei_transform(JuWfn2.uvsr,JuWfn2.Ca)
 		@test disk[:,:,:,:] == mem[:,:,:,:]
 	end
 	@testset "UHF" begin
-		transform_tei(JuWfn3.uvsr,JuWfn3.Ca,JuWfn3.Cb,JuWfn3.Ca,JuWfn3.Cb)
-		rhf = transform_tei(JuWfn2.uvsr,JuWfn2.Ca)
-		uhf = transform_tei(JuWfn2.uvsr,JuWfn2.Ca,JuWfn2.Ca,JuWfn2.Ca,JuWfn2.Ca)
+		disk_tei_transform(JuWfn3.uvsr,JuWfn3.Ca,JuWfn3.Cb,JuWfn3.Ca,JuWfn3.Cb,"TestTEImixed")
+		rhf = disk_tei_transform(JuWfn2.uvsr,JuWfn2.Ca,"TestTEIrhf")
+		uhf = disk_tei_transform(JuWfn2.uvsr,JuWfn2.Ca,JuWfn2.Ca,JuWfn2.Ca,JuWfn2.Ca,"TestTEIuhf")
 		@test rhf[:,:,:,:] == uhf[:,:,:,:]
 	end
 end

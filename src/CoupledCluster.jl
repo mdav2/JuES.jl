@@ -53,6 +53,7 @@ end
 	if doprint println("CCD energy computed in $dt s") end
 	return ccenergy(T2,iJaB)
 end
+
 function ccenergy(tiJaB,iJaB)
 	ecc = 0.0
 	nocc = size(tiJaB,1)
