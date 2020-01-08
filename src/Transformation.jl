@@ -13,83 +13,102 @@ function disk_tei_transform(gao::Array{Float64,4},
     disk based, general spin orbital transformation
     """
     norb = size(C1)[1]
-    rr1 = UnitRange(1,size(C1)[2])
-    rr2 = UnitRange(1,size(C2)[2])
-    rr3 = UnitRange(1,size(C3)[2])
-    rr4 = UnitRange(1,size(C4)[2])
+    d = size(C1)[1]
+    d1 = size(C1)[2]
+    d2 = size(C2)[2]
+    d3 = size(C3)[2]
+    d4 = size(C4)[2]
+    rr  = UnitRange(1,norb)
+    rr1 = UnitRange(1,d1)
+    rr2 = UnitRange(1,d2)
+    rr3 = UnitRange(1,d3)
+    rr4 = UnitRange(1,d4)
+    R  = collect(rr)
+    println("szc4 ", size(C4))
     R1 = collect(rr1)
     R2 = collect(rr2)
     R3 = collect(rr3)
     R4 = collect(rr4)
-    g1 = DiskFourTensor("/tmp/jues.$name.g1.0",Float64,norb,norb,norb,norb,"w")
-    g2 = DiskFourTensor("/tmp/jues.$name.0",Float64,norb,norb,norb,norb,"w")
-    blockfill!(g1,0.0)
-    blockfill!(g2,0.0)
-    cache = zeros(norb,norb)
-    cache2 = zeros(norb,norb)
-    for s in R
-    	for rh in R
-    	    for si in R
-    	        cache[:,:] = gao[rr,rr,rh,si]
-    		    for nu in R
-                    for mu in R
-                        cache2[mu,nu] += cache[mu,nu]*C1[si,s]
+    temp = DiskFourTensor("/tmp/jues.$name.temp.0",Float64,d,d,d,d4,"w")
+    blockfill!(temp,0.0)
+    #Quarter transform 1
+    #(μ,ν,λ,σ) -> (μ,ν,λ,b)
+    for b in R4
+        for μ in R
+            ocache = zeros(d,d)
+            for ν in R
+                icache = gao[μ,ν,:,:]
+                for λ in R
+                    for σ in R
+                        ocache[ν,λ] += C4[σ,b]*icache[λ,σ]
                     end
                 end
             end
-            g1[rr,rr,rh,s] = cache2[:,:]
-            cache2[:,:] = zeros(norb,norb)
+            temp[μ,:,:,b] = ocache[:,:]
         end
     end
-    for s in R
-        for r in R
-            for rh in R
-                cache[:,:] = g1[:,:,rh,s]
-                for nu in R
-                    for mu in R
-                        #@views g2[mu,nu,r,s] += g1[mu,nu,rh,s]*C[rh,r]
-			@views cache2[mu,nu] += cache[mu,nu]*C2[rh,r]
+    #Quarter transform 2
+    #(μ,ν,λ,b) -> (μ,ν,j,b)
+    temp2 = DiskFourTensor("/tmp/jues.$name.temp2.0",Float64,d,d,d3,d4,"w")
+    blockfill!(temp2,0.0)
+    for b in R4
+        for j in R3
+            ocache = zeros(d,d)
+            for μ in R
+                icache = temp[μ,:,:,b]
+                for ν in R
+                    for λ in R #contract over λ
+                        #temp2[μ,ν,j,b] += C3[λ,j]*temp[μ,ν,λ,b]
+                        ocache[μ,ν] += C3[λ,j]*icache[1,ν,λ,1]
                     end
                 end
             end
-            g2[:,:,r,s] = cache2
-            cache2[:,:] = zeros(norb,norb)
+            temp2[:,:,j,b] = ocache[:,:]
         end
     end
-    g1[:,:,:,:] = 0.0
-    for s in R
-        for r in R
-	    cache = g2[:,:,r,s]
-            #cache2[:,:] = 0.0
-            for q in R
-                for nu in R
-                    for mu in R
-                        #@views g1[mu,q,r,s] += g2[mu,nu,r,s]*C[nu,q]
-                        cache2[mu,q] += cache[mu,nu]*C3[nu,q]
+    #Quarter transform 3
+    #(μ,ν,j,b) -> (μ,a,j,b)
+    temp = nothing 
+    Base.GC.gc()
+    temp = DiskFourTensor("/tmp/jues.$name.temp.0",Float64,d,d2,d3,d4,"w")
+    blockfill!(temp,0.0)
+    for b in R4
+        for j in R3
+            ocache = zeros(d,d2)
+            icache = temp2[:,:,j,b]
+            for a in R2
+                for μ in R
+                    for ν in R
+                        #temp[μ,a,j,b] += C2[ν,a]*temp2[μ,ν,j,b]
+                        ocache[μ,a] += C2[ν,a]*icache[μ,ν]
                     end
                 end
             end
-            g1[:,:,r,s] = cache2
-            cache2[:,:] = zeros(norb,norb)
+            temp[:,:,j,b] = ocache[:,:]
         end
     end
-    g2[:,:,:,:] = 0.0
-    for s in R
-        for r in R
-            cache = g1[:,:,r,s]
-            for q in R
-                for p in R
-                    for mu in R
-                        #@views g2[p,q,r,s] += g1[mu,q,r,s]*C[mu,p]
-			cache2[p,q] += cache[mu,q]*C4[mu,p]
+    #Quarter transform 4
+    #(μ,a,j,b) -> (i,a,j,b)
+    temp2 = nothing
+    Base.GC.gc()
+    temp2 = DiskFourTensor("/tmp/jues.$name.temp2.0",Float64,d1,d2,d3,d4,"w")
+    blockfill!(temp2,0.0)
+    for b in R4
+        for j in R3
+            icache = temp[:,:,j,b]
+            ocache = zeros(d1,d2)
+            for a in R2
+                for i in R1
+                    for μ in R
+                        #temp2[i,a,j,b] += C1[μ,i]*temp[μ,a,j,b]
+                        ocache[i,a] += C1[μ,i]*icache[μ,a]
                     end
                 end
             end
-            g2[:,:,r,s] = cache2
-            cache2[:,:] = zeros(norb,norb)
+            temp2[:,:,j,b] = ocache
         end
     end
-    return g2
+    return temp2
 end
 
 

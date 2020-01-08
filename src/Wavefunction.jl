@@ -140,7 +140,7 @@ function Wfn(wfn,dt,unrestricted::Bool,diskbased::Bool,name::String="default")
     hao   = convert(Array{dt,2}, wfn.H().to_array()) #core hamiltonian in AO
     uvsr  = convert(Array{dt,4},mints.ao_eri().to_array()) #AO basis integrals
     if diskbased
-        pqrs = disk_tei_transform(uvsr,Ca,"pqrs")
+        ijab = disk_tei_transform(uvsr,Cao,Cav,Cao,Cav,"ijab")
     else
         #pqrs  = convert(Array{dt,4},mints.mo_eri(_Ca,_Ca,_Ca,_Ca).to_array()) #MO basis integrals
         ijab = convert(Array{dt,4},mints.mo_eri(_Cao,_Cav,_Cao,_Cav).to_array())
@@ -148,12 +148,11 @@ function Wfn(wfn,dt,unrestricted::Bool,diskbased::Bool,name::String="default")
     if unrestricted #avoid making these if not an unrestricted or open shell wfn
 		#various spin cases notation --> alpha BETA
         if diskbased
-            println(size(Cao),size(Cav))
-            iJaB = disk_tei_transform(uvsr,Cao,Cav,Cbo,Cbv,"pQrS")
-            iJAb = disk_tei_transform(uvsr,Cao,Cbv,Cbo,Cav,"pQRs")
-            IJAB = disk_tei_transform(uvsr,Cbo,Cbv,Cbo,Cbv,"PQRS")
-            IjAb = disk_tei_transform(uvsr,Cbo,Cbv,Cao,Cav,"PqRs")
-            IjaB = disk_tei_transform(uvsr,Cbo,Cav,Cao,Cbv,"PqrS")
+            iJaB = disk_tei_transform(uvsr,Cao,Cav,Cbo,Cbv,"iJaB")
+            iJAb = disk_tei_transform(uvsr,Cao,Cbv,Cbo,Cav,"iJAb")
+            IJAB = disk_tei_transform(uvsr,Cbo,Cbv,Cbo,Cbv,"IJAB")
+            IjAb = disk_tei_transform(uvsr,Cbo,Cbv,Cao,Cav,"IjAb")
+            IjaB = disk_tei_transform(uvsr,Cbo,Cav,Cao,Cbv,"IjaB")
         else
             iJaB  = convert(Array{dt,4},mints.mo_eri(_Cao,_Cav,_Cbo,_Cbv).to_array())
             iJAb  = convert(Array{dt,4},mints.mo_eri(_Cao,_Cbv,_Cbo,_Cav).to_array())

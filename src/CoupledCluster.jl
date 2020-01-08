@@ -33,7 +33,7 @@ end
 	set_zero_subnormals(true)
     nocc = refWfn.nalpha
     nvir = refWfn.nvira
-    iJaB = permutedims(refWfn.pqrs,[1,3,2,4])
+    iJaB = permutedims(refWfn.ijab,[1,3,2,4])
 	dtt = eltype(iJaB)
     epsa = refWfn.epsa
 	T2 = zeros(dtt,nocc,nocc,nvir,nvir)
@@ -60,12 +60,11 @@ function ccenergy(tiJaB,iJaB)
 	nvir = size(tiJaB,4)
 	rocc = collect(UnitRange(1,nocc))
 	rvir = collect(UnitRange(1,nvir))
-	@views iJaB_oovv = iJaB[1:nocc,1:nocc,nocc+1:nocc+nvir,nocc+1:nocc+nvir]
 	for i in rocc
 		for j in rocc
 			for a in rvir
 				for b in rvir
-                    cache = iJaB_oovv[i,j,a,b]
+                    cache = iJaB[i,j,a,b]
 					ecc += cache*2*tiJaB[i,j,a,b]
 					ecc -= cache*tiJaB[j,i,a,b]
 				end
@@ -89,10 +88,9 @@ end
 function T2_init!(tiJaB,iJaB,Dijab)
 	nocc = size(tiJaB,1)
 	nvir = size(tiJaB,4)
-	@views iJaB_oovv = iJaB[1:nocc,1:nocc,nocc+1:nocc+nvir,nocc+1:nocc+nvir]
 	rocc = collect(UnitRange(1,nocc))
 	rvir = collect(UnitRange(1,nvir))
-    tiJaB .= iJaB_oovv ./ Dijab
+    tiJaB .= iJaB ./ Dijab
 end
 
 function form_Fae(tiJaB,iJaB)
@@ -107,7 +105,6 @@ function form_Fae!(Fae,tiJaB,iJaB)
 	nvir = size(tiJaB,4)
 	rocc = collect(UnitRange(1,nocc))
 	rvir = collect(UnitRange(1,nvir))
-	@views iJaB_oovv = iJaB[1:nocc,1:nocc,nocc+1:nocc+nvir,nocc+1:nocc+nvir]
     Fae .= 0.0
     cache1 = zeros(eltype(iJaB),nocc,nocc)
     cache2 = zeros(eltype(iJaB),nocc,nocc)
@@ -116,7 +113,7 @@ function form_Fae!(Fae,tiJaB,iJaB)
         	for e in rvir
                 for n in rocc
                     @simd for m in rocc
-                        Fae[a,e] -= tiJaB[m,n,a,f]*(2*iJaB_oovv[m,n,e,f] - iJaB_oovv[n,m,e,f])
+                        Fae[a,e] -= tiJaB[m,n,a,f]*(2*iJaB[m,n,e,f] - iJaB[n,m,e,f])
                     end
                 end
             end
@@ -138,13 +135,12 @@ function form_Fmi!(Fmi,tiJaB,iJaB)
 	rocc = collect(UnitRange(1,nocc))
 	rvir = collect(UnitRange(1,nvir))
     Fmi .= 0.0
-	@views iJaB_oovv = iJaB[1:nocc,1:nocc,nocc+1:nocc+nvir,nocc+1:nocc+nvir]
     for f in rvir
         for e in rvir
             for n in rocc
                 for i in rocc
                     @simd for m in rocc
-                        Fmi[m,i] += tiJaB[i,n,e,f]*(2*iJaB_oovv[m,n,e,f] - iJaB_oovv[m,n,f,e])
+                        Fmi[m,i] += tiJaB[i,n,e,f]*(2*iJaB[m,n,e,f] - iJaB[m,n,f,e])
                     end
                 end
             end
@@ -179,7 +175,6 @@ function form_T2(tiJaB_i,Fae,Fmi,WmBeJ,WmBEj,Wabef,Wmnij,iJaB,Dijab)
 	nocc = size(Wmnij,1)
 	nvir = size(tiJaB_i,4)
 	tiJaB_d = zeros(dtt,nocc,nocc,nvir,nvir)
-	@views iJaB_oovv = iJaB[1:nocc,1:nocc,nocc+1:nocc+nvir,nocc+1:nocc+nvir]
 	rocc = collect(UnitRange(1,nocc))
 	rvir = collect(UnitRange(1,nvir))
 	ttiJaB_i = permutedims(tiJaB_i,[4,1,2,3])
@@ -192,7 +187,7 @@ function form_T2(tiJaB_i,Fae,Fmi,WmBeJ,WmBEj,Wabef,Wmnij,iJaB,Dijab)
             _Wabef = Wabef[a,b,:,:]
 		   for j in rocc
                 for i in rocc
-                    temp = iJaB_oovv[i,j,a,b]
+                    temp = iJaB[i,j,a,b]
                     for e in rvir
                         temp += tiJaB_i[i,j,a,e] * Fae[b,e]
                         temp += tiJaB_i[i,j,e,b] * Fae[a,e]
@@ -239,12 +234,11 @@ end
 @fastmath @inbounds function form_Wmnij!(Wmnij,iJaB,tiJaB)
 	nocc = size(tiJaB,1)
 	nvir = size(tiJaB,4)
-	iJaB_oovv = iJaB[1:nocc,1:nocc,nocc+1:nocc+nvir,nocc+1:nocc+nvir]
 	rocc = collect(UnitRange(1,nocc))
 	rvir = collect(UnitRange(1,nvir))
 
     _tiJaB =  permutedims(tiJaB,[3,4,1,2])
-    _iJaB_oovv = permutedims(iJaB_oovv,[3,4,1,2])
+    _iJaB = permutedims(iJaB,[3,4,1,2])
 	@views Wmnij .= iJaB[1:nocc,1:nocc,1:nocc,1:nocc]
 	Threads.@threads for j in rocc
         for n in rocc
@@ -252,7 +246,7 @@ end
 	            for m in rocc
 	                for f in rvir
 	                    @simd for e in rvir
-							Wmnij[m,n,i,j] += _tiJaB[e,f,i,j]*_iJaB_oovv[e,f,m,n]/2.0
+							Wmnij[m,n,i,j] += _tiJaB[e,f,i,j]*_iJaB[e,f,m,n]/2.0
 						end
 					end
 				end
@@ -276,16 +270,15 @@ function form_Wabef!(Wabef,iJaB,tiJaB)
 	Wabef .= iJaB[nocc+1:nvir+nocc,nocc+1:nvir+nocc,nocc+1:nvir+nocc,nocc+1:nvir+nocc]
 	rocc = collect(UnitRange(1,nocc))
 	rvir = collect(UnitRange(1,nvir))
-	@views iJaB_oovv = iJaB[1:nocc,1:nocc,nocc+1:nocc+nvir,nocc+1:nocc+nvir]
-    _iJaB_oovv = zeros(dtt,nocc,nocc)
+    _iJaB = zeros(dtt,nocc,nocc)
     for f in rvir
         for e in rvir
-            _iJaB_oovv .= iJaB_oovv[:,:,e,f]./2.0
+            _iJaB .= iJaB[:,:,e,f]./2.0
 	        Threads.@threads for b in rvir
 	            for a in rvir
 					for n in rocc
 						@simd for m in rocc
-                            Wabef[a,b,e,f] += tiJaB[m,n,a,b]*_iJaB_oovv[m,n]#*iJaB_oovv[m,n,e,f]
+                            Wabef[a,b,e,f] += tiJaB[m,n,a,b]*_iJaB[m,n]#*iJaB_oovv[m,n,e,f]
 						end
 					end
 				end
@@ -310,18 +303,17 @@ function form_WmBeJ!(WmBeJ, iJaB, tiJaB)
 	@views WmBeJ .= iJaB[1:nocc,nocc+1:nocc+nvir,nocc+1:nocc+nvir,1:nocc]
 	rocc = collect(UnitRange(1,nocc))
 	rvir = collect(UnitRange(1,nvir))
-	@views iJaB_oovv = iJaB[1:nocc,1:nocc,nocc+1:nocc+nvir,nocc+1:nocc+nvir]
-    _iJaB_oovv = zeros(dtt,nocc,nocc)
+    _iJaB = zeros(dtt,nocc,nocc)
     for e in rvir
 	    for f in rvir
-            _iJaB_oovv .= iJaB_oovv[:,:,e,f]./2.0
+            _iJaB .= iJaB[:,:,e,f]./2.0
 	        for b in rvir
 				for j in rocc
 	        		for m in rocc
 						@simd for n in rocc
-                            WmBeJ[m,b,e,j] -= tiJaB[j,n,f,b]*_iJaB_oovv[m,n]
-							WmBeJ[m,b,e,j] += tiJaB[n,j,f,b]*_iJaB_oovv[m,n]*2.0
-							WmBeJ[m,b,e,j] -= tiJaB[n,j,f,b]*_iJaB_oovv[n,m]
+                            WmBeJ[m,b,e,j] -= tiJaB[j,n,f,b]*_iJaB[m,n]
+							WmBeJ[m,b,e,j] += tiJaB[n,j,f,b]*_iJaB[m,n]*2.0
+							WmBeJ[m,b,e,j] -= tiJaB[n,j,f,b]*_iJaB[n,m]
 						end
 					end
 				end
@@ -348,19 +340,17 @@ function form_WmBEj!(WmBEj,iJaB,tiJaB)
 	#doing this double permutation scheme reduces floating point performance,
 	#but also reduces memory footprint
 	iJaB = permutedims(iJaB,[2,1,3,4])
-	@views iJaB_ovvo = iJaB[1:nocc,nocc+1:nocc+nvir,nocc+1:nocc+nvir,1:nocc]
-	WmBEj -= iJaB_ovvo
+	WmBEj -= iJaB
 	iJaB = permutedims(iJaB,[2,1,3,4])
-	@views iJaB_oovv = iJaB[1:nocc,1:nocc,nocc+1:nocc+nvir,nocc+1:nocc+nvir]
-    _iJaB_oovv = zeros(dtt,nocc,nocc)
+    _iJaB = zeros(dtt,nocc,nocc)
 	for e in rvir
 		for f in rvir
-            _iJaB_oovv .= iJaB_oovv[:,:,e,f]./2.0
+            _iJaB .= iJaB[:,:,e,f]./2.0
         	for m in rocc
 	            for b in rvir
 				    for j in rocc
 					    @simd for n in rocc
-                            WmBEj[m,b,e,j] += tiJaB[j,n,f,b]*_iJaB_oovv[n,m]
+                            WmBEj[m,b,e,j] += tiJaB[j,n,f,b]*_iJaB[n,m]
 						end
 					end
 				end
