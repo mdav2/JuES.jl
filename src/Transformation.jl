@@ -3,7 +3,7 @@ using JuES.DiskTensors
 export disk_tei_transform
 export mem_tei_transform
 
-function disk_tei_transform(gao::Array{Float64,4},
+function disk_tei_transform(gao::Union{Array{Float64,4},DiskFourTensor},
                        C1::Array{Float64,2},
                        C2::Array{Float64,2},
                        C3::Array{Float64,2},
@@ -12,6 +12,7 @@ function disk_tei_transform(gao::Array{Float64,4},
     """
     disk based, general spin orbital transformation
     """
+    T = typeof(gao)
     norb = size(C1)[1]
     d = size(C1)[1]
     d1 = size(C1)[2]
@@ -29,8 +30,12 @@ function disk_tei_transform(gao::Array{Float64,4},
     R2 = collect(rr2)
     R3 = collect(rr3)
     R4 = collect(rr4)
-    temp = DiskFourTensor("/tmp/jues.$name.temp.0",Float64,d,d,d,d4,"w")
-    blockfill!(temp,0.0)
+    if T == Array
+        temp = zeros(d,d,d,d4)
+    elseif T == DiskFourTensor
+        temp = DiskFourTensor("/tmp/jues.$name.temp.0",Float64,d,d,d,d4,"w")
+        blockfill!(temp,0.0)
+    end 
     #Quarter transform 1
     #(μ,ν,λ,σ) -> (μ,ν,λ,b)
     for b in R4
@@ -49,8 +54,12 @@ function disk_tei_transform(gao::Array{Float64,4},
     end
     #Quarter transform 2
     #(μ,ν,λ,b) -> (μ,ν,j,b)
-    temp2 = DiskFourTensor("/tmp/jues.$name.temp2.0",Float64,d,d,d3,d4,"w")
-    blockfill!(temp2,0.0)
+    if T == Array
+        temp2 = zeros(d,d,d3,d4)
+    elseif T == DiskFourTensor
+        temp2 = DiskFourTensor("/tmp/jues.$name.temp2.0",Float64,d,d,d3,d4,"w")
+        blockfill!(temp2,0.0)
+    end
     for b in R4
         for j in R3
             ocache = zeros(d,d)
@@ -58,7 +67,6 @@ function disk_tei_transform(gao::Array{Float64,4},
                 icache = temp[μ,:,:,b]
                 for ν in R
                     for λ in R #contract over λ
-                        #temp2[μ,ν,j,b] += C3[λ,j]*temp[μ,ν,λ,b]
                         ocache[μ,ν] += C3[λ,j]*icache[1,ν,λ,1]
                     end
                 end
@@ -68,10 +76,12 @@ function disk_tei_transform(gao::Array{Float64,4},
     end
     #Quarter transform 3
     #(μ,ν,j,b) -> (μ,a,j,b)
-    temp = nothing 
-    Base.GC.gc()
-    temp = DiskFourTensor("/tmp/jues.$name.temp.0",Float64,d,d2,d3,d4,"w")
-    blockfill!(temp,0.0)
+    if T == Array
+        temp = zeros(d,d2,d3,d4)
+    elseif T == DiskFourTensor
+        temp = DiskFourTensor("/tmp/jues.$name.temp.0",Float64,d,d2,d3,d4,"w")
+        blockfill!(temp,0.0)
+    end
     for b in R4
         for j in R3
             ocache = zeros(d,d2)
@@ -89,10 +99,13 @@ function disk_tei_transform(gao::Array{Float64,4},
     end
     #Quarter transform 4
     #(μ,a,j,b) -> (i,a,j,b)
-    temp2 = nothing
-    Base.GC.gc()
-    temp2 = DiskFourTensor("/tmp/jues.$name.temp2.0",Float64,d1,d2,d3,d4,"w")
-    blockfill!(temp2,0.0)
+
+    if T == Array
+        temp2 = zeros(d1,d2,d3,d4)
+    elseif T == DiskFourTensor
+        temp2 = DiskFourTensor("/tmp/jues.$name.temp2.0",Float64,d1,d2,d3,d4,"w")
+        blockfill!(temp2,0.0)
+    end
     for b in R4
         for j in R3
             icache = temp[:,:,j,b]

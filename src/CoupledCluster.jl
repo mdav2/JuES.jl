@@ -18,6 +18,7 @@ usage --> methods should be defined like do_<r/u><method> and take in
 """
 
 using JuES.Wavefunction
+using JuES.Transformation
 using Base.Threads
 using LinearAlgebra
 using Dates
@@ -34,6 +35,7 @@ end
     nocc = refWfn.nalpha
     nvir = refWfn.nvira
     iJaB = permutedims(refWfn.ijab,[1,3,2,4])
+    aBeF = mem_tei_trans
 	dtt = eltype(iJaB)
     epsa = refWfn.epsa
 	T2 = zeros(dtt,nocc,nocc,nvir,nvir)
