@@ -26,7 +26,7 @@ mol3 = psi4.geometry("""
 					 """)
 psi4.set_options(Dict("reference" => "uhf"))
 e3,wfn3 = psi4.energy("hf/sto-3g",mol=mol3,return_wfn=true)
-JuWfn3 = Wfn(wfn3,Float64,true,false)
+JuWfn3 = Wfn(wfn3,Float64,true,true)
 @testset "MP2" begin
 	@test do_rmp2(JuWfn2) ≈ -0.04914964480386458
 	@test do_ump2(JuWfn3) ≈ -0.03588729625230

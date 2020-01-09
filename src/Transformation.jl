@@ -1,5 +1,6 @@
 module Transformation
 using JuES.DiskTensors
+using Base.Threads
 export disk_tei_transform
 export mem_tei_transform
 
@@ -24,7 +25,6 @@ function disk_tei_transform(gao::Array{Float64,4},
     rr3 = UnitRange(1,d3)
     rr4 = UnitRange(1,d4)
     R  = collect(rr)
-    println("szc4 ", size(C4))
     R1 = collect(rr1)
     R2 = collect(rr2)
     R3 = collect(rr3)
