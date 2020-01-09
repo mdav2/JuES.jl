@@ -11,7 +11,8 @@ function disk_tei_transform(gao::Union{Array{Float64,4},DiskFourTensor},
                        C4::Array{Float64,2},
                        name::String)
     """
-    disk based, general spin orbital transformation
+    general spin orbital transformation
+     
     """
     T = typeof(gao)
     norb = size(C1)[1]
@@ -30,7 +31,7 @@ function disk_tei_transform(gao::Union{Array{Float64,4},DiskFourTensor},
     R2 = collect(rr2)
     R3 = collect(rr3)
     R4 = collect(rr4)
-    if T == Array
+    if T == Array{Float64,4}
         temp = zeros(d,d,d,d4)
     elseif T == DiskFourTensor
         temp = DiskFourTensor("/tmp/jues.$name.temp.0",Float64,d,d,d,d4,"w")
@@ -54,7 +55,7 @@ function disk_tei_transform(gao::Union{Array{Float64,4},DiskFourTensor},
     end
     #Quarter transform 2
     #(μ,ν,λ,b) -> (μ,ν,j,b)
-    if T == Array
+    if T == Array{Float64,4}
         temp2 = zeros(d,d,d3,d4)
     elseif T == DiskFourTensor
         temp2 = DiskFourTensor("/tmp/jues.$name.temp2.0",Float64,d,d,d3,d4,"w")
@@ -67,7 +68,7 @@ function disk_tei_transform(gao::Union{Array{Float64,4},DiskFourTensor},
                 icache = temp[μ,:,:,b]
                 for ν in R
                     for λ in R #contract over λ
-                        ocache[μ,ν] += C3[λ,j]*icache[1,ν,λ,1]
+                        ocache[μ,ν] += C3[λ,j]*icache[ν,λ]
                     end
                 end
             end
@@ -76,7 +77,7 @@ function disk_tei_transform(gao::Union{Array{Float64,4},DiskFourTensor},
     end
     #Quarter transform 3
     #(μ,ν,j,b) -> (μ,a,j,b)
-    if T == Array
+    if T == Array{Float64,4}
         temp = zeros(d,d2,d3,d4)
     elseif T == DiskFourTensor
         temp = DiskFourTensor("/tmp/jues.$name.temp.0",Float64,d,d2,d3,d4,"w")
@@ -100,7 +101,7 @@ function disk_tei_transform(gao::Union{Array{Float64,4},DiskFourTensor},
     #Quarter transform 4
     #(μ,a,j,b) -> (i,a,j,b)
 
-    if T == Array
+    if T == Array{Float64,4}
         temp2 = zeros(d1,d2,d3,d4)
     elseif T == DiskFourTensor
         temp2 = DiskFourTensor("/tmp/jues.$name.temp2.0",Float64,d1,d2,d3,d4,"w")

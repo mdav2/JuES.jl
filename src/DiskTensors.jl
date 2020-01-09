@@ -19,6 +19,7 @@ function ranger(inp::Union{UnitRange{Int64},Int64,Colon})
 		return inp
 	end
 end
+export squeeze
 export ranger
 export DiskVector
 export blockfill!

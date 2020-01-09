@@ -11,7 +11,10 @@ struct DiskFourTensor
 	sz3::Int
 	sz4::Int
 end
-
+function squeeze(A::AbstractArray)
+    #singleton_dims = tuple((d for d in 1:ndims(A) if size(A, d) == 1)...)
+    return dropdims(A, dims = (findall(size(A) .== 1)...,))
+end
 function DiskFourTensor(fname::String,dtype::Type,sz1::Int,sz2::Int,sz3::Int,sz4::Int,mode::String="r+")
 	"""
 	Constructor for DiskFourTensor objects
@@ -26,21 +29,22 @@ function DiskFourTensor(fname::String,dtype::Type,sz1::Int,sz2::Int,sz3::Int,sz4
 	DiskFourTensor(fname,"data",sz1,sz2,sz3,sz4)
 end
 # >>> overload getindex ( A[i,j,k,l] ) syntax
-function getindex(dtens::DiskFourTensor,i1::UnitRange{Int64},i2::UnitRange{Int64},
-				  i3::UnitRange{Int64},i4::UnitRange{Int64})
-	h5open(dtens.fname,"r") do fid
-		fid["$dtens.dname"][i1,i2,i3,i4]
-	end
-end
-function getindex(dtens::DiskFourTensor,
-				  i1::Int64,
-				  i2::Int64,
-				  i3::Int64,
-				  i4::Int64)
-	h5open(dtens.fname,"r") do fid
-		fid["$dtens.dname"][ranger(i1),ranger(i2),ranger(i3),ranger(i4)][1]
-	end
-end
+#function getindex(dtens::DiskFourTensor,i1::UnitRange{Int64},i2::UnitRange{Int64},
+#				  i3::UnitRange{Int64},i4::UnitRange{Int64})
+#	h5open(dtens.fname,"r") do fid
+#		fid["$dtens.dname"][i1,i2,i3,i4]
+#	end
+#end
+#function getindex(dtens::DiskFourTensor,
+#				  i1::Int64,
+#				  i2::Int64,
+#				  i3::Int64,
+#				  i4::Int64)
+#	#h5open(dtens.fname,"r") do fid
+#	#	fid["$dtens.dname"][ranger(i1),ranger(i2),ranger(i3),ranger(i4)][1]
+#	#end
+#    getindex(dtens,ranger(i1),ranger(i2),ranger(i3),ranger(i4))
+#end
 
 function getindex(dtens::DiskFourTensor,
 				  i1::Union{UnitRange{Int64},Int64,Colon},
@@ -48,7 +52,7 @@ function getindex(dtens::DiskFourTensor,
 				  i3::Union{UnitRange{Int64},Int64,Colon},
 				  i4::Union{UnitRange{Int64},Int64,Colon})
 	h5open(dtens.fname,"r") do fid
-		fid["$dtens.dname"][ranger(i1),ranger(i2),ranger(i3),ranger(i4)]
+        squeeze(fid["$dtens.dname"][ranger(i1),ranger(i2),ranger(i3),ranger(i4)])
 	end
 end
 # <<< 

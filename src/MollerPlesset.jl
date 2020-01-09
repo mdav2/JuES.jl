@@ -48,12 +48,13 @@ function do_ump2(refWfn::Wfn)
             aa = a - nocca
             bb = b - nocca
             cache = moeri[:,aa:aa,:,bb:bb] - moeri[:,bb:bb,:,aa:aa]
-            cache = permutedims(cache,[1,3,2,4])
+            cache = squeeze(cache)
+            #cache = permutedims(cache,[1,3,2,4])
     	    for j in rocca
     	        for i in j+1:refWfn.nalpha
                 #dmp2 += (1/4)*(moeri[i,aa,j,bb] - moeri[i,bb,j,aa])*(moeri[i,aa,j,bb] - moeri[i,bb,j,aa])/
     	        #    (epsa[i] + epsa[j] - epsa[a] - epsa[b])
-                moint = cache[i,j,1,1]
+                moint = cache[i,j]
                 dmp2 += (moint*moint)/
     	            (epsa[i] + epsa[j] - epsa[a] - epsa[b])
     	        end
@@ -72,10 +73,11 @@ function do_ump2(refWfn::Wfn)
             aa = a - nocca
             bb = b - noccb
             cache = moeri[:,aa:aa,:,bb:bb]
-            cache = permutedims(cache,[1,3,2,4])
+            cache = squeeze(cache)
+            #cache = permutedims(cache,[1,3,2,4])
     	    for j in roccb
     	        for i in rocca
-                    dmp2 += cache[i,j,1,1]*cache[i,j,1,1]/(epsa[i] + epsb[j] - epsa[a] - epsb[b])
+                    dmp2 += cache[i,j]*cache[i,j]/(epsa[i] + epsb[j] - epsa[a] - epsb[b])
     	        end
     	    end
     	end
@@ -95,10 +97,11 @@ function do_ump2(refWfn::Wfn)
             aa = a - noccb
             bb = b - noccb
             cache = moeri[:,aa:aa,:,bb:bb] .- moeri[:,bb:bb,:,aa:aa]
-            cache = permutedims(cache,[1,3,2,4])
+            cache = squeeze(cache)
+            #cache = permutedims(cache,[1,3,2,4])
     	    for i in roccb
     	        for j in i+1:refWfn.nbeta
-                    dmp2 += (cache[i,j,1,1]*cache[i,j,1,1])/
+                    dmp2 += (cache[i,j]*cache[i,j])/
     		        (epsb[i] + epsb[j] - epsb[a] - epsb[b])
     		end
     	    end

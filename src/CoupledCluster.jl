@@ -35,7 +35,7 @@ end
     nocc = refWfn.nalpha
     nvir = refWfn.nvira
     iJaB = permutedims(refWfn.ijab,[1,3,2,4])
-    aBeF = mem_tei_trans
+    aBeF = disk_tei_transform(refWfn.uvrs,refWfn.Ca,refWfn.Ca,refWfn.Cb,refWfn.Cb)
 	dtt = eltype(iJaB)
     epsa = refWfn.epsa
 	T2 = zeros(dtt,nocc,nocc,nvir,nvir)

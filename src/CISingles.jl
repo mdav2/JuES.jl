@@ -35,11 +35,11 @@ end
         for i in rocc
             for j in rocc
                 for a in rvir
-                    aa = a + nocc
-                    bb = b + nocc
+                    #aa = a + nocc
+                    #bb = b + nocc
                     I = (i-1)*nvir+a
                     J = (j-1)*nvir+b
-                    H[I,J] = HS(so_eri,F,i,j,aa,bb)
+                    H[I,J] = HS(so_eri,F,i,j,a,b)
                 end
             end
         end
@@ -70,7 +70,7 @@ end
 @fastmath function do_CIS(refWfn::Wfn,nroots,algo="lobpcg",doprint=false)
 	nocc = 2*refWfn.nalpha
 	nvir = 2*refWfn.nvira
-	so_eri = refWfn.pqrs
+	so_eri = refWfn.ijab
 	F = zeros(nocc + nvir, nocc + nvir)
 	r = collect(UnitRange(1,nocc+nvir))
     @inbounds @fastmath for i in r

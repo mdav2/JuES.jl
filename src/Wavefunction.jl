@@ -12,6 +12,8 @@ module Wavefunction
 
 using JuES.DiskTensors
 using JuES.Transformation
+using JuES.Integrals
+
 using PyCall
 const psi4 = PyNULL()
 function __init__()
@@ -58,6 +60,10 @@ struct Wfn{T}
 	unrestricted::Bool
     Ca::Array{T,2} #AO->MO coefficients
     Cb::Array{T,2} #AO->MO coefficients
+    Cao::Array{T,2}
+    Cav::Array{T,2}
+    Cbo::Array{T,2}
+    Cbv::Array{T,2}
     hao::Array{T,2} #Core hamiltonian
     epsa::Array{T,1} #orbital eigenvalues
     epsb::Array{T,1} #orbital eigenvalues
@@ -117,7 +123,8 @@ end
 function Wfn(wfn,dt,unrestricted::Bool,diskbased::Bool,name::String="default")
     dummy2 = Array{dt}(undef,0,0) #placeholder 2D array
     dummy4 = Array{dt}(undef,0,0,0,0) #placeholder 4D array
-    mints = psi4.core.MintsHelper(wfn.basisset()) #to generate integrals
+    basis = wfn.basisset()
+    mints = psi4.core.MintsHelper(basis) #to generate integrals
     nbf   = wfn.nmo()
     nocca =  wfn.nalpha()
     nvira = nbf - nocca
@@ -138,7 +145,11 @@ function Wfn(wfn,dt,unrestricted::Bool,diskbased::Bool,name::String="default")
     Ca    = convert(Array{dt,2}, _Ca.to_array())
     Cb    = convert(Array{dt,2},_Cb.to_array())
     hao   = convert(Array{dt,2}, wfn.H().to_array()) #core hamiltonian in AO
-    uvsr  = convert(Array{dt,4},mints.ao_eri().to_array()) #AO basis integrals
+    if diskbased
+        uvsr  = disk_ao(mints,basis)
+    else
+        uvsr  = convert(Array{dt,4},mints.ao_eri().to_array()) #AO basis integrals
+    end
     if diskbased
         ijab = disk_tei_transform(uvsr,Cao,Cav,Cao,Cav,"ijab")
     else
@@ -170,7 +181,7 @@ function Wfn(wfn,dt,unrestricted::Bool,diskbased::Bool,name::String="default")
     end
 	#create the Wfn object and return it!
     owfn = Wfn{dt}(nocca,noccb,nvira,nvirb,nbf,unrestricted,
-           Ca,Cb,hao,
+           Ca,Cb,Cao,Cav,Cbo,Cbv,hao,
            epsa,epsb,
            uvsr,ijab,iJaB,iJAb,IJAB,IjAb,IjaB)
     return owfn
