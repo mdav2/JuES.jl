@@ -25,7 +25,7 @@ mol3 = psi4.geometry("""
 					 """)
 psi4.set_options(Dict("reference" => "uhf"))
 e3,wfn3 = psi4.energy("hf/sto-3g",mol=mol3,return_wfn=true)
-JuWfn3 = Wfn(wfn3,Float64,true,true,"uhf")
+JuWfn3 = Wfn(wfn3,Float64,true,false,"uhf")
 @testset "Integral Transformation" begin
 	@testset "SmokeRHF" begin
 		disk = disk_tei_transform(JuWfn2.uvsr,JuWfn2.Ca,"testdisk")
@@ -36,6 +36,6 @@ JuWfn3 = Wfn(wfn3,Float64,true,true,"uhf")
 		disk_tei_transform(JuWfn3.uvsr,JuWfn3.Ca,JuWfn3.Cb,JuWfn3.Ca,JuWfn3.Cb,"TestTEImixed")
 		rhf = disk_tei_transform(JuWfn2.uvsr,JuWfn2.Ca,"TestTEIrhf")
 		uhf = disk_tei_transform(JuWfn2.uvsr,JuWfn2.Ca,JuWfn2.Ca,JuWfn2.Ca,JuWfn2.Ca,"TestTEIuhf")
-		@test rhf[:,:,:,:] == uhf[:,:,:,:]
+		@test rhf[:,:,:,:] ≈ uhf[:,:,:,:]
 	end
 end

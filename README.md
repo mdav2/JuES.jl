@@ -90,11 +90,11 @@ This module contains necessary code for integral direct computations. Currently 
 This module defines an interface for obtaining matrix elements for CI matrices.
 >**(!) Help** This is just a skeleton at this point. Contributions to this module will greatly help a functioning FCI and arbitrary order CI code. Basic equations and citation to Szabo and Ostlund are in docstrings. 
 ### MollerPlesset.jl
-Routines for Moller-Plesset perturbation theory computations are implemented here. Currently only an in-core RMP2 implementation exists. 
->**(!) Help** Disk based RMP2, as well as UMP2 codes would be an excellent contribution. Direct MP2 is also an excellent contribution. Disk based AO->MO transformations are complete for UHF and RHF references, just need MP2 energy expression for UMP2.
+Routines for Moller-Plesset perturbation theory computations are implemented here. Currently in-core and disk based RMP2 and UMP2 are implemented. 
+>**(!) Help** Direct MP2 would be an excellent contribution. 
 ### CISingles.jl
 Specialized routines for computing configuration-interaction singles excited state wavefunctions are defined here. Corrections such as CIS(D) and variants defined here as well. Keep seperate from general CI code. Only in-core RCIS is implemented.
 >**(!) Help** UCIS, disk-based, and direct implementations are excellent targets. 
 ### CoupledCluster.jl
-Routines for computing ground state coupled cluster energies are contained here. Currently there is only RHF-CCD implemented. RHF-CCSD should be implemented soon, and UHF-CCD sometime after.
->**(!) Help** Refining the RHF-CCD implementation, or working on CCSD codes would be greatly appreciated. Once RHF-CCSD is complete, coding a perturbative triples correction would be a straightforward addition. Adapting the codes for use with DiskTensors would also be beneficial.
+Routines for computing ground state coupled cluster energies are contained here. Currently there is only RHF-CCD implemented. RHF-CCSD should be implemented soon, and UHF-CCD sometime after. 
+>**(!) Help** CoupledCluster needs to be updated to use the general AO->MO transformation codes i.e. only transform ijab, mnij, and abef subsets. Refining the RHF-CCD implementation, or working on CCSD codes would be greatly appreciated. Once RHF-CCSD is complete, coding a perturbative triples correction would be a straightforward addition. Adapting the codes for use with DiskTensors would also be beneficial.
