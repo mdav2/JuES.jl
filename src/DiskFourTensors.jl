@@ -1,5 +1,6 @@
 import Base.getindex
 import Base.setindex!
+import Base.+
 struct DiskFourTensor
 	"""
 	Data structure for Rank 4 tensors
@@ -29,22 +30,6 @@ function DiskFourTensor(fname::String,dtype::Type,sz1::Int,sz2::Int,sz3::Int,sz4
 	DiskFourTensor(fname,"data",sz1,sz2,sz3,sz4)
 end
 # >>> overload getindex ( A[i,j,k,l] ) syntax
-#function getindex(dtens::DiskFourTensor,i1::UnitRange{Int64},i2::UnitRange{Int64},
-#				  i3::UnitRange{Int64},i4::UnitRange{Int64})
-#	h5open(dtens.fname,"r") do fid
-#		fid["$dtens.dname"][i1,i2,i3,i4]
-#	end
-#end
-#function getindex(dtens::DiskFourTensor,
-#				  i1::Int64,
-#				  i2::Int64,
-#				  i3::Int64,
-#				  i4::Int64)
-#	#h5open(dtens.fname,"r") do fid
-#	#	fid["$dtens.dname"][ranger(i1),ranger(i2),ranger(i3),ranger(i4)][1]
-#	#end
-#    getindex(dtens,ranger(i1),ranger(i2),ranger(i3),ranger(i4))
-#end
 
 function getindex(dtens::DiskFourTensor,
 				  i1::Union{UnitRange{Int64},Int64,Colon},
@@ -86,5 +71,3 @@ function blockfill!(dtens::DiskFourTensor,val)
 	h5write(dtens.fname,"$dtens.dname",A)
 end
 
-function tensordot(dtens1::DiskFourTensor,dtens2::DiskFourTensor)
-end

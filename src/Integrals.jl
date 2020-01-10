@@ -9,6 +9,11 @@ end
 
 export disk_ao
 
+"""
+    disk_ao
+
+computes all AO basis TEI and fills a DiskFourTensor object with those
+"""
 function disk_ao(mints::PyObject,basis::PyObject,name::String="default")
     integ = mints.integral()
     si = integ.shells_iterator()

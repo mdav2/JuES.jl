@@ -3,12 +3,113 @@ using JuES.DiskTensors
 using Base.Threads
 export disk_tei_transform
 export mem_tei_transform
+export tei_transform
 
-function disk_tei_transform(gao::Union{Array{Float64,4},DiskFourTensor},
-                       C1::Array{Float64,2},
-                       C2::Array{Float64,2},
-                       C3::Array{Float64,2},
-                       C4::Array{Float64,2},
+function tei_transform(gao::Array{Float64,4},
+                            C1::Array{Float64,2},
+                            C2::Array{Float64,2},
+                            C3::Array{Float64,2},
+                            C4::Array{Float64,2},
+                       name::String)
+    """
+    general spin orbital transformation
+     
+    """
+    T = typeof(gao)
+    norb = size(C1)[1]
+    d = size(C1)[1]
+    d1 = size(C1)[2]
+    d2 = size(C2)[2]
+    d3 = size(C3)[2]
+    d4 = size(C4)[2]
+    rr  = UnitRange(1,norb)
+    rr1 = UnitRange(1,d1)
+    rr2 = UnitRange(1,d2)
+    rr3 = UnitRange(1,d3)
+    rr4 = UnitRange(1,d4)
+    R  = collect(rr)
+    R1 = collect(rr1)
+    R2 = collect(rr2)
+    R3 = collect(rr3)
+    R4 = collect(rr4)
+    temp = zeros(d,d,d,d4)
+    #Quarter transform 1
+    #(μ,ν,λ,σ) -> (μ,ν,λ,b)
+    for b in R4
+        for μ in R
+            ocache = zeros(d,d)
+            for ν in R
+                icache = gao[μ,ν,:,:]
+                for λ in R
+                    for σ in R
+                        ocache[ν,λ] += C4[σ,b]*icache[λ,σ]
+                    end
+                end
+            end
+            temp[μ,:,:,b] = ocache[:,:]
+        end
+    end
+    #Quarter transform 2
+    #(μ,ν,λ,b) -> (μ,ν,j,b)
+    temp2 = zeros(d,d,d3,d4)
+    for b in R4
+        for j in R3
+            ocache = zeros(d,d)
+            for μ in R
+                icache = temp[μ,:,:,b]
+                for ν in R
+                    for λ in R #contract over λ
+                        ocache[μ,ν] += C3[λ,j]*icache[ν,λ]
+                    end
+                end
+            end
+            temp2[:,:,j,b] = ocache[:,:]
+        end
+    end
+    #Quarter transform 3
+    #(μ,ν,j,b) -> (μ,a,j,b)
+    temp = zeros(d,d2,d3,d4)
+    for b in R4
+        for j in R3
+            ocache = zeros(d,d2)
+            icache = temp2[:,:,j,b]
+            for a in R2
+                for μ in R
+                    for ν in R
+                        #temp[μ,a,j,b] += C2[ν,a]*temp2[μ,ν,j,b]
+                        ocache[μ,a] += C2[ν,a]*icache[μ,ν]
+                    end
+                end
+            end
+            temp[:,:,j,b] = ocache[:,:]
+        end
+    end
+    #Quarter transform 4
+    #(μ,a,j,b) -> (i,a,j,b)
+
+    temp2 = zeros(d1,d2,d3,d4)
+    for b in R4
+        for j in R3
+            icache = temp[:,:,j,b]
+            ocache = zeros(d1,d2)
+            for a in R2
+                for i in R1
+                    for μ in R
+                        #temp2[i,a,j,b] += C1[μ,i]*temp[μ,a,j,b]
+                        ocache[i,a] += C1[μ,i]*icache[μ,a]
+                    end
+                end
+            end
+            temp2[:,:,j,b] = ocache
+        end
+    end
+    return temp2
+end
+function tei_transform(gao::DiskFourTensor,
+                            C1::Array{Float64,2},
+                            C2::Array{Float64,2},
+                            C3::Array{Float64,2},
+                            C4::Array{Float64,2},
                        name::String)
     """
     general spin orbital transformation

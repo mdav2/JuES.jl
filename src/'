@@ -7,7 +7,6 @@ Currently only RHF reference supported
 
 using IterativeSolvers
 using JuES.Wavefunction
-using JuES.Transformation
 using PyCall
 using LinearAlgebra 
 using Dates
@@ -20,7 +19,7 @@ end
 dt = Float64
 
 #export setup_rcis
-export do_RCIS
+export do_CIS
 
 #function setup_rcis(wfn,dt)
 #    _C = wfn.Ca()
@@ -46,8 +45,8 @@ export do_RCIS
 @fastmath function do_RCIS(refWfn::Wfn,nroots,algo="lobpcg",doprint=false)
 	nocc = 2*refWfn.nalpha
 	nvir = 2*refWfn.nvira
-    eri_voov = tei_transform(refWfn.uvsr,refWfn.Cav,refWfn.Cao,refWfn.Cao,refWfn.Cav,"eri_voov")
-    eri_vvoo = tei_transform(refWfn.uvsr,refWfn.Cav,refWfn.Cav,refWfn.Cao,refWfn.Cao,"eri_vvoo")
+    eri_voov = tei_transform(refWfn.uvsr,refWfn.Cav,refWfn.Cao,refWfn.Cao,refWfn.Cav)
+    eri_vvoo = tei_transform(refWfn.uvsr,refWfn.Cav,refWfn.Cav,refWfn.Cao,refWfn.Cao)
 	F = zeros(nocc + nvir, nocc + nvir)
 	r = collect(UnitRange(1,nocc+nvir))
     @inbounds @fastmath for i in r
@@ -70,7 +69,7 @@ export do_RCIS
         if doprint println("Hamiltonian diagonalized exactly in $dt s") end
     elseif algo == "diag"
     	H = Symmetric(H)
-        dt = @elapsed eigs = eigvals(H)#,1:nroots)
+        dt = @elapsed eigs = eigvals(H,1:nroots)
         if doprint println("Hamiltonian diagonalized exactly in $dt s") end
     else
         if doprint
@@ -78,7 +77,7 @@ export do_RCIS
         end
         return false
     end
-    return eigs#[1:nroots]
+    return eigs[1:nroots]
 end
 
 """
@@ -115,7 +114,7 @@ incorporated via the kronecker deltas
 function HS(eri_voov::Array{dt,4},eri_vvoo::Array{dt,4},
                                         F::Array{dt,2}, 
                                         i::Int64, j::Int64, a::Int64, b::Int64)
-    return kron(i,j)*F[a,b] - kron(a,b)*F[i,j] #+ so_eri(eri_voov,eri_vvoo,a,j,i,b)
+    return kron(i,j)*F[a,b] - kron(a,b)*F[i,j] + so_eri(eri_voov,eri_vvoo,a,j,i,b)
 end
 
 function so_eri(eri_voov,eri_vvoo,a,j,i,b)
@@ -124,7 +123,8 @@ function so_eri(eri_voov,eri_vvoo,a,j,i,b)
     ii = Int64(fld((i+1),2))
     bb = Int64(fld((b+1),2))
     #<aj||ib> = 
-    (a%2==i%2)*(j%2==b%2)*eri_voov[aa,ii,jj,bb] - (a%2==b%2)*(j%2==i%2)*eri_vvoo[aa,bb,jj,ii]
+    (a%2==i%2)*(j%2==b%2)*eri_voov[aa,ii,jj,bb] 
+    - (p%2==s%2)*(q%2==r%2)*eri_vvoo[aa,bb,jj,ii]
 end
 
 

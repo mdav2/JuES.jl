@@ -29,13 +29,17 @@ function do_rccd(refWfn::Wfn)
 	#implicit maxit = 40
     return do_rccd(refWfn,40)
 end
-@fastmath @inbounds function do_rccd(refWfn::Wfn,maxit,doprint=false)
+@fastmath @inbounds function do_rccd(refWfn::Wfn,maxit,
+                                     doprint=false,tmp="/tmp/",messy=false)
     #goes through appropriate steps to do RCCD
 	set_zero_subnormals(true)
     nocc = refWfn.nalpha
     nvir = refWfn.nvira
-    iJaB = permutedims(refWfn.ijab,[1,3,2,4])
-    aBeF = disk_tei_transform(refWfn.uvrs,refWfn.Ca,refWfn.Ca,refWfn.Cb,refWfn.Cb)
+    #iJaB = permutedims(refWfn.ijab,[1,3,2,4])
+    iajb = refWfn.ijab
+    aebf = disk_tei_transform(refWfn.uvrs,refWfn.Cav,refWfn.Cav,refWfn.Cbv,refWfn.Cbv)
+    minj = disk_tei_transform(refWfn.uvrs,refWfn.Cao,refWfn.Cao,refWfn.Cbo,refWfn.Cbo)
+    mnie
 	dtt = eltype(iJaB)
     epsa = refWfn.epsa
 	T2 = zeros(dtt,nocc,nocc,nvir,nvir)
@@ -48,11 +52,13 @@ end
 	WmBeJ = form_WmBeJ(iJaB,T2)
 	WmBEj = form_WmBEj(iJaB,T2)
     dt = @elapsed for i in UnitRange(1,maxit) #TODO: implement RMS check
-        T2 = cciter(T2,iJaB,Dijab,Fae,Fmi,Wabef,Wmnij,WmBeJ,WmBEj)
+        T2 = cciter(T2,iaJB,aBeF,mNiJ,Dijab,Fae,Fmi,Wabef,Wmnij,WmBeJ,WmBEj)
 		if doprint println("@CCD $ccenergy(T2,iJaB)") end
         t1 = Dates.Time(Dates.now())
     end
 	if doprint println("CCD energy computed in $dt s") end
+    if !messy
+    end
 	return ccenergy(T2,iJaB)
 end
 
@@ -76,7 +82,7 @@ function ccenergy(tiJaB,iJaB)
 	return ecc
 end
 
-function cciter(tiJaB_i,iJaB,Dijab,Fae,Fmi,Wabef,Wmnij,WmBeJ,WmBEj)
+function cciter(tiJaB_i,iJaB,aBeF,mNiJ,Dijab,Fae,Fmi,Wabef,Wmnij,WmBeJ,WmBEj)
     form_Fae!(Fae,tiJaB_i,iJaB)
     form_Fmi!(Fmi,tiJaB_i,iJaB)
     form_Wmnij!(Wmnij,iJaB,tiJaB_i)
