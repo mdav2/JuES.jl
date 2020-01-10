@@ -16,6 +16,8 @@ e,wfn = psi4.energy("hf/sto-3g",mol=mol,return_wfn=true)
 JuWfn = Wfn(wfn)
 @testset "CISingles" begin
 	@testset "Smoke" begin
-		@test do_CIS(JuWfn,1)[1] - 0.320236855893771 < tol 
+        out = do_RCIS(JuWfn,5,"diag")
+        println(out)
+        @test abs(do_RCIS(JuWfn,5)[1] - 0.320236855893771) < tol 
 	end
 end

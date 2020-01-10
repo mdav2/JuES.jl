@@ -16,6 +16,6 @@ e,wfn2 = psi4.energy("hf/sto-3g",mol=mol2,return_wfn=true)
 JuWfn2 = Wfn(wfn2)
 @testset "CoupledCluster" begin
 	@testset "Smoke" begin
-		@test do_rccd(JuWfn2,40) - -0.07015050066089029 < tol
+		@test do_rccd(JuWfn2,40,true) ≈ -0.07015050066089029
 	end
 end

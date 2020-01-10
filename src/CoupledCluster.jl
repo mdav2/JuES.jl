@@ -30,39 +30,43 @@ function do_rccd(refWfn::Wfn)
     return do_rccd(refWfn,40)
 end
 @fastmath @inbounds function do_rccd(refWfn::Wfn,maxit,
-                                     doprint=false,tmp="/tmp/",messy=false)
+                                     doprint=false)
     #goes through appropriate steps to do RCCD
 	set_zero_subnormals(true)
     nocc = refWfn.nalpha
     nvir = refWfn.nvira
-    #iJaB = permutedims(refWfn.ijab,[1,3,2,4])
-    iajb = refWfn.ijab
-    aebf = disk_tei_transform(refWfn.uvrs,refWfn.Cav,refWfn.Cav,refWfn.Cbv,refWfn.Cbv)
-    minj = disk_tei_transform(refWfn.uvrs,refWfn.Cao,refWfn.Cao,refWfn.Cbo,refWfn.Cbo)
-    mnie
-	dtt = eltype(iJaB)
+    ovov = refWfn.ijab
+    vvvv = tei_transform(refWfn.uvsr,refWfn.Cav,refWfn.Cav,refWfn.Cav,refWfn.Cav,"test")
+    ovvo = tei_transform(refWfn.uvsr,refWfn.Cao,refWfn.Cav,refWfn.Cav,refWfn.Cao,"test")
+    oooo = tei_transform(refWfn.uvsr,refWfn.Cao,refWfn.Cao,refWfn.Cao,refWfn.Cao,"test")
+    ooov = tei_transform(refWfn.uvsr,refWfn.Cao,refWfn.Cao,refWfn.Cao,refWfn.Cav,"test")
+    oovv = tei_transform(refWfn.uvsr,refWfn.Cao,refWfn.Cao,refWfn.Cav,refWfn.Cav,"test")
+	dtt = eltype(ovov)
     epsa = refWfn.epsa
 	T2 = zeros(dtt,nocc,nocc,nvir,nvir)
     Dijab = form_Dijab(T2,epsa)
-    T2_init!(T2,iJaB,Dijab)
-    Fae = form_Fae(T2,iJaB)
-    Fmi = form_Fmi(T2,iJaB)
-    Wmnij = form_Wmnij(iJaB,T2)
-	Wabef = form_Wabef(iJaB,T2)
-	WmBeJ = form_WmBeJ(iJaB,T2)
-	WmBEj = form_WmBEj(iJaB,T2)
+    T2_init!(T2,ovov,Dijab)
+    println("@RMP2 ",ccenergy(T2,ovov))
+    Fae = form_Fae(T2,ovov)
+    Fmi = form_Fmi(T2,ovov)
+    Wmnij = form_Wmnij(oooo,ovov,T2)
+    Wmnij = zeros(size(Wmnij))
+	Wabef = form_Wabef(vvvv,ovov,T2)
+    Wabef = zeros(size(Wabef))
+	WmBeJ = form_WmBeJ(ovvo,ovov,T2)
+    WmBeJ = zeros(size(WmBeJ))
+	WmBEj = form_WmBEj(ovov,oovv,T2)
+    WmBEj = zeros(size(WmBEj))
     dt = @elapsed for i in UnitRange(1,maxit) #TODO: implement RMS check
-        T2 = cciter(T2,iaJB,aBeF,mNiJ,Dijab,Fae,Fmi,Wabef,Wmnij,WmBeJ,WmBEj)
-		if doprint println("@CCD $ccenergy(T2,iJaB)") end
+        T2 = cciter(T2,ovov,vvvv,oooo,oovv,ovvo,Dijab,Fae,Fmi,Wabef,Wmnij,WmBeJ,WmBEj)
+		if doprint println("@CCD ",ccenergy(T2,ovov)) end
         t1 = Dates.Time(Dates.now())
     end
 	if doprint println("CCD energy computed in $dt s") end
-    if !messy
-    end
-	return ccenergy(T2,iJaB)
+	return ccenergy(T2,ovov)
 end
 
-function ccenergy(tiJaB,iJaB)
+function ccenergy(tiJaB,iajb)
 	ecc = 0.0
 	nocc = size(tiJaB,1)
 	nvir = size(tiJaB,4)
@@ -72,7 +76,7 @@ function ccenergy(tiJaB,iJaB)
 		for j in rocc
 			for a in rvir
 				for b in rvir
-                    cache = iJaB[i,j,a,b]
+                    cache = iajb[i,a,j,b]
 					ecc += cache*2*tiJaB[i,j,a,b]
 					ecc -= cache*tiJaB[j,i,a,b]
 				end
@@ -82,46 +86,52 @@ function ccenergy(tiJaB,iJaB)
 	return ecc
 end
 
-function cciter(tiJaB_i,iJaB,aBeF,mNiJ,Dijab,Fae,Fmi,Wabef,Wmnij,WmBeJ,WmBEj)
-    form_Fae!(Fae,tiJaB_i,iJaB)
-    form_Fmi!(Fmi,tiJaB_i,iJaB)
-    form_Wmnij!(Wmnij,iJaB,tiJaB_i)
-	form_Wabef!(Wabef,iJaB,tiJaB_i)
-	form_WmBeJ!(WmBeJ,iJaB,tiJaB_i)
-	WmBEj = form_WmBEj!(WmBEj,iJaB,tiJaB_i)
-	tiJaB_d = form_T2(tiJaB_i,Fae,Fmi,WmBeJ,WmBEj,Wabef,Wmnij,iJaB,Dijab)
+function cciter(tiJaB_i,ovov,vvvv,oooo,oovv,ovvo,Dijab,Fae,Fmi,Wabef,Wmnij,WmBeJ,WmBEj)
+    form_Fae!(Fae,tiJaB_i,ovov)
+    #Fae = zeros(size(Fae))
+    form_Fmi!(Fmi,tiJaB_i,ovov)
+    #Fmi = zeros(size(Fmi))
+    form_Wmnij!(Wmnij,oooo,ovov,tiJaB_i)
+    #Wmnij = zeros(size(Wmnij))
+	form_Wabef!(Wabef,vvvv,ovov,tiJaB_i)
+    #Wabef = zeros(size(Wabef))
+	form_WmBeJ!(WmBeJ,ovvo,ovov,tiJaB_i)
+    #WmBeJ = zeros(size(WmBeJ))
+	WmBEj = form_WmBEj!(WmBEj,ovov,oovv,tiJaB_i)
+    #WmBEj = zeros(size(WmBEj))
+	tiJaB_d = form_T2(tiJaB_i,Fae,Fmi,WmBeJ,WmBEj,Wabef,Wmnij,ovov,Dijab)
 	return tiJaB_d
 end
 
-function T2_init!(tiJaB,iJaB,Dijab)
+function T2_init!(tiJaB,iajb,Dijab)
 	nocc = size(tiJaB,1)
 	nvir = size(tiJaB,4)
 	rocc = collect(UnitRange(1,nocc))
 	rvir = collect(UnitRange(1,nvir))
-    tiJaB .= iJaB ./ Dijab
+    tiJaB .= permutedims(iajb,[1,3,2,4]) ./ Dijab
 end
 
-function form_Fae(tiJaB,iJaB)
-	dt = eltype(iJaB)
+function form_Fae(tiJaB,menf)
+	dt = eltype(menf)
 	nvir = size(tiJaB,4)
     Fae = zeros(dt,nvir,nvir)
-    form_Fae!(Fae,tiJaB,iJaB)
+    form_Fae!(Fae,tiJaB,menf)
     return Fae
 end
-function form_Fae!(Fae,tiJaB,iJaB)
+function form_Fae!(Fae,tiJaB,menf)
 	nocc = size(tiJaB,1)
 	nvir = size(tiJaB,4)
 	rocc = collect(UnitRange(1,nocc))
 	rvir = collect(UnitRange(1,nvir))
     Fae .= 0.0
-    cache1 = zeros(eltype(iJaB),nocc,nocc)
-    cache2 = zeros(eltype(iJaB),nocc,nocc)
+    cache1 = zeros(eltype(menf),nocc,nocc)
+    cache2 = zeros(eltype(menf),nocc,nocc)
     for f in rvir
     	for a in rvir
         	for e in rvir
                 for n in rocc
                     @simd for m in rocc
-                        Fae[a,e] -= tiJaB[m,n,a,f]*(2*iJaB[m,n,e,f] - iJaB[n,m,e,f])
+                        Fae[a,e] -= menf[m,e,n,f]*(2*tiJaB[m,n,a,f] - tiJaB[n,m,a,f])
                     end
                 end
             end
@@ -129,15 +139,15 @@ function form_Fae!(Fae,tiJaB,iJaB)
     end
 end
 
-function form_Fmi(tiJaB,iJaB)
-	dt = eltype(iJaB)
+function form_Fmi(tiJaB,menf)
+	dt = eltype(menf)
 	nocc = size(tiJaB,1)
 	nvir = size(tiJaB,4)
     Fmi = zeros(dt,nocc,nocc)
-    form_Fmi!(Fmi,tiJaB,iJaB)
+    form_Fmi!(Fmi,tiJaB,menf)
 	return Fmi
 end
-function form_Fmi!(Fmi,tiJaB,iJaB)
+function form_Fmi!(Fmi,tiJaB,menf)
 	nocc = size(tiJaB,1)
 	nvir = size(tiJaB,4)
 	rocc = collect(UnitRange(1,nocc))
@@ -148,7 +158,7 @@ function form_Fmi!(Fmi,tiJaB,iJaB)
             for n in rocc
                 for i in rocc
                     @simd for m in rocc
-                        Fmi[m,i] += tiJaB[i,n,e,f]*(2*iJaB[m,n,e,f] - iJaB[m,n,f,e])
+                        Fmi[m,i] += menf[m,e,n,f]*(2*tiJaB[i,n,e,f] - tiJaB[i,n,f,e])
                     end
                 end
             end
@@ -178,83 +188,71 @@ function form_Dijab(tiJaB,F)
 	return Dijab
 end
 
-function form_T2(tiJaB_i,Fae,Fmi,WmBeJ,WmBEj,Wabef,Wmnij,iJaB,Dijab)
+function form_T2(tiJaB_i,Fae,Fmi,WmBeJ,WmBEj,Wabef,Wmnij,iajb,Dijab)
 	dtt = eltype(tiJaB_i)
 	nocc = size(Wmnij,1)
 	nvir = size(tiJaB_i,4)
 	tiJaB_d = zeros(dtt,nocc,nocc,nvir,nvir)
 	rocc = collect(UnitRange(1,nocc))
 	rvir = collect(UnitRange(1,nvir))
-	ttiJaB_i = permutedims(tiJaB_i,[4,1,2,3])
-	WWmBEj  = permutedims(WmBEj,[3,1,2,4])
-	WWmBeJ  = permutedims(WmBeJ,[3,1,2,4])
-	WmBEj = nothing
-	WmBeJ = nothing
-	Threads.@threads for b in rvir
+	for b in rvir
         for a in rvir 
-            _Wabef = Wabef[a,b,:,:]
 		   for j in rocc
                 for i in rocc
-                    temp = iJaB[i,j,a,b]
+                    temp = iajb[i,a,j,b]
                     for e in rvir
-                        temp += tiJaB_i[i,j,a,e] * Fae[b,e]
-                        temp += tiJaB_i[i,j,e,b] * Fae[a,e]
+                        temp += tiJaB_i[i,j,a,e]*Fae[b,e]
+                        temp += tiJaB_i[j,i,b,e]*Fae[a,e]
                         for f in rvir
-                            temp += tiJaB_i[i,j,e,f]*_Wabef[e,f]
-                        end
-                        for m in rocc
-                             temp += ttiJaB_i[e,m,i,b]*WWmBEj[e,m,a,j]
-                             temp += ttiJaB_i[e,m,j,a]*WWmBEj[e,m,b,i]
-                             temp += ttiJaB_i[e,i,m,a]*WWmBeJ[e,m,b,j]
-                             temp -= ttiJaB_i[e,m,i,a]*WWmBeJ[e,m,b,j]
-                             temp += ttiJaB_i[e,i,m,a]*WWmBeJ[e,m,b,j]
-                             temp += ttiJaB_i[e,i,m,a]*WWmBEj[e,m,b,j]
-                             temp += ttiJaB_i[e,j,m,b]*WWmBeJ[e,m,a,i]
-                             temp -= ttiJaB_i[e,m,j,b]*WWmBeJ[e,m,a,i]
-                             temp += ttiJaB_i[e,j,m,b]*WWmBeJ[e,m,a,i]
-                             temp += ttiJaB_i[e,j,m,b]*WWmBEj[e,m,a,i]
+                            temp += tiJaB_i[i,j,e,f]*Wabef[a,b,e,f]
                         end
                     end
-
-					for m in rocc
+                    for m in rocc
                         temp -= tiJaB_i[i,m,a,b]*Fmi[m,j]
                         temp -= tiJaB_i[m,j,a,b]*Fmi[m,i]
                         for n in rocc
                             temp += tiJaB_i[m,n,a,b]*Wmnij[m,n,i,j]
                         end
+                        for e in rvir
+                            temp += 2*tiJaB_i[i,m,a,e]*WmBeJ[m,b,e,j]
+                            temp -= tiJaB_i[m,i,a,e]*WmBeJ[m,b,e,j]
+                            temp += tiJaB_i[i,m,a,e]*WmBEj[m,b,e,j]
+                            temp += tiJaB_i[m,i,b,e]*WmBEj[m,a,e,j]
+                            temp += tiJaB_i[m,j,a,e]*WmBEj[m,b,e,i]
+                            temp += 2*tiJaB_i[j,m,b,e]*WmBeJ[m,a,e,i]
+                            temp -= tiJaB_i[m,j,b,e]*WmBeJ[m,a,e,i]
+                            temp += tiJaB_i[j,m,b,e]*WmBEj[m,a,e,i]
+                        end
                     end
-                    tiJaB_d[i,j,a,b] += temp
-				end
+                    tiJaB_d[i,j,a,b] = temp
+                end
 			end
 		end
 	end
 	tiJaB_d .= tiJaB_d ./ Dijab
 	return tiJaB_d
 end
-function form_Wmnij(iJaB,tiJaB)
-	dtt = eltype(iJaB)
+function form_Wmnij(minj,menf,tiJaB)
+	dtt = eltype(menf)
 	nocc = size(tiJaB,1)
 	nvir = size(tiJaB,4)
 	Wmnij = zeros(dtt,nocc,nocc,nocc,nocc)
-    form_Wmnij!(Wmnij,iJaB,tiJaB)
+    form_Wmnij!(Wmnij,minj,menf,tiJaB)
     return Wmnij
 end
-@fastmath @inbounds function form_Wmnij!(Wmnij,iJaB,tiJaB)
+function form_Wmnij!(Wmnij,minj,menf,tiJaB)
 	nocc = size(tiJaB,1)
 	nvir = size(tiJaB,4)
 	rocc = collect(UnitRange(1,nocc))
 	rvir = collect(UnitRange(1,nvir))
-
-    _tiJaB =  permutedims(tiJaB,[3,4,1,2])
-    _iJaB = permutedims(iJaB,[3,4,1,2])
-	@views Wmnij .= iJaB[1:nocc,1:nocc,1:nocc,1:nocc]
-	Threads.@threads for j in rocc
+	for j in rocc
         for n in rocc
 	        for i in rocc
 	            for m in rocc
+                    Wmnij[m,n,i,j] = minj[m,i,n,j]
 	                for f in rvir
-	                    @simd for e in rvir
-							Wmnij[m,n,i,j] += _tiJaB[e,f,i,j]*_iJaB[e,f,m,n]/2.0
+	                    for e in rvir
+                            Wmnij[m,n,i,j] += tiJaB[i,j,e,f]*menf[m,e,n,f]/2.0
 						end
 					end
 				end
@@ -263,30 +261,29 @@ end
 	end
 end
 
-function form_Wabef(iJaB,tiJaB)
-	dt = eltype(iJaB)
+function form_Wabef(aebf,mnef,tiJaB)
+	dt = eltype(aebf)
 	nvir = size(tiJaB,4)
 	Wabef = zeros(dt,nvir,nvir,nvir,nvir)
-    form_Wabef!(Wabef,iJaB,tiJaB)
+    form_Wabef!(Wabef,aebf,mnef,tiJaB)
     return Wabef
 end
-function form_Wabef!(Wabef,iJaB,tiJaB)
+function form_Wabef!(Wabef,aebf,menf,tiJaB)
 	dtt = eltype(Wabef)
 	nocc = size(tiJaB,1)
 	nvir = size(tiJaB,4)
-    #Wabef .= 0
-	Wabef .= iJaB[nocc+1:nvir+nocc,nocc+1:nvir+nocc,nocc+1:nvir+nocc,nocc+1:nvir+nocc]
 	rocc = collect(UnitRange(1,nocc))
 	rvir = collect(UnitRange(1,nvir))
     _iJaB = zeros(dtt,nocc,nocc)
+    Wabef .= 0
     for f in rvir
         for e in rvir
-            _iJaB .= iJaB[:,:,e,f]./2.0
-	        Threads.@threads for b in rvir
+	        for b in rvir
 	            for a in rvir
+                    Wabef[a,b,e,f] = aebf[a,e,b,f]
 					for n in rocc
-						@simd for m in rocc
-                            Wabef[a,b,e,f] += tiJaB[m,n,a,b]*_iJaB[m,n]#*iJaB_oovv[m,n,e,f]
+						for m in rocc
+                            Wabef[a,b,e,f] += tiJaB[m,n,a,b]*menf[m,e,n,f]/2.0
 						end
 					end
 				end
@@ -295,33 +292,31 @@ function form_Wabef!(Wabef,iJaB,tiJaB)
 	end
 end
 
-function form_WmBeJ(iJaB,tiJaB)
-	dtt = eltype(iJaB)
+function form_WmBeJ(mebj,iajb,tiJaB)
+	dtt = eltype(iajb)
 	nocc = size(tiJaB,1)
 	nvir = size(tiJaB,4)
 	WmBeJ = zeros(dtt,nocc,nvir,nvir,nocc)
-    form_WmBeJ!(WmBeJ,iJaB,tiJaB)
+    form_WmBeJ!(WmBeJ,mebj,iajb,tiJaB)
     return WmBeJ
 end
-function form_WmBeJ!(WmBeJ, iJaB, tiJaB)
+function form_WmBeJ!(WmBeJ,mebj,iajb, tiJaB)
 	dtt = eltype(WmBeJ)
 	nocc = size(tiJaB,1)
 	nvir = size(tiJaB,4)
     #WmBeJ .= 0 
-	@views WmBeJ .= iJaB[1:nocc,nocc+1:nocc+nvir,nocc+1:nocc+nvir,1:nocc]
 	rocc = collect(UnitRange(1,nocc))
 	rvir = collect(UnitRange(1,nvir))
     _iJaB = zeros(dtt,nocc,nocc)
     for e in rvir
-	    for f in rvir
-            _iJaB .= iJaB[:,:,e,f]./2.0
-	        for b in rvir
-				for j in rocc
-	        		for m in rocc
-						@simd for n in rocc
-                            WmBeJ[m,b,e,j] -= tiJaB[j,n,f,b]*_iJaB[m,n]
-							WmBeJ[m,b,e,j] += tiJaB[n,j,f,b]*_iJaB[m,n]*2.0
-							WmBeJ[m,b,e,j] -= tiJaB[n,j,f,b]*_iJaB[n,m]
+	    for b in rvir
+	    	for j in rocc
+	    		for m in rocc
+                    WmBeJ[m,b,e,j] = mebj[m,e,b,j]
+	                for f in rvir
+						for n in rocc
+                            WmBeJ[m,b,e,j] += iajb[m,e,n,f]*(2*tiJaB[n,j,f,b] - tiJaB[j,n,f,b])/2.0
+                            WmBeJ[m,b,e,j] -= iajb[n,e,m,f]*tiJaB[n,j,f,b]/2.0
 						end
 					end
 				end
@@ -331,34 +326,28 @@ function form_WmBeJ!(WmBeJ, iJaB, tiJaB)
 end
 
 
-function form_WmBEj(iJaB,tiJaB)
-	dtt = eltype(iJaB)
+function form_WmBEj(nemf,mjbe,tiJaB)
+	dtt = eltype(nemf)
 	nocc = size(tiJaB,1)
 	nvir = size(tiJaB,4)
 	WmBEj = zeros(dtt,nocc,nvir,nvir,nocc)
-    form_WmBEj!(WmBEj,iJaB,tiJaB)
+    form_WmBEj!(WmBEj,nemf,mjbe,tiJaB)
     return WmBEj
 end
-function form_WmBEj!(WmBEj,iJaB,tiJaB)
+function form_WmBEj!(WmBEj,nemf,mjbe,tiJaB)
 	dtt = eltype(WmBEj)
 	nocc = size(tiJaB,1)
 	nvir = size(tiJaB,4)
 	rocc = collect(UnitRange(1,nocc))
 	rvir = collect(UnitRange(1,nvir))
-	#doing this double permutation scheme reduces floating point performance,
-	#but also reduces memory footprint
-	iJaB = permutedims(iJaB,[2,1,3,4])
-	WmBEj -= iJaB
-	iJaB = permutedims(iJaB,[2,1,3,4])
-    _iJaB = zeros(dtt,nocc,nocc)
 	for e in rvir
-		for f in rvir
-            _iJaB .= iJaB[:,:,e,f]./2.0
-        	for m in rocc
-	            for b in rvir
-				    for j in rocc
-					    @simd for n in rocc
-                            WmBEj[m,b,e,j] += tiJaB[j,n,f,b]*_iJaB[n,m]
+    	for m in rocc
+            for b in rvir
+			    for j in rocc
+                    WmBEj[m,b,e,j] = -mjbe[m,j,b,e]
+		            for f in rvir
+					    for n in rocc
+                            WmBEj[m,b,e,j] += tiJaB[j,n,f,b]*nemf[n,e,m,f]/2.0
 						end
 					end
 				end
