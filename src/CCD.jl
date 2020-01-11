@@ -1,51 +1,40 @@
-module CoupledCluster
-"""
-Basic module for running CC computations in Julia.
-
-short term goal is RCCD and UCCD
-medium term goal is RCCSD and UCCSD
-long term goal is RCCSD(T) and UCCSD(T)
-
-Implemented --> RCCD
-			--> 
-Optimized --> RCCD
-
-
-usage --> methods should be defined like do_<r/u><method> and take in
-	  --> a Wavefunction.jl Wfn object as their sole _required_ input.
-	  --> optional inputs such as maxit, convergence, etc can be defined
-	  --> via multiple dispatch
-"""
-
-using JuES.Wavefunction
-using JuES.Transformation
-using Base.Threads
-using LinearAlgebra
-using Dates
-export do_rccd
-
-
 function do_rccd(refWfn::Wfn)
     #implicit maxit = 40
     return do_rccd(refWfn, 40)
 end
-@fastmath @inbounds function do_rccd(refWfn::Wfn, maxit, doprint = false)
+"""
+    do_rccd
+
+Applies RCCD equations to the input Wfn object. Disk based versus in-core 
+algorithm is selected based on the type of atomic orbitals in Wfn.uvsr.
+---
+## paramters
+refWfn::Wfn         -> Wfn object to which the RCCD equations will be applied.
+
+maxit::Int          -> maximum number of coupled cluster iterations.
+
+doprint::Bool=false -> whether or not to print energy and timing information to 
+    stdout.
+## output
+ccenergy::Float -> final RCCD energy. 
+"""
+function do_rccd(refWfn::Wfn, maxit, doprint = false)
     #goes through appropriate steps to do RCCD
     set_zero_subnormals(true)
     nocc = refWfn.nalpha
     nvir = refWfn.nvira
     ovov = refWfn.ijab
     vvvv =
-        tei_transform(refWfn.uvsr, refWfn.Cav, refWfn.Cav, refWfn.Cav, refWfn.Cav, "test")
+        tei_transform(refWfn.uvsr, refWfn.Cav, refWfn.Cav, refWfn.Cav, refWfn.Cav, "vvvv")
     ovvo =
-        tei_transform(refWfn.uvsr, refWfn.Cao, refWfn.Cav, refWfn.Cav, refWfn.Cao, "test")
+        tei_transform(refWfn.uvsr, refWfn.Cao, refWfn.Cav, refWfn.Cav, refWfn.Cao, "ovvo")
     oooo =
-        tei_transform(refWfn.uvsr, refWfn.Cao, refWfn.Cao, refWfn.Cao, refWfn.Cao, "test")
+        tei_transform(refWfn.uvsr, refWfn.Cao, refWfn.Cao, refWfn.Cao, refWfn.Cao, "oooo")
     ooov =
-        tei_transform(refWfn.uvsr, refWfn.Cao, refWfn.Cao, refWfn.Cao, refWfn.Cav, "test")
+        tei_transform(refWfn.uvsr, refWfn.Cao, refWfn.Cao, refWfn.Cao, refWfn.Cav, "ooov")
     oovv =
-        tei_transform(refWfn.uvsr, refWfn.Cao, refWfn.Cao, refWfn.Cav, refWfn.Cav, "test")
-    dtt = eltype(ovov)
+        tei_transform(refWfn.uvsr, refWfn.Cao, refWfn.Cao, refWfn.Cav, refWfn.Cav, "oovv")
+    dtt = Float64#eltype(ovov)
     epsa = refWfn.epsa
     T2 = zeros(dtt, nocc, nocc, nvir, nvir)
     Dijab = form_Dijab(T2, epsa)
@@ -96,11 +85,11 @@ function ccenergy(tiJaB, iajb)
     rvir = collect(UnitRange(1, nvir))
     for i in rocc
         for j in rocc
+            cache = iajb[i,:,j,:]
             for a in rvir
                 for b in rvir
-                    cache = iajb[i, a, j, b]
-                    ecc += cache * 2 * tiJaB[i, j, a, b]
-                    ecc -= cache * tiJaB[j, i, a, b]
+                    ecc += cache[a,b] * 2 * tiJaB[i, j, a, b]
+                    ecc -= cache[a,b] * tiJaB[j, i, a, b]
                 end
             end
         end
@@ -144,7 +133,16 @@ function T2_init!(tiJaB, iajb, Dijab)
     nvir = size(tiJaB, 4)
     rocc = collect(UnitRange(1, nocc))
     rvir = collect(UnitRange(1, nvir))
-    tiJaB .= permutedims(iajb, [1, 3, 2, 4]) ./ Dijab
+    for i in rocc
+        for j in rocc
+            cache = iajb[i,:,j,:]
+            for a in rvir
+                for b in rvir
+                    tiJaB[i,j,a,b] = cache[a,b] / Dijab[i,j,a,b]
+                end
+            end
+        end
+    end
 end
 
 function form_Fae(tiJaB, menf)
@@ -165,10 +163,11 @@ function form_Fae!(Fae, tiJaB, menf)
     for f in rvir
         for a in rvir
             for e in rvir
+                cache = menf[:,e,:,f]
                 for n in rocc
                     @simd for m in rocc
                         Fae[a, e] -=
-                            menf[m, e, n, f] * (2 * tiJaB[m, n, a, f] - tiJaB[n, m, a, f])
+                            cache[m,n] * (2 * tiJaB[m, n, a, f] - tiJaB[n, m, a, f])
                     end
                 end
             end
@@ -192,11 +191,12 @@ function form_Fmi!(Fmi, tiJaB, menf)
     Fmi .= 0.0
     for f in rvir
         for e in rvir
+            cache = menf[:,e,:,f]
             for n in rocc
                 for i in rocc
                     @simd for m in rocc
                         Fmi[m, i] +=
-                            menf[m, e, n, f] * (2 * tiJaB[i, n, e, f] - tiJaB[i, n, f, e])
+                            cache[m,n] * (2 * tiJaB[i, n, e, f] - tiJaB[i, n, f, e])
                     end
                 end
             end
@@ -235,9 +235,10 @@ function form_T2(tiJaB_i, Fae, Fmi, WmBeJ, WmBEj, Wabef, Wmnij, iajb, Dijab)
     rvir = collect(UnitRange(1, nvir))
     for b in rvir
         for a in rvir
+            cache_iajb = iajb[:,a,:,b]
             for j in rocc
                 for i in rocc
-                    temp = iajb[i, a, j, b]
+                    temp = cache_iajb[i, j]
                     for e in rvir
                         temp += tiJaB_i[i, j, a, e] * Fae[b, e]
                         temp += tiJaB_i[j, i, b, e] * Fae[a, e]
@@ -283,14 +284,17 @@ function form_Wmnij!(Wmnij, minj, menf, tiJaB)
     nvir = size(tiJaB, 4)
     rocc = collect(UnitRange(1, nocc))
     rvir = collect(UnitRange(1, nvir))
-    for j in rocc
+    for m in rocc
         for n in rocc
+            cache_minj = minj[m,:,n,:]
+            cache_menf = menf[m,:,n,:]
             for i in rocc
-                for m in rocc
-                    Wmnij[m, n, i, j] = minj[m, i, n, j]
+                for j in rocc
+                    #m i n j
+                    Wmnij[m, n, i, j] = cache_minj[i, j]
                     for f in rvir
                         for e in rvir
-                            Wmnij[m, n, i, j] += tiJaB[i, j, e, f] * menf[m, e, n, f] / 2.0
+                            Wmnij[m, n, i, j] += tiJaB[i, j, e, f] * cache_menf[e, f] / 2.0
                         end
                     end
                 end
@@ -316,12 +320,14 @@ function form_Wabef!(Wabef, aebf, menf, tiJaB)
     Wabef .= 0
     for f in rvir
         for e in rvir
+            cache_aebf = aebf[:,e,:,f]
+            cache_menf = menf[:,e,:,f]
             for b in rvir
                 for a in rvir
-                    Wabef[a, b, e, f] = aebf[a, e, b, f]
+                    Wabef[a, b, e, f] = cache_aebf[a, b]
                     for n in rocc
                         for m in rocc
-                            Wabef[a, b, e, f] += tiJaB[m, n, a, b] * menf[m, e, n, f] / 2.0
+                            Wabef[a, b, e, f] += tiJaB[m, n, a, b] * cache_menf[m, n] / 2.0
                         end
                     end
                 end
@@ -347,16 +353,19 @@ function form_WmBeJ!(WmBeJ, mebj, iajb, tiJaB)
     rvir = collect(UnitRange(1, nvir))
     _iJaB = zeros(dtt, nocc, nocc)
     for e in rvir
-        for b in rvir
-            for j in rocc
-                for m in rocc
-                    WmBeJ[m, b, e, j] = mebj[m, e, b, j]
+        for m in rocc
+            cache_mebj = mebj[m,e,:,:]
+            cache_iajb1 = iajb[m,e,:,:]
+            cache_iajb2 = iajb[:,e,m,:]
+            for b in rvir
+                for j in rocc
+                    WmBeJ[m, b, e, j] = cache_mebj[b, j]
                     for f in rvir
                         for n in rocc
                             WmBeJ[m, b, e, j] +=
-                                iajb[m, e, n, f] *
+                                cache_iajb1[n, f] *
                                 (2 * tiJaB[n, j, f, b] - tiJaB[j, n, f, b]) / 2.0
-                            WmBeJ[m, b, e, j] -= iajb[n, e, m, f] * tiJaB[n, j, f, b] / 2.0
+                            WmBeJ[m, b, e, j] -= cache_iajb2[n, f] * tiJaB[n, j, f, b] / 2.0
                         end
                     end
                 end
@@ -382,12 +391,14 @@ function form_WmBEj!(WmBEj, nemf, mjbe, tiJaB)
     rvir = collect(UnitRange(1, nvir))
     for e in rvir
         for m in rocc
+            cache_mjbe = mjbe[m,:,:,e]
+            cache_nemf = nemf[:,e,m,:]
             for b in rvir
                 for j in rocc
-                    WmBEj[m, b, e, j] = -mjbe[m, j, b, e]
+                    WmBEj[m, b, e, j] = -cache_mjbe[j, b]
                     for f in rvir
                         for n in rocc
-                            WmBEj[m, b, e, j] += tiJaB[j, n, f, b] * nemf[n, e, m, f] / 2.0
+                            WmBEj[m, b, e, j] += tiJaB[j, n, f, b] * cache_nemf[n, f] / 2.0
                         end
                     end
                 end
@@ -396,4 +407,3 @@ function form_WmBEj!(WmBEj, nemf, mjbe, tiJaB)
     end
     return WmBEj
 end
-end #module CC

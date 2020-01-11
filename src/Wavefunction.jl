@@ -1,11 +1,10 @@
 """
 Module for storing and handling reference wavefunctions.
-## Structures
----
 
-Wfn : holds info for disk based and in core computations.
-DirectWfn : holds info for integral direct computations.
+## structs
 
+    Wfn -> holds info for disk based and in core computations.
+    DirectWfn -> holds info for integral direct computations.
 
 """
 module Wavefunction

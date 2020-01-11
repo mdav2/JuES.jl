@@ -1,6 +1,19 @@
 """
+    DiskTensors
+
 Disk based rank 1,2, and 4 tensors. Defines functions such as +, -, dot,... 
 with buffered I/O. Uses HDF5 format for storing tensors. One tensor per file.
+
+## structs
+    DiskVector -> see ?JuES.DiskTensors.DiskVector
+    DiskMatrix -> see ?JuES.DiskTensors.DiskMatrix
+    DiskFourTensor -> see ?JuES.DiskTensors.DiskFourTensor
+
+## methods
+    squeeze -> see ?JuES.DiskTensors.squeeze
+    eltype -> returns element type of a DiskFourTensor
+    ranger -> converts input to a UnitRange, if possible
+    blockfill! -> fills a DiskTensor with the value entered
 """
 module DiskTensors
 
