@@ -13,11 +13,11 @@ include("DiskFourTensors.jl")
 converts inp::Int64 -> UnitRange(inp:inp) for use in indexing DiskTensors
 """
 function ranger(inp::Union{UnitRange{Int64},Int64,Colon})
-    if typeof(inp) == Int64
-        return UnitRange(inp:inp)
-    else
-        return inp
-    end
+	if typeof(inp) == Int64
+		return UnitRange(inp:inp)
+	else
+		return inp
+	end
 end
 export squeeze
 export ranger
@@ -37,5 +37,5 @@ export dmdot
 
 export DiskFourTensor
 export d4read
-    #export dmelmult
+#export dmelmult
 end
