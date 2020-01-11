@@ -15,37 +15,37 @@ syntax --> <nparticle>Electron_<matrix>d<ndiff>
 using JuES.Determinant
 using JuES.Wavefunction
 
-function OneElectron_Hd0(a::SlaterDeterminant,b::SlaterDeterminant,ref::Wfn)
-	"""
-	Σ <m|h|m>
-	"""
+function OneElectron_Hd0(a::SlaterDeterminant, b::SlaterDeterminant, ref::Wfn)
+    """
+    Σ <m|h|m>
+    """
 end
-function TwoElectron_Hd0(a::SlaterDeterminant,b::SlaterDeterminant,ref::Wfn)
-	"""
-	1/2 ΣΣ <mn||mn>
-	"""
+function TwoElectron_Hd0(a::SlaterDeterminant, b::SlaterDeterminant, ref::Wfn)
+    """
+    1/2 ΣΣ <mn||mn>
+    """
 end
-function OneElectron_Hd1(a::SlaterDeterminant,b::SlaterDeterminant,ref::Wfn)
-	"""
-	<m|h|p>
-	"""
+function OneElectron_Hd1(a::SlaterDeterminant, b::SlaterDeterminant, ref::Wfn)
+    """
+    <m|h|p>
+    """
 end
-function TwoElectron_Hd1(a::SlaterDeterminant,b::SlaterDeterminant,ref::Wfn)
-	"""
-	differ m -> p
-	Σ<mn||pn>
-	"""
+function TwoElectron_Hd1(a::SlaterDeterminant, b::SlaterDeterminant, ref::Wfn)
+    """
+    differ m -> p
+    Σ<mn||pn>
+    """
 end
-function OneElectron_Hd2(a::SlaterDeterminant,b::SlaterDeterminant,ref::Wfn)
-	"""
-	0
-	"""
+function OneElectron_Hd2(a::SlaterDeterminant, b::SlaterDeterminant, ref::Wfn)
+    """
+    0
+    """
 end
-function TwoElectron_Hd2(a::SlaterDeterminant,b::SlaterDeterminant,ref::Wfn)
-	"""
-	mn -> pq
-	<mn||pq>
-	"""
+function TwoElectron_Hd2(a::SlaterDeterminant, b::SlaterDeterminant, ref::Wfn)
+    """
+    mn -> pq
+    <mn||pq>
+    """
 end
 
 end #module
