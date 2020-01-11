@@ -35,10 +35,10 @@ psi4 = pyimport("psi4")
 psi4.core.be_quiet() #turn off output
 
 @testset "JuES" begin
-include("TestWavefunction.jl")
-include("TestCISingles.jl")
-include("TestDiskTensors.jl")
-include("TestCoupledCluster.jl")
-include("TestTEI.jl")
-include("TestMollerPlesset.jl")
+    include("TestWavefunction.jl")
+    include("TestCISingles.jl")
+    include("TestDiskTensors.jl")
+    include("TestCoupledCluster.jl")
+    include("TestTEI.jl")
+    include("TestMollerPlesset.jl")
 end
