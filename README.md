@@ -79,7 +79,7 @@ General representation of a Slater determinant. Used in modules CISingles.jl.
 ### DiskTensors.jl
 This module describes a way of storing vectors, matrices, and rank four tensors on disk in a convenient way for use in electronic structure computations. 
 This module uses the HDF5 binary format for storing and accessing arrays. This was chosen for its convenient interface, support for compressed I/O, and good support in Julia. 
-> **(!) Help** This module has all intended types (rank 1,2,4 tensors) implemented but many operations (+,-,/,',...) are not defined. Test suite is reasonably complete and documentation is rough.
+> **Help** This module has all intended types (rank 1,2,4 tensors) implemented but many operations (+,-,/,',...) are not defined. Test suite is reasonably complete and documentation is rough.
 ### Davidson.jl
 This module implements a simple Davidson solver, which currently has some unidentified bug. Use the IterativeSolvers.jl LOBPCG routine for in-core computations.
 > **(!) Help** Rewriting the Davidson code is probably a good idea. A routine to collapse the trial vector subspace would make this module much more functional. A generalized implementation for non-symmetric matrices is required before EOM codes can be useful. 
@@ -93,8 +93,8 @@ This module defines an interface for obtaining matrix elements for CI matrices.
 Routines for Moller-Plesset perturbation theory computations are implemented here. Currently in-core and disk based RMP2 and UMP2 are implemented. 
 >**(!) Help** Direct MP2 would be an excellent contribution. 
 ### CISingles.jl
-Specialized routines for computing configuration-interaction singles excited state wavefunctions are defined here. Corrections such as CIS(D) and variants defined here as well. Keep seperate from general CI code. Only in-core RCIS is implemented.
+Specialized routines for computing configuration-interaction singles excited state wavefunctions are defined here. Corrections such as CIS(D) and variants defined here as well. Keep seperate from general CI code. Only in-core RCIS is implemented, and is currently not working.
 >**(!) Help** UCIS, disk-based, and direct implementations are excellent targets. 
 ### CoupledCluster.jl
 Routines for computing ground state coupled cluster energies are contained here. Currently there is only RHF-CCD implemented. RHF-CCSD should be implemented soon, and UHF-CCD sometime after. 
->**(!) Help** CoupledCluster needs to be updated to use the general AO->MO transformation codes i.e. only transform ijab, mnij, and abef subsets. Refining the RHF-CCD implementation, or working on CCSD codes would be greatly appreciated. Once RHF-CCSD is complete, coding a perturbative triples correction would be a straightforward addition. Adapting the codes for use with DiskTensors would also be beneficial.
+>**(!) Help** Working on CCSD codes would be greatly appreciated. Once RHF-CCSD is complete, coding a perturbative triples correction would be a straightforward addition. CCD code could be updated to be able to use DiskTensors for Fxy and Wvxyz intermediates.
