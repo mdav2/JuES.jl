@@ -18,7 +18,7 @@ doprint::Bool=false -> whether or not to print energy and timing information to
 ## output
 ccenergy::Float -> final RCCD energy. 
 """
-function do_rccd(refWfn::Wfn, maxit, doprint = false)
+function do_rccd(refWfn::Wfn, maxit; doprint::Bool=false, return_T2::Bool=false)
     #goes through appropriate steps to do RCCD
     set_zero_subnormals(true)
     nocc = refWfn.nalpha
@@ -74,7 +74,11 @@ function do_rccd(refWfn::Wfn, maxit, doprint = false)
     if doprint
         println("CCD energy computed in $dt s")
     end
-    return ccenergy(T2, ovov)
+    if return_T2
+        return ccenergy(T2, ovov), T2
+    else
+        return ccenergy(T2, ovov)
+    end
 end
 
 function ccenergy(tiJaB, iajb)

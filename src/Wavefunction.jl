@@ -28,27 +28,42 @@ Data structure for storing integrals, MO coefficients, and misc information abou
 a reference (HF) wavefunction.
 
 ## Fields
----
 nalpha::Int number of alpha electrons
+
 nbeta::Int number of beta electrons
+
 nvira::Int number of virtual functions of alpha spin
+
 nvirb::Int number of virtual functions of beta spin
+
 nmo::Int number of molecular orbitals
+
 unrestricted::Bool whether or not the alpha and beta spatial extents are required to
 be the same.
-Ca::Array{T,2} AO->MO coefficients for alpha MO's
-Cb::Array{T,2} AO->MO coefficients for beta MO's
-hao::Array{T,2} AO basis core hamiltonian (kinetic + potential)
-epsa::Array{T,1} orbital eigenvalues for alpha MO's
-epsb::Array{T,1} orbtial eigenvalues for beta MO's
-uvsr::Union{Array{T,4},DiskFourTensor} AO basis TEI
-pqrs::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case AAAA)
-pQrS::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case ABAB)
-pQRs::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case ABBA)
-PQRS::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case BBBB)
-PqRs::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case BABA)
-PqrS::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case BAAB)
 
+Ca::Array{T,2} AO->MO coefficients for alpha MO's
+
+Cb::Array{T,2} AO->MO coefficients for beta MO's
+
+hao::Array{T,2} AO basis core hamiltonian (kinetic + potential)
+
+epsa::Array{T,1} orbital eigenvalues for alpha MO's
+
+epsb::Array{T,1} orbtial eigenvalues for beta MO's
+
+uvsr::Union{Array{T,4},DiskFourTensor} AO basis TEI
+
+pqrs::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case AAAA)
+
+pQrS::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case ABAB)
+
+pQRs::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case ABBA)
+
+PQRS::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case BBBB)
+
+PqRs::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case BABA)
+
+PqrS::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case BAAB)
 """
 struct Wfn{T}
     nalpha::Int
