@@ -17,7 +17,7 @@ JuWfn2 = Wfn(wfn2)
 JuWfn3 = Wfn(wfn2, Float64, true, true)
 @testset "CoupledCluster" begin
     @testset "Smoke" begin
-        @test do_rccd(JuWfn2, 40, false) ≈ -0.07015050066089029
-        @test do_rccd(JuWfn3, 40, false) ≈ -0.07015050066089029
+        @test do_rccd(JuWfn2, 40, doprint=false) ≈ -0.07015050066089029
+        @test do_rccd(JuWfn3, 40, doprint=false) ≈ -0.07015050066089029
     end
 end
