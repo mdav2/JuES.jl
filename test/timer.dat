@@ -2200,3 +2200,195 @@ HF: DIIS                            :      0.067u      0.017s      0.067w     80
 HF: Form C                          :      0.067u      0.000s      0.004w     80 calls
 
 **************************************************************************************
+
+Host: davis-ws
+
+Timers On : Mon Jan 13 14:49:29 2020
+Timers Off: Mon Jan 13 14:49:43 2020
+
+Wall Time:       14.38 seconds
+
+                                                       Time (seconds)
+Module                                       User      System        Wall        Calls
+Total PK formation time             :      0.133u      0.000s      0.080w      2 calls
+HF: Form core H                     :      0.000u      0.000s      0.001w      2 calls
+HF: Form S/X                        :      0.000u      0.000s      0.000w      2 calls
+HF: Guess                           :      0.400u      0.000s      0.237w      2 calls
+SAD Guess                           :      0.367u      0.000s      0.220w      2 calls
+HF: Form G                          :      0.017u      0.000s      0.001w     22 calls
+JK: D                               :      0.000u      0.000s      0.000w     22 calls
+JK: USO2AO                          :      0.000u      0.000s      0.000w     22 calls
+JK: JK                              :      0.000u      0.000s      0.000w     22 calls
+PK computes JK                      :      0.000u      0.000s      0.000w     22 calls
+JK: AO2USO                          :      0.017u      0.000s      0.000w     22 calls
+HF: Form F                          :      0.000u      0.000s      0.000w     22 calls
+HF: Form D                          :      0.000u      0.000s      0.000w     22 calls
+HF: DIIS                            :      0.017u      0.000s      0.007w     20 calls
+DIISManager::add_entry              :      0.000u      0.000s      0.001w     20 calls
+DIISManager::extrapolate            :      0.000u      0.000s      0.001w     20 calls
+bMatrix setup                       :      0.000u      0.000s      0.000w     20 calls
+bMatrix pseudoinverse               :      0.000u      0.000s      0.000w     20 calls
+New vector                          :      0.000u      0.000s      0.000w     20 calls
+HF: Form C                          :      0.000u      0.000s      0.000w     20 calls
+
+--------------------------------------------------------------------------------------
+Total PK formation time             :      0.133u      0.000s      0.080w      2 calls
+HF: Form core H                     :      0.000u      0.000s      0.001w      2 calls
+HF: Form S/X                        :      0.000u      0.000s      0.000w      2 calls
+HF: Guess                           :      0.400u      0.000s      0.237w      2 calls
+| SAD Guess                         :      0.367u      0.000s      0.220w      2 calls
+HF: Form G                          :      0.017u      0.000s      0.001w     22 calls
+| JK: D                             :      0.000u      0.000s      0.000w     22 calls
+| JK: USO2AO                        :      0.000u      0.000s      0.000w     22 calls
+| JK: JK                            :      0.000u      0.000s      0.000w     22 calls
+| | PK computes JK                  :      0.000u      0.000s      0.000w     22 calls
+| JK: AO2USO                        :      0.017u      0.000s      0.000w     22 calls
+HF: Form F                          :      0.000u      0.000s      0.000w     22 calls
+HF: Form D                          :      0.000u      0.000s      0.000w     22 calls
+HF: DIIS                            :      0.017u      0.000s      0.007w     20 calls
+| DIISManager::add_entry            :      0.000u      0.000s      0.001w     20 calls
+| DIISManager::extrapolate          :      0.000u      0.000s      0.001w     20 calls
+| | bMatrix setup                   :      0.000u      0.000s      0.000w     20 calls
+| | bMatrix pseudoinverse           :      0.000u      0.000s      0.000w     20 calls
+| | New vector                      :      0.000u      0.000s      0.000w     20 calls
+HF: Form C                          :      0.000u      0.000s      0.000w     20 calls
+
+**************************************************************************************
+
+Host: davis-ws
+
+Timers On : Mon Jan 13 14:49:34 2020
+Timers Off: Mon Jan 13 14:49:43 2020
+
+Wall Time:        9.41 seconds
+
+                                                       Time (seconds)
+Module                                       User      System        Wall        Calls
+
+--------------------------------------------------------------------------------------
+
+**************************************************************************************
+
+Host: davis-ws
+
+Timers On : Mon Jan 13 14:49:34 2020
+Timers Off: Mon Jan 13 14:49:43 2020
+
+Wall Time:        9.67 seconds
+
+                                                       Time (seconds)
+Module                                       User      System        Wall        Calls
+
+--------------------------------------------------------------------------------------
+
+**************************************************************************************
+
+Host: davis-ws
+
+Timers On : Mon Jan 13 14:49:34 2020
+Timers Off: Mon Jan 13 14:49:43 2020
+
+Wall Time:        9.59 seconds
+
+                                                       Time (seconds)
+Module                                       User      System        Wall        Calls
+
+--------------------------------------------------------------------------------------
+
+**************************************************************************************
+
+Host: davis-ws
+
+Timers On : Mon Jan 13 14:49:34 2020
+Timers Off: Mon Jan 13 14:49:43 2020
+
+Wall Time:        9.55 seconds
+
+                                                       Time (seconds)
+Module                                       User      System        Wall        Calls
+
+--------------------------------------------------------------------------------------
+
+**************************************************************************************
+
+
+Host: davis-ws
+
+Host: davis-ws
+
+Timers On : Mon Jan 13 14:49:34 2020
+Timers On : Mon Jan 13 14:49:34 2020
+Timers Off: Mon Jan 13 14:49:43 2020
+Timers Off: Mon Jan 13 14:49:43 2020
+
+Wall Time:        9.53 seconds
+
+
+Wall Time:        9.61 seconds
+
+                                                       Time (seconds)
+                                                       Time (seconds)
+Module                                       User      System        Wall        Calls
+Module                                       User      System        Wall        Calls
+
+--------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------
+
+**************************************************************************************
+
+**************************************************************************************
+
+Host: davis-ws
+
+Timers On : Tue Jan 14 10:31:13 2020
+Timers Off: Tue Jan 14 10:32:12 2020
+
+Wall Time:       59.05 seconds
+
+                                                       Time (seconds)
+Module                                       User      System        Wall        Calls
+Total PK formation time             :      0.350u      0.017s      0.211w      8 calls
+HF: Form core H                     :      0.000u      0.000s      0.004w      8 calls
+HF: Form S/X                        :      0.000u      0.000s      0.001w      8 calls
+HF: Guess                           :      1.883u      0.000s      1.138w      8 calls
+SAD Guess                           :      1.750u      0.000s      1.058w      8 calls
+HF: Form G                          :      0.017u      0.000s      0.004w     88 calls
+JK: D                               :      0.000u      0.000s      0.001w     88 calls
+JK: USO2AO                          :      0.000u      0.000s      0.000w     88 calls
+JK: JK                              :      0.000u      0.000s      0.001w     88 calls
+PK computes JK                      :      0.000u      0.000s      0.001w     88 calls
+JK: AO2USO                          :      0.000u      0.000s      0.000w     88 calls
+HF: Form F                          :      0.000u      0.000s      0.001w     88 calls
+HF: Form D                          :      0.017u      0.000s      0.000w     88 calls
+HF: DIIS                            :      0.083u      0.000s      0.042w     80 calls
+DIISManager::add_entry              :      0.000u      0.000s      0.004w     80 calls
+DIISManager::extrapolate            :      0.067u      0.000s      0.008w     80 calls
+bMatrix setup                       :      0.017u      0.000s      0.002w     80 calls
+bMatrix pseudoinverse               :      0.017u      0.000s      0.004w     80 calls
+New vector                          :      0.017u      0.000s      0.001w     80 calls
+HF: Form C                          :      0.000u      0.000s      0.003w     80 calls
+
+--------------------------------------------------------------------------------------
+Total PK formation time             :      0.350u      0.017s      0.211w      8 calls
+HF: Form core H                     :      0.000u      0.000s      0.004w      8 calls
+HF: Form S/X                        :      0.000u      0.000s      0.001w      8 calls
+HF: Guess                           :      1.883u      0.000s      1.138w      8 calls
+| SAD Guess                         :      1.750u      0.000s      1.058w      8 calls
+HF: Form G                          :      0.017u      0.000s      0.004w     88 calls
+| JK: D                             :      0.000u      0.000s      0.001w     88 calls
+| JK: USO2AO                        :      0.000u      0.000s      0.000w     88 calls
+| JK: JK                            :      0.000u      0.000s      0.001w     88 calls
+| | PK computes JK                  :      0.000u      0.000s      0.001w     88 calls
+| JK: AO2USO                        :      0.000u      0.000s      0.000w     88 calls
+HF: Form F                          :      0.000u      0.000s      0.001w     88 calls
+HF: Form D                          :      0.017u      0.000s      0.000w     88 calls
+HF: DIIS                            :      0.083u      0.000s      0.042w     80 calls
+| DIISManager::add_entry            :      0.000u      0.000s      0.004w     80 calls
+| DIISManager::extrapolate          :      0.067u      0.000s      0.008w     80 calls
+| | bMatrix setup                   :      0.017u      0.000s      0.002w     80 calls
+| | bMatrix pseudoinverse           :      0.017u      0.000s      0.004w     80 calls
+| | New vector                      :      0.017u      0.000s      0.001w     80 calls
+HF: Form C                          :      0.000u      0.000s      0.003w     80 calls
+
+**************************************************************************************

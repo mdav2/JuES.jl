@@ -1,3 +1,4 @@
+using Distributed
 using SharedArrays
 function do_rccd(refWfn::Wfn)
     #implicit maxit = 40
@@ -27,11 +28,17 @@ function do_rccd(refWfn::Wfn, maxit; doprint::Bool=false, return_T2::Bool=false)
     nvir = refWfn.nvira
     ovov = refWfn.ijab
     dtt = Float64#eltype(ovov)
-    vvvv = tei_transform(refWfn.uvsr, refWfn.Cav, refWfn.Cav, refWfn.Cav, refWfn.Cav, "vvvv")
-    ovvo = tei_transform(refWfn.uvsr, refWfn.Cao, refWfn.Cav, refWfn.Cav, refWfn.Cao, "ovvo")
-    oovv = tei_transform(refWfn.uvsr, refWfn.Cao, refWfn.Cao, refWfn.Cav, refWfn.Cav, "oovv")
-    ooov = tei_transform(refWfn.uvsr, refWfn.Cao, refWfn.Cao, refWfn.Cao, refWfn.Cav, "ooov")
-    oooo = tei_transform(refWfn.uvsr, refWfn.Cao, refWfn.Cao, refWfn.Cao, refWfn.Cao, "oooo")
+    vvvv = @spawnat :any tei_transform(refWfn.uvsr, refWfn.Cav, refWfn.Cav, refWfn.Cav, refWfn.Cav, "vvvv")
+    ovvo = @spawnat :any tei_transform(refWfn.uvsr, refWfn.Cao, refWfn.Cav, refWfn.Cav, refWfn.Cao, "ovvo")
+    oovv = @spawnat :any tei_transform(refWfn.uvsr, refWfn.Cao, refWfn.Cao, refWfn.Cav, refWfn.Cav, "oovv")
+    ooov = @spawnat :any tei_transform(refWfn.uvsr, refWfn.Cao, refWfn.Cao, refWfn.Cao, refWfn.Cav, "ooov")
+    oooo = @spawnat :any tei_transform(refWfn.uvsr, refWfn.Cao, refWfn.Cao, refWfn.Cao, refWfn.Cao, "oooo")
+    oooo = fetch(oooo)
+    ooov = fetch(ooov)
+    oovv = fetch(oovv)
+    ovvo = fetch(ovvo)
+    vvvv = fetch(vvvv)
+
     epsa = refWfn.epsa
     T2 = zeros(dtt, nocc, nocc, nvir, nvir)
     Dijab = form_Dijab(T2, epsa)
@@ -113,12 +120,18 @@ function cciter(
     WmBeJ,
     WmBEj,
 )
-    form_Wabef!(Wabef, deepcopy(vvvv), deepcopy(ovov), deepcopy(tiJaB_i))
-    form_WmBeJ!(WmBeJ, deepcopy(ovvo), deepcopy(ovov), deepcopy(tiJaB_i))
-    form_WmBEj!(WmBEj, deepcopy(ovov), deepcopy(oovv), deepcopy(tiJaB_i))
-    form_Wmnij!(Wmnij, deepcopy(oooo), deepcopy(ovov), deepcopy(tiJaB_i))
-    form_Fae!(Fae, deepcopy(tiJaB_i), deepcopy(ovov))
-    form_Fmi!(Fmi, deepcopy(tiJaB_i), deepcopy(ovov))
+    f = @spawnat :any form_Wabef!(Wabef, deepcopy(vvvv), deepcopy(ovov), deepcopy(tiJaB_i))
+    d = @spawnat :any form_WmBeJ!(WmBeJ, deepcopy(ovvo), deepcopy(ovov), deepcopy(tiJaB_i))
+    e = @spawnat :any form_WmBEj!(WmBEj, deepcopy(ovov), deepcopy(oovv), deepcopy(tiJaB_i))
+    c = @spawnat :any form_Wmnij!(Wmnij, deepcopy(oooo), deepcopy(ovov), deepcopy(tiJaB_i))
+    a = @spawnat :any form_Fae!(Fae, deepcopy(tiJaB_i), deepcopy(ovov))
+    b = @spawnat :any form_Fmi!(Fmi, deepcopy(tiJaB_i), deepcopy(ovov))
+    fetch(a)
+    fetch(b)
+    fetch(c)
+    fetch(d)
+    fetch(e)
+    fetch(f)
     tiJaB_d = form_T2(tiJaB_i, Fae, Fmi, WmBeJ, WmBEj, Wabef, Wmnij, ovov, Dijab)
     return tiJaB_d
 end
@@ -229,11 +242,11 @@ function form_T2(tiJaB_i, Fae, Fmi, WmBeJ, WmBEj, Wabef, Wmnij, iajb, Dijab)
     dtt = eltype(tiJaB_i)
     nocc = size(Wmnij, 1)
     nvir = size(tiJaB_i, 4)
+    tiJaB_d = convert(SharedArray,zeros(dtt, nocc, nocc, nvir, nvir))
     rocc = 1:nocc
     rvir = 1:nvir 
-    tiJaB_d = zeros(size(tiJaB_i))
     dt = @elapsed begin
-    for b in rvir
+    @sync @distributed for b in rvir
         for a in rvir
             cache_iajb = iajb[:,a,:,b]
             cache_tijab = tiJaB_d[:,:,a,b]
@@ -278,7 +291,7 @@ function form_T2(tiJaB_i, Fae, Fmi, WmBeJ, WmBEj, Wabef, Wmnij, iajb, Dijab)
     end
     println("T2 in $dt")
     #tiJaB_i = nothing
-    return tiJaB_d
+    return convert(Array,tiJaB_d)
 end
 function form_Wmnij(minj, menf, tiJaB)
     dtt = eltype(menf)

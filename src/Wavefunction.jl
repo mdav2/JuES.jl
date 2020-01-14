@@ -152,10 +152,10 @@ function Wfn(wfn, dt, unrestricted::Bool, diskbased::Bool, name::String = "defau
     _Cav = wfn.Ca_subset("AO", "VIR")
     _Cbo = wfn.Cb_subset("AO", "OCC")
     _Cbv = wfn.Cb_subset("AO", "VIR")
-    Cao = wfn.Ca_subset("AO", "OCC").to_array()
-    Cav = wfn.Ca_subset("AO", "VIR").to_array()
-    Cbo = wfn.Cb_subset("AO", "OCC").to_array()
-    Cbv = wfn.Cb_subset("AO", "VIR").to_array()
+    Cao = convert(Array{dt,2}, wfn.Ca_subset("AO", "OCC").to_array())
+    Cav = convert(Array{dt,2}, wfn.Ca_subset("AO", "VIR").to_array())
+    Cbo = convert(Array{dt,2}, wfn.Cb_subset("AO", "OCC").to_array())
+    Cbv = convert(Array{dt,2}, wfn.Cb_subset("AO", "VIR").to_array())
     Ca = convert(Array{dt,2}, _Ca.to_array())
     Cb = convert(Array{dt,2}, _Cb.to_array())
     hao = convert(Array{dt,2}, wfn.H().to_array()) #core hamiltonian in AO
@@ -168,7 +168,7 @@ function Wfn(wfn, dt, unrestricted::Bool, diskbased::Bool, name::String = "defau
         ijab = tei_transform(uvsr, Cao, Cav, Cao, Cav, "ijab")
     else
         #pqrs  = convert(Array{dt,4},mints.mo_eri(_Ca,_Ca,_Ca,_Ca).to_array()) #MO basis integrals
-        ijab = convert(Array{dt,4}, mints.mo_eri(_Cao, _Cav, _Cao, _Cav).to_array())
+        ijab = tei_transform(uvsr, Cao, Cav, Cao, Cav, "ijab")
     end
     if unrestricted #avoid making these if not an unrestricted or open shell wfn
         #various spin cases notation --> alpha BETA
@@ -179,11 +179,11 @@ function Wfn(wfn, dt, unrestricted::Bool, diskbased::Bool, name::String = "defau
             IjAb = tei_transform(uvsr, Cbo, Cbv, Cao, Cav, string("$name", ".IjAb"))
             IjaB = tei_transform(uvsr, Cbo, Cav, Cao, Cbv, string("$name", ".IjaB"))
         else
-            iJaB = convert(Array{dt,4}, mints.mo_eri(_Cao, _Cav, _Cbo, _Cbv).to_array())
-            iJAb = convert(Array{dt,4}, mints.mo_eri(_Cao, _Cbv, _Cbo, _Cav).to_array())
-            IJAB = convert(Array{dt,4}, mints.mo_eri(_Cbo, _Cbv, _Cbo, _Cbv).to_array())
-            IjAb = convert(Array{dt,4}, mints.mo_eri(_Cbo, _Cav, _Cbo, _Cav).to_array())
-            IjaB = convert(Array{dt,4}, mints.mo_eri(_Cbo, _Cav, _Cao, _Cbv).to_array())
+            iJaB = tei_transform(uvsr, Cao, Cav, Cbo, Cbv, string("$name", ".iJaB"))
+            iJAb = tei_transform(uvsr, Cao, Cbv, Cbo, Cav, string("$name", ".iJAb"))
+            IJAB = tei_transform(uvsr, Cbo, Cbv, Cbo, Cbv, string("$name", ".IJAB"))
+            IjAb = tei_transform(uvsr, Cbo, Cbv, Cao, Cav, string("$name", ".IjAb"))
+            IjaB = tei_transform(uvsr, Cbo, Cav, Cao, Cbv, string("$name", ".IjaB"))
         end
     else
         #just fill with placeholder for RHF case
