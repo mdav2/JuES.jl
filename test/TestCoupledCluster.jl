@@ -2,6 +2,7 @@ using Test
 using PyCall
 using JuES.Wavefunction
 using JuES.CoupledCluster
+using Base.Threads
 psi4 = pyimport("psi4")
 psi4.core.be_quiet() #turn off output
 tol = 1E-14
@@ -17,6 +18,7 @@ JuWfn2 = Wfn(wfn2)
 JuWfn3 = Wfn(wfn2, Float64, true, true)
 @testset "CoupledCluster" begin
     @testset "Smoke" begin
+#        Threads.@spawn println("echo")
         @test do_rccd(JuWfn2, 40, doprint=false) ≈ -0.07015050066089029
         @test do_rccd(JuWfn3, 40, doprint=false) ≈ -0.07015050066089029
     end
