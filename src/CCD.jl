@@ -216,7 +216,7 @@ function form_Dijab(tiJaB, F)
     rocc = UnitRange(1, nocc)
     rvir = UnitRange(1, nvir)
     Dijab = zeros(dt, nocc, nocc, nvir, nvir)
-    for i in rocc
+    Threads.@threads for i in rocc
         for j in rocc
             for a in rvir
                 for b in rvir
