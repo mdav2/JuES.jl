@@ -20,6 +20,8 @@ module CoupledCluster
 using JuES.Wavefunction
 using JuES.Transformation
 using Base.Threads
+using SharedArrays
+using Distributed
 using LinearAlgebra
 using Dates
 

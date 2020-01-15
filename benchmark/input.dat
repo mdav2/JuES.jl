@@ -1,0 +1,15 @@
+memory 2 GB
+
+molecule {
+0 1
+O
+H 1 1.1
+H 1 1.1 2 104.0
+}
+
+set basis cc-pvdz
+set ccenergy {
+    maxiter 40
+    e_convergence 1E-40
+}
+energy('ccsd')
