@@ -1,17 +1,11 @@
 using Test
 using PyCall
 using JuES
-#using JuES.Wavefunction
-#using JuES.CoupledCluster
+using JuES.Wavefunction
+using JuES.CoupledCluster
 using Base.Threads
 
 
-#using PyCall
-#psi4 = pyimport("psi4")
-#const psi4 = PyNULL()
-#function __init__()
-#    copy!(psi4, pyimport("psi4"))
-#end
 psi4.core.be_quiet() #turn off output
 tol = 1E-14
 mol2 = psi4.geometry("""

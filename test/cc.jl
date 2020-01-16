@@ -11,7 +11,7 @@ mol2 = psi4.geometry("""
       H 1 1.1 2 104.0
       symmetry c1
       """)
-psi4.set_options(Dict("basis" => "sto-3g", "scf_type" => "pk", "d_convergence" => 14))
+psi4.set_options(Dict("basis" => "cc-pvdz", "scf_type" => "pk", "d_convergence" => 14))
 e, wfn2 = psi4.energy("hf/sto-3g", mol = mol2, return_wfn = true)
 println("echo")
 Threads.@spawn println("echo")

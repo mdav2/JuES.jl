@@ -237,7 +237,7 @@ function form_T2(tiJaB_i, Fae, Fmi, WmBeJ, WmBEj, Wabef, Wmnij, iajb, Dijab)
     rocc = 1:nocc
     rvir = 1:nvir 
     tiJaB_d = convert(SharedArray,zeros(size(tiJaB_i)))
-    @sync @distributed for b in rvir
+    Threads.@threads for b in rvir
         for a in rvir
             cache_iajb = iajb[:,a,:,b]
             cache_tijab = tiJaB_d[:,:,a,b]
@@ -330,25 +330,30 @@ function form_Wabef!(Wabef, aebf, menf, tiJaB)
     nvir = size(tiJaB, 4)
     rocc = UnitRange(1, nocc)
     rvir = UnitRange(1, nvir)
-    for f in rvir
-        for e in rvir
-            cache_aebf = aebf[:,e,:,f]
-            cache_menf = menf[:,e,:,f]
-            for b in rvir
-                for a in rvir
-                    #Wabef[a, b, e, f] = 0 
-                    @views Wabef[a, b, e, f] = dot(tiJaB[:,:,a,b], cache_menf[:,:])/2.0
-                    #for n in rocc
-                    #    @simd for m in rocc
-                    #        Wabef[a, b, e, f] += tiJaB[m, n, a, b] * cache_menf[m, n] 
-                    #    end
-                    #end
-                    #Wabef[a, b, e, f] /= 2.0
-                    Wabef[a, b, e, f] += cache_aebf[a, b]
-                end
-            end
-        end
+    mnef = permutedims(menf,[1,3,2,4])
+    abef = permutedims(aebf,[1,3,2,4])
+    @tensor begin
+        Wabef[a,b,e,f] = tiJaB[m,n,a,b]*mnef[m,n,e,f]/2 + abef[a,b,e,f]
     end
+    #for f in rvir
+    #    for e in rvir
+    #        cache_aebf = aebf[:,e,:,f]
+    #        cache_menf = menf[:,e,:,f]
+    #        for b in rvir
+    #            for a in rvir
+    #                #Wabef[a, b, e, f] = 0 
+    #                @views Wabef[a, b, e, f] = dot(tiJaB[:,:,a,b], cache_menf[:,:])/2.0
+    #                #for n in rocc
+    #                #    @simd for m in rocc
+    #                #        Wabef[a, b, e, f] += tiJaB[m, n, a, b] * cache_menf[m, n] 
+    #                #    end
+    #                #end
+    #                #Wabef[a, b, e, f] /= 2.0
+    #                Wabef[a, b, e, f] += cache_aebf[a, b]
+    #            end
+    #        end
+    #    end
+    #end
 end
 
 function form_WmBeJ(mebj, iajb, tiJaB)

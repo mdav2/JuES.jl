@@ -1,6 +1,8 @@
 module Transformation
 using JuES.DiskTensors
+using TensorOperations
 using Base.Threads
+using LinearAlgebra
 export disk_tei_transform
 export mem_tei_transform
 export tei_transform
@@ -37,74 +39,87 @@ function tei_transform(
     temp = zeros(d, d, d, d4)
     #Quarter transform 1
     #(μ,ν,λ,σ) -> (μ,ν,λ,b)
-    for b in R4
-        for μ in R
-            ocache = zeros(d, d)
-            for ν in R
-                icache = gao[μ, ν, :, :]
-                for λ in R
-                    for σ in R
-                        ocache[ν, λ] += C4[σ, b] * icache[λ, σ]
-                    end
-                end
-            end
-            temp[μ, :, :, b] = ocache[:, :]
-        end
+    @tensor begin
+        temp[μ,ν,λ,b] = C4[σ,b]*gao[μ,ν,λ,σ]
     end
+    #for b in R4
+    #    for μ in R
+    #        ocache = zeros(d, d)
+    #        for ν in R
+    #            icache = gao[μ, ν, :, :]
+    #            for λ in R
+    #                #@views ocache[ν,λ] = dot(C4[:,b],icache[λ,:])
+    #                for σ in R
+    #                    ocache[ν, λ] += C4[σ, b] * icache[λ, σ]
+    #                end
+    #            end
+    #        end
+    #        temp[μ, :, :, b] = ocache[:, :]
+    #    end
+    #end
     #Quarter transform 2
     #(μ,ν,λ,b) -> (μ,ν,j,b)
     temp2 = zeros(d, d, d3, d4)
-    for b in R4
-        for j in R3
-            ocache = zeros(d, d)
-            for μ in R
-                icache = temp[μ, :, :, b]
-                for ν in R
-                    for λ in R #contract over λ
-                        ocache[μ, ν] += C3[λ, j] * icache[ν, λ]
-                    end
-                end
-            end
-            temp2[:, :, j, b] = ocache[:, :]
-        end
+    @tensor begin
+        temp2[μ,ν,j,b] = C3[λ,j]*temp[μ,ν,λ,b]
     end
+    #for b in R4
+    #    for j in R3
+    #        ocache = zeros(d, d)
+    #        for μ in R
+    #            icache = temp[μ, :, :, b]
+    #            for ν in R
+    #                for λ in R #contract over λ
+    #                    ocache[μ, ν] += C3[λ, j] * icache[ν, λ]
+    #                end
+    #            end
+    #        end
+    #        temp2[:, :, j, b] = ocache[:, :]
+    #    end
+    #end
     #Quarter transform 3
     #(μ,ν,j,b) -> (μ,a,j,b)
     temp = zeros(d, d2, d3, d4)
-    for b in R4
-        for j in R3
-            ocache = zeros(d, d2)
-            icache = temp2[:, :, j, b]
-            for a in R2
-                for μ in R
-                    for ν in R
-                        #temp[μ,a,j,b] += C2[ν,a]*temp2[μ,ν,j,b]
-                        ocache[μ, a] += C2[ν, a] * icache[μ, ν]
-                    end
-                end
-            end
-            temp[:, :, j, b] = ocache[:, :]
-        end
+    @tensor begin
+        temp[μ,a,j,b] = C2[ν,a]*temp2[μ,ν,j,b]
     end
+    #for b in R4
+    #    for j in R3
+    #        ocache = zeros(d, d2)
+    #        icache = temp2[:, :, j, b]
+    #        for a in R2
+    #            for μ in R
+    #                for ν in R
+    #                    #temp[μ,a,j,b] += C2[ν,a]*temp2[μ,ν,j,b]
+    #                    ocache[μ, a] += C2[ν, a] * icache[μ, ν]
+    #                end
+    #            end
+    #        end
+    #        temp[:, :, j, b] = ocache[:, :]
+    #    end
+    #end
     #Quarter transform 4
     #(μ,a,j,b) -> (i,a,j,b)
 
     temp2 = zeros(d1, d2, d3, d4)
-    for b in R4
-        for j in R3
-            icache = temp[:, :, j, b]
-            ocache = zeros(d1, d2)
-            for a in R2
-                for i in R1
-                    for μ in R
-                        #temp2[i,a,j,b] += C1[μ,i]*temp[μ,a,j,b]
-                        ocache[i, a] += C1[μ, i] * icache[μ, a]
-                    end
-                end
-            end
-            temp2[:, :, j, b] = ocache
-        end
+    @tensor begin
+        temp2[i,a,j,b] = C1[μ,i]*temp[μ,a,j,b]
     end
+    #for b in R4
+    #    for j in R3
+    #        icache = temp[:, :, j, b]
+    #        ocache = zeros(d1, d2)
+    #        for a in R2
+    #            for i in R1
+    #                for μ in R
+    #                    #temp2[i,a,j,b] += C1[μ,i]*temp[μ,a,j,b]
+    #                    ocache[i, a] += C1[μ, i] * icache[μ, a]
+    #                end
+    #            end
+    #        end
+    #        temp2[:, :, j, b] = ocache
+    #    end
+    #end
     return temp2
 end
 function tei_transform(
