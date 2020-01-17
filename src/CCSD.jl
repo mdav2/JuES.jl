@@ -42,7 +42,7 @@ function do_rccsd(refWfn::Wfn, maxit; doprint::Bool=false, return_T2::Bool=false
     @tensor begin
         tiatia[m,n,a,f] := T1[m,a]*T1[n,f]
     end
-    println(ccenergy(oovv,T1,tiatia,T2))
+    if doprint println(ccenergy(oovv,T1,tiatia,T2)) end
     for i in 1:maxit
         _T1,_T2 = cciter(Fae,Fmi,Fme,
                Wabef,Wmnij,WmBeJ,WmBEj,
@@ -59,8 +59,13 @@ function do_rccsd(refWfn::Wfn, maxit; doprint::Bool=false, return_T2::Bool=false
         @tensor begin
             tiatia[m,n,a,f] = T1[m,a]*T1[n,f]
         end
-        println(ccenergy(oovv,T1,tiatia,T2))
+        if doprint println(ccenergy(oovv,T1,tiatia,T2)) end
     end
+    end
+    if return_T2
+        return ccenergy(oovv,T1,tiatia,T2),T2
+    else
+        return ccenergy(oovv,T1,tiatia,T2)
     end
 end
 
@@ -69,6 +74,7 @@ function ccenergy(ijab,tia,tiatia,tijab)
         ecc[] := ijab[i,j,a,b]*(2*tijab[i,j,a,b] + 2*tiatia[i,j,a,b] 
                               - tijab[j,i,a,b] - tiatia[j,i,a,b])
     end
+    return ecc[]
 end
 function cciter(Fae,Fmi,Fme,
                 Wabef,Wmnij,WmBeJ,WmBEj,
@@ -79,31 +85,15 @@ function cciter(Fae,Fmi,Fme,
                 vovo,ovov,
                 vvvo,vvov,ovoo,
                 vooo,
-                #ijab,mnef,amef,
-                #maef,mnie,mnij,
-                #mnej,abef,mbej,
-                #bmej,mbfe,amie,
-                #abej,abie,mbij,
-                #amij,
                 tia,tiatia,tijab,Dia,Dijab)
-    #form_Fae!(Fae,maef,amef,mnef,tia,tiatia,tijab)
     form_Fae!(Fae,ovvv,vovv,oovv,tia,tiatia,tijab)
-    #form_Fmi!(Fmi,mnie,mnef,tia,tiatia,tijab)
     form_Fmi!(Fmi,ooov,oovv,tia,tiatia,tijab)
-    #form_Fme!(Fme,mnef,tia)
     form_Fme!(Fme,oovv,tia)
-    #form_Wabef!(Wabef,abef,amef,mbef,mnef,tia,tiatia,tijab)
     form_Wabef!(Wabef,vvvv,vovv,ovvv,oovv,tia,tiatia,tijab)
-    #form_Wmnij!(Wmnij,mnij,mnie,mnej,mnef,tia,tiatia,tijab)
     form_Wmnij!(Wmnij,oooo,ooov,oovo,oovv,tia,tiatia,tijab)
-    #form_WmBeJ!(WmBeJ,mbej,mbef,mnej,mnef,tia,tiatia,tijab)
     form_WmBeJ!(WmBeJ,ovvo,ovvv,oovo,oovv,tia,tiatia,tijab)
-    #form_WmBEj!(WmBEj,bmej,mbfe,nmej,nmef,tia,tiatia,tijab)
     form_WmBEj!(WmBEj,vovo,ovvv,oovo,oovv,tia,tiatia,tijab)
-    #_tia = form_T1(Fae,Fmi,Fme,amie,maie,mnie,amef,tia,tijab)
     _tia = form_T1(Fae,Fmi,Fme,voov,ovov,ooov,vovv,tia,tijab,Dia)
-    #_tijab = form_T2(Fae,Fmi,Fme,Wabef,Wmnij,WmBeJ,WmBEj,ijab,
-    #                 mbej,amej,abej,abie,mbij,amij,tia,tiatia,tijab)
     _tijab = form_T2(Fae,Fmi,Fme,Wabef,Wmnij,WmBeJ,WmBEj,oovv,
                      ovvo,vovo,vvvo,vvov,ovoo,vooo,tia,tiatia,tijab,Dijab)
     tia = nothing
@@ -123,25 +113,6 @@ function form_Dia(T1, epsa)
     end
     return Dia
 end
-
-#function form_Dijab(T2, epsa)
-#    Dia = zeros(size(T2))
-#    nocc = size(T2)[1]
-#    nvir = size(T2)[4]
-#    for i in 1:nocc
-#        for j in 1:nocc
-#            for a in 1:nvir
-#                for b in 1:nvir
-#                    aa = a + nocc
-#                    bb = b + nocc
-#                    Dijab[i,j,a,b] = epsa[i] + epsa[j] - epsa[aa] - epsa[bb]
-#                end
-#            end
-#        end
-#    end
-#    return Dijab
-#end
-
 function form_Fae!(Fae,maef,amef,mnef,tia,tiatia,tijab)
     Fae .= 0.0
     @tensoropt begin
@@ -199,7 +170,7 @@ function form_WmBEj!(WmBEj,bmej,mbfe,nmej,nmef,tia,tiatia,tijab)
     @tensoropt begin
         WmBEj[m,b,e,j] = (-1*bmej[b,m,e,j] - tia[j,f]*mbfe[m,b,f,e]
                           + tia[n,b]*nmej[n,m,e,j]
-                          + 0.5*(tijab[j,n,f,b] + tiatia[j,n,f,b])*nmef[n,m,e,f])
+                          + (0.5*tijab[j,n,f,b] + tiatia[j,n,f,b])*nmef[n,m,e,f])
     end
     return WmBEj
 end
