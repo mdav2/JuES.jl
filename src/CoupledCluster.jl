@@ -20,12 +20,15 @@ module CoupledCluster
 using JuES.Wavefunction
 using JuES.Transformation
 using Base.Threads
-using SharedArrays
-using Distributed
+#using SharedArrays
+#using Distributed
+using TensorOperations
 using LinearAlgebra
 using Dates
 
 export do_rccd
+export do_rccsd
 
 include("CCD.jl")
+include("CCSD.jl")
 end #module CC
