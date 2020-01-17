@@ -1,10 +1,10 @@
 module Transformation
 using JuES.DiskTensors
 using TensorOperations
-using Base.Threads
 using LinearAlgebra
-export disk_tei_transform
-export mem_tei_transform
+using LoopVectorization
+#export disk_tei_transform
+#export mem_tei_transform
 export tei_transform
 
 function tei_transform(
@@ -159,33 +159,30 @@ function tei_transform(
     end
     #Quarter transform 1
     #(μ,ν,λ,σ) -> (μ,ν,λ,b)
-    #for μ in R
-    #    for ν in R
-    #        ocache = zeros(d,d4)
-    #        icache = gao[μ,ν,:,:]
-    #        @tensoropt begin
-    #            ocache[λ,b] = C4[σ,b]*icache[λ,σ]
-    #        end
-    #        temp[μ,ν,:,:] = ocache[:,:]
-    #    end
-    #end
     for μ in R
         for ν in R
             ocache = zeros(d,d4)
             icache = gao[μ,ν,:,:]
-            for λ in R 
-                for b in R4
-                    for σ in R
-                        ocache[λ,b] += C4[σ,b]*icache[λ,σ]
-                    end
-                end
+            @tensoropt begin
+                ocache[λ,b] = C4[σ,b]*icache[λ,σ]
             end
-            #@tensoropt begin
-            #    ocache[λ,b] = C4[σ,b]*icache[λ,σ]
-            #end
             temp[μ,ν,:,:] = ocache[:,:]
         end
     end
+    #for μ in R
+    #    for ν in R
+    #        ocache = zeros(d,d4)
+    #        icache = gao[μ,ν,:,:]
+    #        for l ∈ eachindex(d) 
+    #            for b ∈ eachindex(d4)
+    #                for s ∈ eachindex(d)
+    #                    ocache[l,b] += C4[s,b]*icache[l,s]
+    #                end
+    #            end
+    #        end
+    #        temp[μ,ν,:,:] = ocache[:,:]
+    #    end
+    #end
     #for b in R4
     #    for μ in R
     #        ocache = zeros(d, d)
@@ -213,20 +210,30 @@ function tei_transform(
         temp2 = DiskFourTensor("/tmp/jues.$name.temp2.0", Float64, d, d, d3, d4, "w")
         blockfill!(temp2, 0.0)
     end
-    for b in R4
-        for j in R3
-            ocache = zeros(d, d)
-            for μ in R
-                icache = temp[μ, :, :, b]
-                for ν in R
-                    for λ in R #contract over λ
-                        ocache[μ, ν] += C3[λ, j] * icache[ν, λ]
-                    end
-                end
+    for μ in R
+        for ν in R
+            ocache = zeros(d3,d4)
+            icache = temp[μ,ν,:,:]
+            @tensoropt begin
+                ocache[j,b] = C3[λ,j]*icache[λ,b]
             end
-            temp2[:, :, j, b] = ocache[:, :]
+            temp2[μ,ν,:,:] = ocache[:,:]
         end
     end
+    #for b in R4
+    #    for j in R3
+    #        ocache = zeros(d, d)
+    #        for μ in R
+    #            icache = temp[μ, :, :, b]
+    #            for ν in R
+    #                for λ in R #contract over λ
+    #                    ocache[μ, ν] += C3[λ, j] * icache[ν, λ]
+    #                end
+    #            end
+    #        end
+    #        temp2[:, :, j, b] = ocache[:, :]
+    #    end
+    #end
     #Quarter transform 3
     #(μ,ν,j,b) -> (μ,a,j,b)
     if T == Array{Float64,4}
