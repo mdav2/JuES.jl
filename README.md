@@ -96,5 +96,5 @@ Routines for Moller-Plesset perturbation theory computations are implemented her
 Specialized routines for computing configuration-interaction singles excited state wavefunctions are defined here. Corrections such as CIS(D) and variants defined here as well. Keep seperate from general CI code. Only in-core RCIS is implemented, and is currently not working.
 >**(!) Help** UCIS, disk-based, and direct implementations are excellent targets. 
 ### CoupledCluster.jl
-Routines for computing ground state coupled cluster energies are contained here. Currently there is only RHF-CCD implemented. RHF-CCSD should be implemented soon, and UHF-CCD sometime after. 
->**(!) Help** Working on CCSD codes would be greatly appreciated. Once RHF-CCSD is complete, coding a perturbative triples correction would be a straightforward addition. CCD code could be updated to be able to use DiskTensors for Fxy and Wvxyz intermediates.
+Routines for computing ground state coupled cluster energies are contained here. Currently there is RHF-CCD and RHF-CCSD implemented. UHF codes are in the works.
+>**(!) Help** Working on UHF-CC codes would be greatly appreciated. Coding a perturbative triples correction would be a straightforward addition. CCD and CCSD code could be updated to be able to use DiskTensors for Fxy and Wvxyz intermediates.
