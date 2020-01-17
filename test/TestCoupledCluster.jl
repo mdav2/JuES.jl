@@ -20,7 +20,8 @@ JuWfn2 = Wfn(wfn2)
 #JuWfn3 = Wfn(wfn2, Float64, true, true) #disk based CCD is currently NOT working
 @testset "CoupledCluster" begin
     @testset "Smoke" begin
-        @test do_rccd(JuWfn2, 40, doprint=false) ≈ -0.07015050066089029
+#        @test do_rccd(JuWfn2, 40, doprint=false) ≈ -0.07015050066089029
         #@test do_rccd(JuWfn3, 40, doprint=false) ≈ -0.07015050066089029
+        do_rccsd(JuWfn2, 40, doprint=true)
     end
 end

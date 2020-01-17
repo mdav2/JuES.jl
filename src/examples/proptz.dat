@@ -1,9 +1,0 @@
-output of propane cc-pvtz CIS
-	Searching PubChem database for propane (single best match returned)
-	Found 1 result(s)
-constructing Hamiltonian 
-Hamiltonian constructed in 3691 milliseconds
-Hamiltonian iteratively solved in 19671 milliseconds
-Hamiltonian diagonalized exactly in 55891 milliseconds
-[0.35591555396414976, 0.35591555396414976]
-

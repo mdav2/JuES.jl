@@ -159,20 +159,52 @@ function tei_transform(
     end
     #Quarter transform 1
     #(μ,ν,λ,σ) -> (μ,ν,λ,b)
-    for b in R4
-        for μ in R
-            ocache = zeros(d, d)
-            for ν in R
-                icache = gao[μ, ν, :, :]
-                for λ in R
+    #for μ in R
+    #    for ν in R
+    #        ocache = zeros(d,d4)
+    #        icache = gao[μ,ν,:,:]
+    #        @tensoropt begin
+    #            ocache[λ,b] = C4[σ,b]*icache[λ,σ]
+    #        end
+    #        temp[μ,ν,:,:] = ocache[:,:]
+    #    end
+    #end
+    for μ in R
+        for ν in R
+            ocache = zeros(d,d4)
+            icache = gao[μ,ν,:,:]
+            for λ in R 
+                for b in R4
                     for σ in R
-                        ocache[ν, λ] += C4[σ, b] * icache[λ, σ]
+                        ocache[λ,b] += C4[σ,b]*icache[λ,σ]
                     end
                 end
             end
-            temp[μ, :, :, b] = ocache[:, :]
+            #@tensoropt begin
+            #    ocache[λ,b] = C4[σ,b]*icache[λ,σ]
+            #end
+            temp[μ,ν,:,:] = ocache[:,:]
         end
     end
+    #for b in R4
+    #    for μ in R
+    #        ocache = zeros(d, d)
+    #        for ν in R
+    #            icache = gao[μ, ν, :, :]
+    #            temp = zeros(d)
+    #            @tensoropt begin
+    #                temp[λ] = C4[σ,b]*icache[λ,σ]
+    #            end
+    #            ocache[ν,:] = temp[:]
+    #            #for λ in R
+    #            #    for σ in R
+    #            #        ocache[ν, λ] += C4[σ, b] * icache[λ, σ]
+    #            #    end
+    #            #end
+    #        end
+    #        temp[μ, :, :, b] = ocache[:, :]
+    #    end
+    #end
     #Quarter transform 2
     #(μ,ν,λ,b) -> (μ,ν,j,b)
     if T == Array{Float64,4}
