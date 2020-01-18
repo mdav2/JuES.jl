@@ -29,6 +29,6 @@ using Dates
 export do_rccd
 export do_rccsd
 
-include("CCD.jl")
-include("CCSD.jl")
+include("RCCD.jl")
+include("RCCSD.jl")
 end #module CC
