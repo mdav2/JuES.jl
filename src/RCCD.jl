@@ -1,3 +1,9 @@
+module RCCD
+using JuES.Wavefunction
+using TensorOperations
+using JuES.Transformation
+include("Denominators.jl")
+export do_rccd
 function do_rccd(refWfn::Wfn)
     #implicit maxit = 40
     return do_rccd(refWfn, 40)
@@ -67,7 +73,6 @@ function do_rccd(refWfn::Wfn, maxit; doprint::Bool=false, return_T2::Bool=false)
         if doprint
             println("$i @CCD ", ccenergy(T2, oovv))
         end
-        t1 = Dates.Time(Dates.now())
     end
     if doprint
         println("CCD iterations computed in $dt s")
@@ -214,27 +219,6 @@ function form_Fmi!(Fmi, tiJaB, mnef)
     #    end
     #end
     return Fmi
-end
-
-function form_Dijab(tiJaB, F)
-    dt = eltype(tiJaB)
-    nocc = size(tiJaB, 1)
-    nvir = size(tiJaB, 4)
-    rocc = UnitRange(1, nocc)
-    rvir = UnitRange(1, nvir)
-    Dijab = zeros(dt, nocc, nocc, nvir, nvir)
-    Threads.@threads for i in rocc
-        for j in rocc
-            for a in rvir
-                for b in rvir
-                    aa = a + nocc
-                    bb = b + nocc
-                    Dijab[i, j, a, b] = F[i] + F[j] - F[aa] - F[bb]
-                end
-            end
-        end
-    end
-    return Dijab
 end
 
 function form_T2(tiJaB_i, Fae, Fmi, WmBeJ, WmBEj, Wabef, Wmnij, ijab, Dijab)
@@ -471,3 +455,4 @@ function form_WmBEj!(WmBEj, nmef, mbje, tiJaB)
     #end
     return WmBEj
 end
+end #module

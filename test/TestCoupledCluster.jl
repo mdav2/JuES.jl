@@ -2,7 +2,7 @@ using Test
 using PyCall
 using JuES
 using JuES.Wavefunction
-using JuES.CoupledCluster
+using JuES.CoupledCluster: RCCSD, RCCD
 
 
 psi4.core.be_quiet() #turn off output
@@ -20,8 +20,9 @@ JuWfn2 = Wfn(wfn2)
 #JuWfn3 = Wfn(wfn2, Float64, true, true) #disk based CCD is currently NOT working
 @testset "CoupledCluster" begin
     @testset "Smoke" begin
-        @test do_rccd(JuWfn2, 40, doprint=false) ≈ -0.07015050066089029
+        @test RCCD.do_rccd(JuWfn2, 40, doprint=false) ≈ -0.07015050066089029
         #@test do_rccd(JuWfn3, 40, doprint=false) ≈ -0.07015050066089029
-        @test do_rccsd(JuWfn2, 40, doprint=true) ≈ -0.070680102078571
+        @test RCCSD.do_rccsd(JuWfn2, 40, doprint=false) ≈ -0.070680102078571
+        #do_roccd(JuWfn2, 40, doprint=true)
     end
 end
