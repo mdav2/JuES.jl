@@ -26,9 +26,7 @@ using TensorOperations
 using LinearAlgebra
 using Dates
 
-export do_rccd
-export do_rccsd
-
 include("RCCD.jl")
 include("RCCSD.jl")
+include("ROCCD.jl")
 end #module CC

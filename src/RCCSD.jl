@@ -1,6 +1,12 @@
+module RCCSD
+using JuES.Wavefunction
+using JuES.Transformation
+using TensorOperations
+include("Denominators.jl")
+
 """
     do_rccsd
-    """
+"""
 function do_rccsd(refWfn::Wfn, maxit; doprint::Bool=false, return_T2::Bool=false)
     #goes through appropriate steps to do RCCSD
     dtm = @elapsed begin
@@ -215,3 +221,4 @@ function form_T2(Fae,Fmi,Fme,Wabef,Wmnij,WmBeJ,WmBEj,ijab,mbej,amej,abej,abie,mb
     _tijab = _tijab ./ Dijab
     return _tijab
 end
+end #module
