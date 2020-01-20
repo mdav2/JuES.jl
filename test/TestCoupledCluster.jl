@@ -2,7 +2,7 @@ using Test
 using PyCall
 using JuES
 using JuES.Wavefunction
-using JuES.CoupledCluster: RCCSD, RCCD
+using JuES.CoupledCluster: RCCSD, RCCD, ROCCD
 
 
 psi4.core.be_quiet() #turn off output
@@ -23,6 +23,6 @@ JuWfn2 = Wfn(wfn2)
         @test RCCD.do_rccd(JuWfn2, 40, doprint=false) ≈ -0.07015050066089029
         #@test do_rccd(JuWfn3, 40, doprint=false) ≈ -0.07015050066089029
         @test RCCSD.do_rccsd(JuWfn2, 40, doprint=false) ≈ -0.070680102078571
-        #do_roccd(JuWfn2, 40, doprint=true)
+        ROCCD.do_roccd(JuWfn2, 40, doprint=true)
     end
 end
