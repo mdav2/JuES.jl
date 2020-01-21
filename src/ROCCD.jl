@@ -3,6 +3,8 @@ module ROCCD
 using JuES.Wavefunction
 using JuES.Transformation
 using TensorOperations
+using LinearAlgebra
+
 include("Denominators.jl")
 
 export do_roccd
@@ -21,28 +23,31 @@ function do_roccd(refWfn::Wfn,maxit; doprint::Bool=false, return_T2::Bool=false)
     Cbv = refWfn.Cbv
     h = refWfn.hao
     @tensor begin
-        ha[p,q] := Ca[p,μ]*h[μ,ν]*Ca[ν,q]
+        ha[p,q] := Ca[m,q]*h[m,n]*Ca[n,p]
     end
     @tensor begin
-        hb[p,q] := Cb[p,μ]*h[μ,ν]*Ca[ν,q]
+        hb[p,q] := Cb[m,q]*h[m,n]*Ca[n,p]
     end
     xoxo = permutedims(tei_transform(uvsr,Ca,Ca,Cao,Cao,"xoxo"),[1,3,2,4])
     xxoo = permutedims(tei_transform(uvsr,Ca,Cao,Ca,Cao,"xxoo"),[1,3,2,4])
     XOXO = permutedims(tei_transform(uvsr,Cb,Cb,Cbo,Cbo,"XOXO"),[1,3,2,4])
     fa = form_fa(ha,xoxo,xxoo,XOXO)
-    println(fa)
     xxoo = nothing
     XXOO = permutedims(tei_transform(uvsr,Cb,Cbo,Cb,Cbo,"XXOO"),[1,3,2,4])
     fb = form_fb(hb,XOXO,XXOO,xoxo)
+    println(fa)
     println(fb)
     xoxo = nothing
     XOXO = nothing
     XXOO = nothing
 
-    oOoO = permutedims(tei_transform(uvsr,Cao,Cao,Cbo,Cbo,"oOoO"),[1,3,2,4])
-    oovv = permutedims(tei_transform(uvsr,Cao,Cav,Cao,Cav,"oovv"),[1,3,2,4])
     oOvV = permutedims(tei_transform(uvsr,Cao,Cav,Cbo,Cbv,"oOvV"),[1,3,2,4])
+    oovv = permutedims(tei_transform(uvsr,Cao,Cav,Cao,Cav,"oovv"),[1,3,2,4])
+    oovv = oovv - permutedims(oovv,[1,2,4,3])
     OOVV = permutedims(tei_transform(uvsr,Cbo,Cbv,Cbo,Cbv,"OOVV"),[1,3,2,4])
+    OOVV = OOVV - permutedims(OOVV,[1,2,4,3])
+
+    oOoO = permutedims(tei_transform(uvsr,Cao,Cao,Cbo,Cbo,"oOoO"),[1,3,2,4])
     vVvV = permutedims(tei_transform(uvsr,Cav,Cav,Cbv,Cbv,"vVvV"),[1,3,2,4])
     oVvO = permutedims(tei_transform(uvsr,Cao,Cav,Cbv,Cbo,"oVvO"),[1,3,2,4])
     vOvO = permutedims(tei_transform(uvsr,Cav,Cav,Cbo,Cbo,"vOvO"),[1,3,2,4])
@@ -61,7 +66,7 @@ function do_roccd(refWfn::Wfn,maxit; doprint::Bool=false, return_T2::Bool=false)
     tiJaB .= oOvV ./ DiJaB
     tIJAB .= OOVV ./ DIJAB
 
-    ecc = ccenergy(oOvV,tijab,tiJaB,tIJAB)
+    ecc = ccenergy(oOvV,oovv,OOVV,tijab,tiJaB,tIJAB)
     println("@RO-MP2 $ecc")
 
     Fae = zeros(nvira,nvira)
@@ -85,8 +90,8 @@ function do_roccd(refWfn::Wfn,maxit; doprint::Bool=false, return_T2::Bool=false)
     WMbeJ = zeros(noccb,nvira,nvira,noccb)
 
 
-    form_Fae!(Fae,fa[nocca+1:nocca+nvira,nocca+1:nocca+nvira],oOvV,tijab,tiJaB)
-    form_Fae!(FAE,fb[noccb+1:nocca+nvira,noccb+1:noccb+nvirb],oOvV,tIJAB,tiJaB)
+    form_Fae!(Fae,fa[nocca+1:nocca+nvira,nocca+1:nocca+nvira],oOvV,oovv,tijab,tiJaB)
+    form_FAE!(FAE,fb[noccb+1:nocca+nvira,noccb+1:noccb+nvirb],oOvV,OOVV,tIJAB,tiJaB)
     form_Fmi!(Fmi,fa[1:nocca,1:nocca],oOvV,tijab,tiJaB)
     form_Fmi!(FMI,fb[1:noccb,1:noccb],oOvV,tIJAB,tiJaB)
     form_Wmnij!(Wmnij,oOoO,oOvV,tijab)
@@ -103,13 +108,25 @@ function do_roccd(refWfn::Wfn,maxit; doprint::Bool=false, return_T2::Bool=false)
     form_WMbEj!(WMbEj,vOoV,oOvV,tijab,tiJaB)
     form_WMbeJ!(WMbeJ,vOvO,oOvV,tiJaB)
 end
-function ccenergy(oOvV,tijab,tiJaB,tIJAB)
+function ccenergy(oOvV,oovv,OOVV,tijab,tiJaB,tIJAB)
     @tensoropt begin
-        ecc[] := ( (1/4)*tijab[i,j,a,b]*(oOvV[i,j,a,b] - oOvV[j,i,a,b])
-                  + tiJaB[i,j,a,b]*oOvV[i,j,a,b]
-                  + (1/4)*tIJAB[i,j,a,b]*(oOvV[i,j,a,b] - oOvV[j,i,a,b]))
+        ecc1[] := ( (1/4)*tijab[i,j,a,b]*oovv[i,j,a,b])
+           #       + tiJaB[i,j,a,b]*oOvV[i,j,a,b]
+           #       + (1/4)*tIJAB[i,j,a,b]*(oOvV[i,j,a,b] - oOvV[j,i,a,b]))
     end
-    return ecc[]
+    @tensoropt begin
+        ecc2[] := (tiJaB[i,j,a,b]*oOvV[i,j,a,b])
+    end
+    @tensoropt begin
+        ecc3[] := ((1/4)*tIJAB[i,j,a,b]*OOVV[i,j,a,b])
+    end
+    ecc1 = ecc1[]
+    ecc2 = ecc2[]
+    ecc3 = ecc3[]
+    println("AA $ecc1")
+    println("AB $ecc2")
+    println("BB $ecc3")
+    return ecc1 + ecc2 + ecc3
 end
 function form_tijab(oovv,Fae,Fmi,Wmnij,Wabef,Wmbej,WMbEj,tijab,tiJaB,Dijab)
     @tensoropt begin
@@ -183,13 +200,23 @@ function form_fb(hb,XOXO,XXOO,xoxo)
         fb[p,q] = hb[p,q] + XOXO[p,k,q,k] - XXOO[p,q,k,k] + xoxo[p,K,q,K]
     end
 end
-function form_Fae!(Fae,fa,oOvV,tijab,tiJaB)
+function form_Fae!(Fae,fa,oOvV,oovv,tijab,tiJaB)
     @tensoropt begin
-        Fae[a,e] := -0.5*(tijab[m,n,a,f]*(oOvV[m,n,e,f] - oOvV[n,m,e,f]))
-                    - tiJaB[m,n,a,f]*oOvV[m,n,e,f]
+        Fae[a,e] := (-0.5*tijab[m,n,a,f]*oovv[m,n,e,f])
+        Fae[a,e] -= (-1*tiJaB[m,n,a,f]*oOvV[m,n,e,f])
+        #Fae[a,e] -= (-0.5*tIJAB[m,n,a,f]*OOVV[m,n,e,f])
     end
     Fae += fa - diagm(diag(fa))
     return Fae
+end
+function form_FAE!(FAE,fb,oOvV,OOVV,tIJAB,tiJaB)
+    @tensoropt begin
+        Fae[a,e] := (-0.5*tijab[m,n,a,f]*oovv[m,n,e,f])
+        Fae[a,e] -= (-1*tiJaB[n,m,f,a]*oOvV[n,m,f,e])
+        #Fae[a,e] -= (-0.5*tIJAB[m,n,a,f]*OOVV[m,n,e,f])
+    end
+    FAE += fb - diagm(diag(fb))
+    return FAE
 end
 function form_Fmi!(Fmi,fa,oOvV,tijab,tiJaB)
     @tensoropt begin

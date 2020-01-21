@@ -46,7 +46,7 @@ function form_DiJaB(iJaB,fa::Array{Float64,2},fb::Array{Float64,2})
             for a in 1:nvira
                 for b in 1:nvirb
                     aa = a + nocca
-                    bb = b + nocca
+                    bb = b + noccb
                     DiJaB[i,j,a,b] = fa[i,i] + fb[j,j] - fa[aa,aa] - fb[bb,bb]
                 end
             end

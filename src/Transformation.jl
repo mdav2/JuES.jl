@@ -2,7 +2,6 @@ module Transformation
 using JuES.DiskTensors
 using TensorOperations
 using LinearAlgebra
-using LoopVectorization
 #export disk_tei_transform
 #export mem_tei_transform
 export tei_transform
