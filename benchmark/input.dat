@@ -1,10 +1,8 @@
-memory 2 GB
+memory 40 GB
 
 molecule {
 0 1
-O
-H 1 1.1
-H 1 1.1 2 104.0
+pubchem:butane
 }
 
 set basis cc-pvdz

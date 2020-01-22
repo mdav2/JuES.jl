@@ -53,6 +53,7 @@ function do_roccd(refWfn::Wfn,maxit; doprint::Bool=false, return_T2::Bool=false)
     OOOO = permutedims(tei_transform(uvsr,Cbo,Cbo,Cbo,Cbo,"OOOO"),[1,3,2,4])
     OOOO = OOOO - permutedims(OOOO,[1,2,4,3])
     vVvV = permutedims(tei_transform(uvsr,Cav,Cav,Cbv,Cbv,"vVvV"),[1,3,2,4])
+    vvvv = permutedims(tei_transform(uvsr,Cav,Cav,Cav,Cav,"vvvv"),[1,3,2,4])
     oVvO = permutedims(tei_transform(uvsr,Cao,Cav,Cbv,Cbo,"oVvO"),[1,3,2,4])
     vOvO = permutedims(tei_transform(uvsr,Cav,Cav,Cbo,Cbo,"vOvO"),[1,3,2,4])
     oVoV = permutedims(tei_transform(uvsr,Cao,Cao,Cbv,Cbv,"oVoV"),[1,3,2,4])
@@ -262,9 +263,9 @@ function form_WmNiJ!(WmNiJ,oOoO,oOvV,tiJaB)
 end
 function form_WMniJ!(WMniJ,oOoO,oOvV,tiJaB)
     @tensoropt begin
-        WMniJ[m,n,i,j] = (-1*oOoO[n,m,i,j] 
-                          - (1/4)*tiJaB[i,j,e,f]*oOvV[m,n,f,e]
-                          - (1/4)*tiJaB[i,j,f,e]*oOvV[m,n,e,f])
+        WMniJ[m,n,i,j] = (-1*oOoO[n,m,i,j])
+                          #- (1/4)*tiJaB[i,j,e,f]*oOvV[m,n,f,e]
+                          #- (1/4)*tiJaB[i,j,f,e]*oOvV[m,n,e,f])
     end
     return WMniJ
 end
