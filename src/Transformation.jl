@@ -1,11 +1,28 @@
+"""
+    JuES.Transformation
+
+this module manages all _complete_ integral transformations,
+either disk-cached or in-core.
+"""
 module Transformation
 using JuES.DiskTensors
 using TensorOperations
 using LinearAlgebra
-#using LoopVectorization
-#export disk_tei_transform
-#export mem_tei_transform
+
 export tei_transform
+
+function tei_transform(gao::Array{Float64,4},
+                       C::Array{Float64,2},
+                       name::String="default"
+                      )
+    tei_transform(gao,C,C,C,C,name)
+end
+function tei_transform(gao::DiskFourTensor,
+                       C::Array{Float64,2},
+                       name::String="default"
+                      )
+    tei_transform(gao,C,C,C,C,name)
+end
 
 function tei_transform(
     gao::Array{Float64,4},
@@ -39,90 +56,27 @@ function tei_transform(
     temp = zeros(d, d, d, d4)
     #Quarter transform 1
     #(μ,ν,λ,σ) -> (μ,ν,λ,b)
-#    gao = permutedims(gao,[4,1,2,3])
     @tensoropt begin
-        #temp[μ,ν,λ,b] = C4[σ,b]*gao[σ,μ,ν,λ]
         temp[μ,ν,λ,b] = C4[σ,b]*gao[μ,ν,λ,σ]
     end
-    #for b in R4
-    #    for μ in R
-    #        ocache = zeros(d, d)
-    #        for ν in R
-    #            icache = gao[μ, ν, :, :]
-    #            for λ in R
-    #                #@views ocache[ν,λ] = dot(C4[:,b],icache[λ,:])
-    #                for σ in R
-    #                    ocache[ν, λ] += C4[σ, b] * icache[λ, σ]
-    #                end
-    #            end
-    #        end
-    #        temp[μ, :, :, b] = ocache[:, :]
-    #    end
-    #end
     #Quarter transform 2
     #(μ,ν,λ,b) -> (μ,ν,j,b)
-    #temp = permutedims(temp,[3,2,1,4])
     temp2 = zeros(d, d, d3, d4)
     @tensoropt begin
         temp2[μ,ν,j,b] = C3[λ,j]*temp[μ,ν,λ,b]
     end
-    #for b in R4
-    #    for j in R3
-    #        ocache = zeros(d, d)
-    #        for μ in R
-    #            icache = temp[μ, :, :, b]
-    #            for ν in R
-    #                for λ in R #contract over λ
-    #                    ocache[μ, ν] += C3[λ, j] * icache[ν, λ]
-    #                end
-    #            end
-    #        end
-    #        temp2[:, :, j, b] = ocache[:, :]
-    #    end
-    #end
     #Quarter transform 3
     #(μ,ν,j,b) -> (μ,a,j,b)
     temp = zeros(d, d2, d3, d4)
     @tensoropt begin
         temp[μ,a,j,b] = C2[ν,a]*temp2[μ,ν,j,b]
     end
-    #for b in R4
-    #    for j in R3
-    #        ocache = zeros(d, d2)
-    #        icache = temp2[:, :, j, b]
-    #        for a in R2
-    #            for μ in R
-    #                for ν in R
-    #                    #temp[μ,a,j,b] += C2[ν,a]*temp2[μ,ν,j,b]
-    #                    ocache[μ, a] += C2[ν, a] * icache[μ, ν]
-    #                end
-    #            end
-    #        end
-    #        temp[:, :, j, b] = ocache[:, :]
-    #    end
-    #end
     #Quarter transform 4
     #(μ,a,j,b) -> (i,a,j,b)
-
     temp2 = zeros(d1, d2, d3, d4)
     @tensor begin
         temp2[i,a,j,b] = C1[μ,i]*temp[μ,a,j,b]
     end
-    #for b in R4
-    #    for j in R3
-    #        icache = temp[:, :, j, b]
-    #        ocache = zeros(d1, d2)
-    #        for a in R2
-    #            for i in R1
-    #                for μ in R
-    #                    #temp2[i,a,j,b] += C1[μ,i]*temp[μ,a,j,b]
-    #                    ocache[i, a] += C1[μ, i] * icache[μ, a]
-    #                end
-    #            end
-    #        end
-    #        temp2[:, :, j, b] = ocache
-    #    end
-    #end
     return temp2
 end
 function tei_transform(
@@ -164,16 +118,6 @@ function tei_transform(
     #(μ,ν,λ,σ) -> (μ,ν,λ,b)
     ocache = zeros(d,d,d4)
     icache = zeros(size(gao[1,:,:,:]))
-    #for μ in R
-    #    for ν in R
-    #        ocache .= 0.0#zeros(d,d4)
-    #        icache .= gao[μ,ν,:,:]
-    #        @tensoropt begin
-    #            ocache[λ,b] = C4[σ,b]*icache[λ,σ]
-    #        end
-    #        temp[μ,ν,:,:] .= ocache[:,:]
-    #    end
-    #end
     for μ in R
         #for ν in R
         ocache .= 0.0#zeros(d,d4)
@@ -184,39 +128,6 @@ function tei_transform(
         temp[μ,:,:,:] .= ocache[:,:,:]
         #end
     end
-    #for μ in R
-    #    for ν in R
-    #        ocache = zeros(d,d4)
-    #        icache = gao[μ,ν,:,:]
-    #        for l ∈ eachindex(d) 
-    #            for b ∈ eachindex(d4)
-    #                @avx for s in 1:d#eachindex(d)
-    #                    ocache[l,b] += C4[s,b]*icache[l,s]
-    #                end
-    #            end
-    #        end
-    #        temp[μ,ν,:,:] = ocache[:,:]
-    #    end
-    #end
-    #for b in R4
-    #    for μ in R
-    #        ocache = zeros(d, d)
-    #        for ν in R
-    #            icache = gao[μ, ν, :, :]
-    #            temp = zeros(d)
-    #            @tensoropt begin
-    #                temp[λ] = C4[σ,b]*icache[λ,σ]
-    #            end
-    #            ocache[ν,:] = temp[:]
-    #            #for λ in R
-    #            #    for σ in R
-    #            #        ocache[ν, λ] += C4[σ, b] * icache[λ, σ]
-    #            #    end
-    #            #end
-    #        end
-    #        temp[μ, :, :, b] = ocache[:, :]
-    #    end
-    #end
     #Quarter transform 2
     #(μ,ν,λ,b) -> (μ,ν,j,b)
     if T == Array{Float64,4}
@@ -235,20 +146,6 @@ function tei_transform(
             temp2[μ,ν,:,:] = ocache[:,:]
         end
     end
-    #for b in R4
-    #    for j in R3
-    #        ocache = zeros(d, d)
-    #        for μ in R
-    #            icache = temp[μ, :, :, b]
-    #            for ν in R
-    #                for λ in R #contract over λ
-    #                    ocache[μ, ν] += C3[λ, j] * icache[ν, λ]
-    #                end
-    #            end
-    #        end
-    #        temp2[:, :, j, b] = ocache[:, :]
-    #    end
-    #end
     #Quarter transform 3
     #(μ,ν,j,b) -> (μ,a,j,b)
     if T == Array{Float64,4}
@@ -264,7 +161,6 @@ function tei_transform(
             for a in R2
                 for μ in R
                     for ν in R
-                        #temp[μ,a,j,b] += C2[ν,a]*temp2[μ,ν,j,b]
                         ocache[μ, a] += C2[ν, a] * icache[μ, ν]
                     end
                 end
@@ -300,135 +196,4 @@ function tei_transform(
 end
 
 
-"""
-disk based, restricted transformation
-"""
-function disk_tei_transform(gao::Array{Float64,4}, C::Array{Float64,2}, name::String)
-    norb = size(C)[1]
-    rr = UnitRange(1, norb)
-    R = collect(UnitRange(1, norb))::Array{Int64,1}
-    g1 = DiskFourTensor("/tmp/jues.$name.g1.0", Float64, norb, norb, norb, norb, "w")
-    g2 = DiskFourTensor("/tmp/jues.$name.0", Float64, norb, norb, norb, norb, "w")
-    blockfill!(g1, 0.0)
-    blockfill!(g2, 0.0)
-    cache = zeros(norb, norb)
-    cache2 = zeros(norb, norb)
-    for s in R
-        for rh in R
-            for si in R
-                cache[:, :] = gao[rr, rr, rh, si]
-                for nu in R
-                    for mu in R
-                        #g1[mu,nu,rh,s] += gao[mu,nu,rh,si]*C[si,s]
-                        cache2[mu, nu] += cache[mu, nu] * C[si, s]
-                    end
-                end
-            end
-            g1[rr, rr, rh, s] = cache2[:, :]
-            cache2[:, :] = zeros(norb, norb)
-        end
-    end
-    for s in R
-        for r in R
-            for rh in R
-                cache[:, :] = g1[:, :, rh, s]
-                for nu in R
-                    for mu in R
-                        #@views g2[mu,nu,r,s] += g1[mu,nu,rh,s]*C[rh,r]
-                        cache2[mu, nu] += cache[mu, nu] * C[rh, r]
-                    end
-                end
-            end
-            g2[:, :, r, s] = cache2
-            cache2[:, :] = zeros(norb, norb)
-        end
-    end
-    g1[:, :, :, :] = 0.0
-    for s in R
-        for r in R
-            cache = g2[:, :, r, s]
-            #cache2[:,:] = 0.0
-            for q in R
-                for nu in R
-                    for mu in R
-                        #@views g1[mu,q,r,s] += g2[mu,nu,r,s]*C[nu,q]
-                        cache2[mu, q] += cache[mu, nu] * C[nu, q]
-                    end
-                end
-            end
-            g1[:, :, r, s] = cache2
-            cache2[:, :] = zeros(norb, norb)
-        end
-    end
-    g2[:, :, :, :] = 0.0
-    for s in R
-        for r in R
-            cache = g1[:, :, r, s]
-            for q in R
-                for p in R
-                    for mu in R
-                        #@views g2[p,q,r,s] += g1[mu,q,r,s]*C[mu,p]
-                        cache2[p, q] += cache[mu, q] * C[mu, p]
-                    end
-                end
-            end
-            g2[:, :, r, s] = cache2
-            cache2[:, :] = zeros(norb, norb)
-        end
-    end
-    return g2
-end
-function mem_tei_transform(gao::Array{Float64,4}, C::Array{Float64,2})
-    norb = size(gao)[1]::Int64 #indexed from 1
-    g1 = zeros(size(gao))::Array{Float64,4}
-    g2 = zeros(size(gao))::Array{Float64,4}
-    R = collect(UnitRange(1, norb))::Array{Int64,1}
-    for s in R
-        for si in R
-            for rh in R
-                for nu in R
-                    @simd for mu in R
-                        @views g1[mu, nu, rh, s] += gao[mu, nu, rh, si] * C[si, s]
-                    end
-                end
-            end
-        end
-    end
-    for s in R
-        for r in R
-            for rh in R
-                for nu in R
-                    @simd for mu in R
-                        @views g2[mu, nu, r, s] += g1[mu, nu, rh, s] * C[rh, r]
-                    end
-                end
-            end
-        end
-    end
-    g1 .= 0.0
-    for s in R
-        for r in R
-            for q in R
-                for nu in R
-                    @simd for mu in R
-                        @views g1[mu, q, r, s] += g2[mu, nu, r, s] * C[nu, q]
-                    end
-                end
-            end
-        end
-    end
-    g2 .= 0.0
-    for s in R
-        for r in R
-            for q in R
-                for mu in R
-                    @simd for p in R
-                        @views g2[p, q, r, s] += g1[mu, q, r, s] * C[mu, p]
-                    end
-                end
-            end
-        end
-    end
-    return g2
-end
 end

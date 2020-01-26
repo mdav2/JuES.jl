@@ -8,13 +8,13 @@ export psi4
 include("DiskTensors.jl")
 include("Transformation.jl")
 include("Integrals.jl")
-include("HartreeFock.jl")
 include("Wavefunction.jl")
 include("Direct.jl")
 include("Determinant.jl")
-include("CoupledCluster.jl")
 include("MatrixElement.jl")
-include("CISingles.jl")
+include("HartreeFock.jl")
 include("MollerPlesset.jl")
+include("CISingles.jl")
+include("CoupledCluster.jl")
 
 end # module

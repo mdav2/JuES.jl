@@ -29,8 +29,8 @@ e3, wfn3 = psi4.energy("hf/sto-3g", mol = mol3, return_wfn = true)
 JuWfn3 = Wfn(wfn3, Float64, true, false, "uhf")
 @testset "Integral Transformation" begin
     @testset "SmokeRHF" begin
-        disk = disk_tei_transform(JuWfn2.uvsr, JuWfn2.Ca, "testdisk")
-        mem = mem_tei_transform(JuWfn2.uvsr, JuWfn2.Ca)
+        disk = tei_transform(JuWfn2.uvsr, JuWfn2.Ca, "testdisk")
+        mem = tei_transform(JuWfn2.uvsr, JuWfn2.Ca)
         @test disk[:, :, :, :] == mem[:, :, :, :]
     end
     @testset "UHF" begin

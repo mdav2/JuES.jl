@@ -39,6 +39,6 @@ psi4.core.be_quiet() #turn off output
     include("TestCISingles.jl")
     include("TestDiskTensors.jl")
     include("TestCoupledCluster.jl")
-    include("TestTEI.jl")
+    include("TestTransformation.jl")
     include("TestMollerPlesset.jl")
 end

@@ -1,10 +1,7 @@
 module Direct
-using PyCall
 using JuES.Wavefunction
-const psi4 = PyNULL()
-function __init__()
-    copy!(psi4, pyimport("psi4"))
-end
+using PyCall
+using TensorOperations
 export ao
 export func_shell
 export ao_to_mo_shell
@@ -17,54 +14,6 @@ function ao_function(wfn::DirectWfn, p, q, r, s)
     """
     shell = ao_shell(wfn, p, q, r, s)
     return shell[po, qo, ro, so]
-end
-function ao_to_mo_shell(p, q, r, s, C, wfn::DirectWfn)
-    nao = size(C)[1]
-    moint = 0.0
-    nshell = wfn.basis.nshell()
-    aoshell = func_shell(wfn)
-    println(aoshell)
-    for shell1 = 1:nshell
-        nao_shell1 = aoshell[shell1]
-        for shell2 = 1:nshell
-            nao_shell2 = aoshell[shell2]
-            for shell3 = 1:nshell
-                nao_shell3 = aoshell[shell3]
-                for shell4 = 1:nshell
-                    nao_shell4 = aoshell[shell4]
-                    current = ao_shell(wfn, shell1, shell2, shell3, shell4)
-                    for p in nao_shell1
-                        for q in nao_shell2
-                            for r in nao_shell3
-                                for s in nao_shell4
-                                    println(p, q, r, s)
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
-function ao_to_mo(p, q, r, s, C, wfn::DirectWfn)
-    nao = size(C)[1]
-    moint = 0.0
-    for uu = 1:nao
-        for vv = 1:nao
-            for ss = 1:nao
-                for rr = 1:nao
-                    moint +=
-                        ao_function(wfn, uu, vv, ss, rr) *
-                        C[p, uu] *
-                        C[q, vv] *
-                        C[r, ss] *
-                        C[s, rr]
-                end
-            end
-        end
-    end
-    return moint
 end
 function func_shell(wfn::DirectWfn)
     """
@@ -103,34 +52,43 @@ function ao_shell(wfn::DirectWfn, p, q, r, s)
     shell = mints.ao_eri_shell(ps, qs, rs, ss).to_array()
     return shell
 end
-function direct_MP2(wfn::DirectWfn)
-    """
-    Algorithm
-    --
-    for each occ <ij|-->, compute partially transformed
-    integrals <ij|λσ>, store in memory
+"""
+    direct_ao_contract
 
-    for each vir <--|ab> contract <ij|λσ> ⋅ C[a,λ] ⋅ C[b,σ]
-    and its transpose <--|ba>
-
-    compute contribution of <ij|ab> to δE(MP2)
-
-       12 34      12 34     12 34        
-    = <ij|ab> ( 2<ij|ab> - <ij|ba> ) / Δ[ijab]
-    = <ij|ab> ( 2<ij|ab> - <ij|ba> ) / Δ[ijab]
-    ------------------------------------------
-       13 24      13 24     13 24        
-    = [ia|jb] ( 2[ia|jb] - [ib|ja] ) / Δ[ijab]
-    """
-    basis = wfn.basis
-    nshell = basis.nshell()
-    #figure out how to make use of shell/batches
-    # "         how to make partially transformed integrals
-    # "         how to do contraction
-    #for storing partially transformed integrals
-    partial = zeros(Float64, wfn.nalpha, wfn.nalpha, wfn.nmo, wfn.nmo)
-    R = collect(UnitRange(1, nshell))
-    aoshell = func_shell(wfn)
+RHF only
+contraction to N^3 (iν|λσ) given specific i
+"""
+function direct_ao_contract(i,C::Array{Float64,2},mints::PyObject, basis::PyObject)
+    nsh = basis.nshell()
+    nao = basis.nbf()
+    iνλσ = zeros(nao,nao,nao)
+    Ci = C[:,i]
+    for s in 1:nsh
+        for r in 1:nsh
+            for q in 1:nsh
+                for p in 1:nsh
+                    sf = basis.shell_to_basis_function(s-1) + 1
+                    rf = basis.shell_to_basis_function(r-1) + 1
+                    qf = basis.shell_to_basis_function(q-1) + 1
+                    pf = basis.shell_to_basis_function(p-1) + 1
+                    shell = mints.ao_eri_shell(p-1,q-1,r-1,s-1).np
+                    pn, qn, rn, sn = size(shell)
+                    pn -= 1
+                    qn -= 1
+                    rn -= 1
+                    sn -= 1
+                    #println("$pf $pn $qf $qn $rf $rn $sf $sn")
+                    _Ci = Ci[pf:pf+pn]
+                    @tensoropt begin
+                        temp[ν,λ,σ] := _Ci[μ]*shell[μ,ν,λ,σ]
+                    end
+                    ##println("$p $q $r $s")
+                    iνλσ[qf:qf+qn,rf:rf+rn,sf:sf+sn] += temp
+                end
+            end
+        end
+    end
+    return iνλσ
 
 end
 end#module

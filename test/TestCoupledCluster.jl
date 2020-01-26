@@ -33,6 +33,6 @@ JuWfn3 = Wfn(wfn3)
         @test RCCD.do_rccd(JuWfn2, 40, doprint=false) ≈ -0.07015050066089029
         #@test do_rccd(JuWfn3, 40, doprint=false) ≈ -0.07015050066089029
         @test RCCSD.do_rccsd(JuWfn2, 40, doprint=false) ≈ -0.070680102078571
-        ROCCD.do_roccd(JuWfn3, 40, doprint=true)
+        #ROCCD.do_roccd(JuWfn3, 40, doprint=true)
     end
 end

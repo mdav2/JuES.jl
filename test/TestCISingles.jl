@@ -17,7 +17,6 @@ JuWfn = Wfn(wfn)
 @testset "CISingles" begin
     @testset "Smoke" begin
         out = do_RCIS(JuWfn, 5, "diag")
-        println(out)
         @test abs(do_RCIS(JuWfn, 5)[1] - 0.320236855893771) < tol
     end
 end

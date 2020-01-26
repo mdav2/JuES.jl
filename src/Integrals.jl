@@ -1,11 +1,7 @@
 module Integrals
 
-using JuES.DiskTensors
 using PyCall
-const psi4 = PyNULL()
-function __init__()
-    copy!(psi4, pyimport("psi4"))
-end
+using JuES.DiskTensors
 
 export disk_ao
 
