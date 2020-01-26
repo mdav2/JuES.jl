@@ -63,12 +63,12 @@ JuES                      |   16     1      1     18
 ### Integral backends
 This project uses other electronic structure programs to compute basic quantities like the one- and two-electron Hamiltonian integrals, as well as their counterparts for other operators. There is currently no intention of writing an integrals code specifically for JuES.
 
-As of version `alpha1` there is an interface to the Psi4 programs via the `psi4numpy` interface. This is simply the interface that I know the best, and should be extended in the future. There are plans for interfacing with the PySCF project and the NWChem project. If someone with knowledge wants to implement an interface to other programs e.g. Q-Chem, CFOUR, ORCA, Turbomole, or MOLPRO, they are very welcome. It is intended that the most robust interfaces should be to free and/or open source programs. 
+As of now there is an interface to the Psi4 programs via the `psi4numpy` interface. This is simply the interface that I know the best, and should be extended in the future. There are plans for interfacing with the PySCF project and the NWChem project. If someone with knowledge wants to implement an interface to other programs e.g. Q-Chem, CFOUR, ORCA, Turbomole, or MOLPRO, they are very welcome. It is intended that the most robust interfaces should be to free and/or open source programs. 
 
 ### Naming
 It is customary for Julia modules and data structures to have CamelCase names, such as `Wavefunction.jl`. Please follow this aesthetically pleasing convention! 
 
-## Modules
+## Submodules
 This section contains a description of some preliminary modules in the JuES environment. Many aspects are aspirational, and the description is not so much a description of current functionality as a statement of intent.
 ### Wavefunction.jl
 Wavefunction.jl is the foundational module of JuES. All JuES programs will make use of Wavefunction.jl at some point. This module is the point of interaction between integral backends (e.g. `psi4numpy`) and the JuES programming environment. An interface to an integral backend should produce a complete Wfn structure from the relevant sources. A Wfn structure is a representation of a reference determinant, such as a set of Hartree-Fock or DFT orbitals. 
@@ -85,13 +85,13 @@ This module implements a simple Davidson solver, which currently has some uniden
 > **(!) Help** Rewriting the Davidson code is probably a good idea. A routine to collapse the trial vector subspace would make this module much more functional. A generalized implementation for non-symmetric matrices is required before EOM codes can be useful. 
 ### Direct.jl
 This module contains necessary code for integral direct computations. Currently only interfaces to the Psi4 programs, but additions of interfaces are welcome. 
-> **(!) Help** I don't yet understand how to code a reasonable integral direct program, so this will likely be neglected for some time without outside help.
+> **(!) Help** Function for contracting integrals for a fixed index is implemented. For most purpses, storing a 3-index quantity in memory is feasible; so incorporating this into energy routines would be very helpful.
 ### MatrixElement.jl
 This module defines an interface for obtaining matrix elements for CI matrices.
 >**(!) Help** This is just a skeleton at this point. Contributions to this module will greatly help a functioning FCI and arbitrary order CI code. Basic equations and citation to Szabo and Ostlund are in docstrings. 
 ### MollerPlesset.jl
 Routines for Moller-Plesset perturbation theory computations are implemented here. Currently in-core and disk based RMP2 and UMP2 are implemented. 
->**(!) Help** Direct MP2 would be an excellent contribution. 
+>**(!) Help** Direct UMP2 would be an excellent contribution. 
 ### CISingles.jl
 Specialized routines for computing configuration-interaction singles excited state wavefunctions are defined here. Corrections such as CIS(D) and variants defined here as well. Keep seperate from general CI code. Only in-core RCIS is implemented, and is currently not working.
 >**(!) Help** UCIS, disk-based, and direct implementations are excellent targets. 
