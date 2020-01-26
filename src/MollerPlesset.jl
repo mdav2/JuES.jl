@@ -10,11 +10,15 @@ module MollerPlesset
 
 using JuES.Wavefunction
 using JuES.DiskTensors
+using TensorOperations
+using PyCall
 
 export do_rmp2
 export do_ump2
+export do_direct_rmp2
 
 include("RMP2.jl")
 include("UMP2.jl")
+include("DirectRMP2.jl")
 
 end #module

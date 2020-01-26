@@ -23,9 +23,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Monday, 20 January 2020 06:26PM
+    Psi4 started on: Sunday, 26 January 2020 06:48AM
 
-    Process ID: 10246
+    Process ID: 431
     Host:       ws-b14-mmd
     PSIDATADIR: /home/mmd01986/anaconda3/envs/psi4/share/psi4
     Memory:     500.0 MiB
@@ -37,10 +37,8 @@
 memory 2 GB
 
 molecule {
-1 2
-O
-H 1 1.1
-H 1 1.1 2 104.0
+0 1
+pubchem:ethane
 symmetry c1
 }
 set reference rohf
@@ -57,15 +55,15 @@ energy('mp2/sto-3g')
   Memory set to   1.863 GiB by Python driver.
 
 *** tstart() called on ws-b14-mmd
-*** at Mon Jan 20 18:26:27 2020
+*** at Sun Jan 26 06:48:47 2020
 
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1   entry O          line    81 file /home/mmd01986/anaconda3/envs/psi4/share/psi4/basis/sto-3g.gbs 
-    atoms 2-3 entry H          line    19 file /home/mmd01986/anaconda3/envs/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 1-2 entry C          line    61 file /home/mmd01986/anaconda3/envs/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 3-8 entry H          line    19 file /home/mmd01986/anaconda3/envs/psi4/share/psi4/basis/sto-3g.gbs 
 
 
          ---------------------------------------------------------
@@ -79,27 +77,32 @@ energy('mp2/sto-3g')
   ==> Geometry <==
 
     Molecular point group: c1
-    Full point group: C2v
+    Full point group: Ci
 
-    Geometry (in Angstrom), charge = 1, multiplicity = 2:
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
 
        Center              X                  Y                   Z               Mass       
     ------------   -----------------  -----------------  -----------------  -----------------
-         O            0.000000000000     0.000000000000    -0.075791843599    15.994914619570
-         H            0.000000000000    -0.866811828967     0.601435779259     1.007825032230
-         H            0.000000000000     0.866811828967     0.601435779259     1.007825032230
+         C           -0.756000000000     0.000000000000    -0.000000000000    12.000000000000
+         C            0.756000000000     0.000000000000    -0.000000000000    12.000000000000
+         H           -1.140400000000     0.658600000000     0.784500000000     1.007825032230
+         H           -1.140400000000     0.350100000000    -0.962600000000     1.007825032230
+         H           -1.140500000000    -1.008700000000     0.178100000000     1.007825032230
+         H            1.140400000000    -0.350100000000     0.962600000000     1.007825032230
+         H            1.140500000000     1.008700000000    -0.178100000000     1.007825032230
+         H            1.140400000000    -0.658600000000    -0.784500000000     1.007825032230
 
   Running in c1 symmetry.
 
-  Rotational constants: A =     20.53324  B =     11.13094  C =      7.21807 [cm^-1]
-  Rotational constants: A = 615570.98071  B = 333697.07813  C = 216392.23582 [MHz]
-  Nuclear repulsion =    8.002366482173422
+  Rotational constants: A =      2.65710  B =      0.68102  C =      0.68101 [cm^-1]
+  Rotational constants: A =  79657.79535  B =  20416.39115  C =  20416.30469 [MHz]
+  Nuclear repulsion =   42.427825594895381
 
-  Charge       = 1
-  Multiplicity = 2
-  Electrons    = 9
-  Nalpha       = 5
-  Nbeta        = 4
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 18
+  Nalpha       = 9
+  Nbeta        = 9
 
   ==> Algorithm <==
 
@@ -116,9 +119,9 @@ energy('mp2/sto-3g')
 
   Basis Set: STO-3G
     Blend: STO-3G
-    Number of shells: 5
-    Number of basis function: 7
-    Number of Cartesian functions: 7
+    Number of shells: 12
+    Number of basis function: 16
+    Number of Cartesian functions: 16
     Spherical Harmonics?: true
     Max angular momentum: 1
 
@@ -127,28 +130,28 @@ energy('mp2/sto-3g')
    -------------------------------------------------------
     Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
    -------------------------------------------------------
-     A          7       7       0       0       0       0
+     A         16      16       0       0       0       0
    -------------------------------------------------------
-    Total       7       7       5       4       4       1
+    Total      16      16       9       9       9       0
    -------------------------------------------------------
 
   ==> Integral Setup <==
 
   Using in-core PK algorithm.
    Calculation information:
-      Number of atoms:                   3
-      Number of AO shells:               5
-      Number of primitives:             15
-      Number of atomic orbitals:         7
-      Number of basis functions:         7
+      Number of atoms:                   8
+      Number of AO shells:              12
+      Number of primitives:             36
+      Number of atomic orbitals:        16
+      Number of basis functions:        16
 
       Integral cutoff                 1.00e-12
       Number of threads:                 1
 
   Performing in-core PK
-  Using 812 doubles for integral storage.
-  We computed 120 shell quartets total.
-  Whereas there are 120 unique shell quartets.
+  Using 18632 doubles for integral storage.
+  We computed 3080 shell quartets total.
+  Whereas there are 3081 unique shell quartets.
 
   ==> DiskJK: Disk-Based J/K Matrices <==
 
@@ -160,7 +163,7 @@ energy('mp2/sto-3g')
 
     OpenMP threads:              1
 
-  Minimum eigenvalue in the overlap matrix is 4.3422219609E-01.
+  Minimum eigenvalue in the overlap matrix is 2.0522992036E-01.
   Using Symmetric Orthogonalization.
 
   SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
@@ -169,32 +172,27 @@ energy('mp2/sto-3g')
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @ROHF iter SAD:   -73.91840937239937   -7.39184e+01   0.00000e+00 
-   @ROHF iter   1:   -74.64609371140311   -7.27684e-01   1.43109e-02 DIIS
-   @ROHF iter   2:   -74.65874080578948   -1.26471e-02   2.36699e-03 DIIS
-   @ROHF iter   3:   -74.65922888038483   -4.88075e-04   5.43776e-04 DIIS
-   @ROHF iter   4:   -74.65925140419746   -2.25238e-05   4.47411e-05 DIIS
-   @ROHF iter   5:   -74.65925170136245   -2.97165e-07   1.64679e-05 DIIS
-   @ROHF iter   6:   -74.65925174710250   -4.57401e-08   7.39397e-08 DIIS
-   @ROHF iter   7:   -74.65925174710303   -5.25802e-13   2.56737e-10 DIIS
-   @ROHF iter   8:   -74.65925174710300    2.84217e-14   4.58003e-13 DIIS
-   @ROHF iter   9:   -74.65925174710306   -5.68434e-14   8.94426e-16 DIIS
-   @ROHF iter  10:   -74.65925174710303    2.84217e-14   7.53034e-16 DIIS
-   @ROHF iter  11:   -74.65925174710299    4.26326e-14   3.97768e-16 DIIS
-   @ROHF iter  12:   -74.65925174710301   -2.84217e-14   5.53506e-16 DIIS
-   @ROHF iter  13:   -74.65925174710299    2.84217e-14   4.88184e-16 DIIS
-   @ROHF iter  14:   -74.65925174710306   -7.10543e-14   8.09218e-16 DIIS
-   @ROHF iter  15:   -74.65925174710303    2.84217e-14   4.38525e-16 DIIS
-   @ROHF iter  16:   -74.65925174710294    8.52651e-14   3.34179e-16 DIIS
-   @ROHF iter  17:   -74.65925174710299   -4.26326e-14   8.04958e-16 DIIS
-   @ROHF iter  18:   -74.65925174710304   -5.68434e-14   6.10613e-16 DIIS
-   @ROHF iter  19:   -74.65925174710301    2.84217e-14   5.56766e-16 DIIS
-   @ROHF iter  20:   -74.65925174710303   -1.42109e-14   4.76885e-16 DIIS
-   @ROHF iter  21:   -74.65925174710301    1.42109e-14   4.43854e-16 DIIS
-   @ROHF iter  22:   -74.65925174710299    2.84217e-14   5.11118e-16 DIIS
-   @ROHF iter  23:   -74.65925174710301   -2.84217e-14   4.78693e-16 DIIS
-   @ROHF iter  24:   -74.65925174710299    2.84217e-14   4.68828e-16 DIIS
-   @ROHF iter  25:   -74.65925174710299    0.00000e+00   8.52989e-16 DIIS
+   @ROHF iter SAD:   -76.14870384587984   -7.61487e+01   0.00000e+00 
+   @ROHF iter   1:   -78.30177429899550   -2.15307e+00   3.12263e-03 DIIS
+   @ROHF iter   2:   -78.30512711490377   -3.35282e-03   6.19819e-04 DIIS
+   @ROHF iter   3:   -78.30529926502550   -1.72150e-04   1.46970e-04 DIIS
+   @ROHF iter   4:   -78.30530746755815   -8.20253e-06   5.34296e-06 DIIS
+   @ROHF iter   5:   -78.30530748035704   -1.27989e-08   2.82028e-07 DIIS
+   @ROHF iter   6:   -78.30530748038910   -3.20597e-11   2.49847e-08 DIIS
+   @ROHF iter   7:   -78.30530748038936   -2.55795e-13   2.36568e-09 DIIS
+   @ROHF iter   8:   -78.30530748038929    7.10543e-14   2.30889e-10 DIIS
+   @ROHF iter   9:   -78.30530748038932   -2.84217e-14   1.23215e-11 DIIS
+   @ROHF iter  10:   -78.30530748038939   -7.10543e-14   4.06289e-13 DIIS
+   @ROHF iter  11:   -78.30530748038933    5.68434e-14   2.93997e-14 DIIS
+   @ROHF iter  12:   -78.30530748038937   -4.26326e-14   9.30922e-15 DIIS
+   @ROHF iter  13:   -78.30530748038930    7.10543e-14   3.71425e-15 DIIS
+   @ROHF iter  14:   -78.30530748038942   -1.13687e-13   1.67625e-15 DIIS
+   @ROHF iter  15:   -78.30530748038935    7.10543e-14   1.00906e-15 DIIS
+   @ROHF iter  16:   -78.30530748038936   -1.42109e-14   9.71972e-16 DIIS
+   @ROHF iter  17:   -78.30530748038930    5.68434e-14   4.78040e-16 DIIS
+   @ROHF iter  18:   -78.30530748038936   -5.68434e-14   5.16219e-16 DIIS
+   @ROHF iter  19:   -78.30530748038933    2.84217e-14   6.27929e-16 DIIS
+   @ROHF iter  20:   -78.30530748038933    0.00000e+00   4.81434e-16 DIIS
   Energy and wave function converged.
 
 
@@ -205,30 +203,33 @@ energy('mp2/sto-3g')
 
     Doubly Occupied:                                                      
 
-       1A    -20.967059     2A     -1.745196     3A     -1.073135  
-       4A     -0.980477  
+       1A    -11.035779     2A    -11.035521     3A     -0.984990  
+       4A     -0.805266     5A     -0.572934     6A     -0.572919  
+       7A     -0.475560     8A     -0.454940     9A     -0.454930  
 
     Singly Occupied:                                                      
 
-       5A     -0.622051  
+    
 
     Virtual:                                                              
 
-       6A     -0.003035     7A      0.087366  
+      10A      0.645768    11A      0.645812    12A      0.709998  
+      13A      0.724977    14A      0.775592    15A      0.785475  
+      16A      0.785501  
 
     Final Occupation by Irrep:
               A 
-    DOCC [     4 ]
-    SOCC [     1 ]
+    DOCC [     9 ]
+    SOCC [     0 ]
 
-  @ROHF Final Energy:   -74.65925174710299
+  @ROHF Final Energy:   -78.30530748038933
 
    => Energetics <=
 
-    Nuclear Repulsion Energy =              8.0023664821734215
-    One-Electron Energy =                -114.7293707413162309
-    Two-Electron Energy =                  32.0677525120398172
-    Total Energy =                        -74.6592517471029851
+    Nuclear Repulsion Energy =             42.4278255948953813
+    One-Electron Energy =                -188.6805879005150928
+    Two-Electron Energy =                  67.9474548252303805
+    Total Energy =                        -78.3053074803893310
 
 Computation Completed
 
@@ -238,53 +239,165 @@ Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
 Properties computed using the SCF density matrix
 
   Nuclear Dipole Moment: [e a0]
-     X:     0.0000      Y:     0.0000      Z:     1.1273
+     X:     0.0000      Y:     0.0000      Z:     0.0000
 
   Electronic Dipole Moment: [e a0]
-     X:     0.0000      Y:    -0.0000      Z:     0.0310
+     X:     0.0000      Y:    -0.0000      Z:    -0.0000
 
   Dipole Moment: [e a0]
-     X:     0.0000      Y:    -0.0000      Z:     1.1582     Total:     1.1582
+     X:     0.0000      Y:    -0.0000      Z:    -0.0000     Total:     0.0000
 
   Dipole Moment: [D]
-     X:     0.0000      Y:    -0.0000      Z:     2.9440     Total:     2.9440
+     X:     0.0000      Y:    -0.0000      Z:    -0.0000     Total:     0.0000
 
 
-*** tstop() called on ws-b14-mmd at Mon Jan 20 18:26:28 2020
+*** tstop() called on ws-b14-mmd at Sun Jan 26 06:48:47 2020
 Module time:
-	user time   =       0.37 seconds =       0.01 minutes
-	system time =       0.01 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       0.50 seconds =       0.01 minutes
+	system time =       0.00 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.37 seconds =       0.01 minutes
-	system time =       0.01 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       0.50 seconds =       0.01 minutes
+	system time =       0.00 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
  MINTS: Wrapper to libmints.
    by Justin Turney
 
    Calculation information:
       Number of threads:                 1
-      Number of atoms:                   3
-      Number of AO shells:               5
-      Number of SO shells:               5
-      Number of primitives:             15
-      Number of atomic orbitals:         7
-      Number of basis functions:         7
+      Number of atoms:                   8
+      Number of AO shells:              12
+      Number of SO shells:              12
+      Number of primitives:             36
+      Number of atomic orbitals:        16
+      Number of basis functions:        16
 
       Number of irreps:                  1
       Integral cutoff                 0.00e+00
-      Number of functions per irrep: [   7 ]
+      Number of functions per irrep: [  16 ]
 
  OEINTS: Overlap, kinetic, potential, dipole, and quadrupole integrals
          stored in file 35.
 
       Computing two-electron integrals...done
-      Computed 231 non-zero two-electron integrals.
+      Computed 9208 non-zero two-electron integrals.
         Stored in file 33.
 
 
 *** tstart() called on ws-b14-mmd
-*** at Mon Jan 20 18:26:28 2020
+*** at Sun Jan 26 06:48:47 2020
+
+
+
+  Module OCC Options:
+  ----------------------------------------------------------------------------
+  ACTIVE                        => (empty)          
+  BASIS_RELATIVISTIC            => (empty)          
+  BENCH                         => (empty)          
+  CACHELEVEL                    => (empty)          
+  CCL_ENERGY                    => (empty)          
+  CC_DIIS_MAX_VECS              => (empty)          
+  CC_DIIS_MIN_VECS              => (empty)          
+  CC_MAXITER                    => (empty)          
+  CC_TYPE                       => (empty)          
+  CEPA_OS_SCALE                 => (empty)          
+  CEPA_SOS_SCALE                => (empty)          
+  CEPA_SS_SCALE                 => (empty)          
+  CEPA_TYPE                     => (empty)          
+  CI_TYPE                       => (empty)          
+  CUBEPROP_BASIS_FUNCTIONS      => (empty)          
+  CUBEPROP_FILEPATH             => (empty)          
+  CUBEPROP_ISOCONTOUR_THRESHOLD => (empty)          
+  CUBEPROP_ORBITALS             => (empty)          
+  CUBEPROP_TASKS                => (empty)          
+  CUBIC_BASIS_TOLERANCE         => (empty)          
+  CUBIC_BLOCK_MAX_POINTS        => (empty)          
+  CUBIC_GRID_OVERAGE            => (empty)          
+  CUBIC_GRID_SPACING            => (empty)          
+  CUTOFF                        => (empty)          
+  DEBUG                         => (empty)          
+  DERTYPE                       => (empty)          
+  DF_BASIS_CC                   => (empty)          
+  DIE_IF_NOT_CONVERGED          => (empty)          
+  DKH_ORDER                     => (empty)          
+  DOCC                          => (empty)          
+  DO_DIIS                       => (empty)          
+  DO_LEVEL_SHIFT                => (empty)          
+  DO_SCS                        => FALSE           !
+  DO_SOS                        => FALSE           !
+  E3_SCALE                      => (empty)          
+  EA_POLES                      => (empty)          
+  EKT_EA                        => (empty)          
+  EKT_IP                        => (empty)          
+  EP_EA_POLES                   => (empty)          
+  EP_IP_POLES                   => (empty)          
+  EP_MAXITER                    => (empty)          
+  EXTERNAL_POTENTIAL_SYMMETRY   => (empty)          
+  E_CONVERGENCE                 => 1e-14           !
+  FREEZE_CORE                   => (empty)          
+  FROZEN_DOCC                   => (empty)          
+  FROZEN_UOCC                   => (empty)          
+  INTEGRAL_PACKAGE              => (empty)          
+  IP_POLES                      => (empty)          
+  LEVEL_SHIFT                   => (empty)          
+  LINEQ_SOLVER                  => (empty)          
+  LITERAL_CFOUR                 => (empty)          
+  MAT_NUM_COLUMN_PRINT          => (empty)          
+  MAX_MOGRAD_CONVERGENCE        => (empty)          
+  MOGRAD_DAMPING                => (empty)          
+  MOLDEN_WITH_VIRTUAL           => (empty)          
+  MO_DIIS_NUM_VECS              => (empty)          
+  MO_MAXITER                    => (empty)          
+  MO_READ                       => (empty)          
+  MO_STEP_MAX                   => (empty)          
+  MO_WRITE                      => (empty)          
+  MP2_OS_SCALE                  => (empty)          
+  MP2_SOS_SCALE                 => (empty)          
+  MP2_SOS_SCALE2                => (empty)          
+  MP2_SS_SCALE                  => (empty)          
+  MP2_TYPE                      => CONV            !
+  MP_TYPE                       => (empty)          
+  NAT_ORBS                      => (empty)          
+  NUM_FROZEN_DOCC               => (empty)          
+  NUM_FROZEN_UOCC               => (empty)          
+  NUM_GPUS                      => (empty)          
+  OCC_ORBS_PRINT                => (empty)          
+  OEPROP                        => (empty)          
+  OPT_METHOD                    => (empty)          
+  ORB_OPT                       => FALSE           !
+  ORB_RESP_SOLVER               => (empty)          
+  ORTH_TYPE                     => (empty)          
+  PARENT_SYMMETRY               => (empty)          
+  PCG_BETA_TYPE                 => (empty)          
+  PCG_CONVERGENCE               => (empty)          
+  PCG_MAXITER                   => (empty)          
+  PCM                           => (empty)          
+  PE                            => (empty)          
+  PRINT                         => (empty)          
+  PRINT_NOONS                   => (empty)          
+  PROPERTIES                    => (empty)          
+  PROPERTIES_ORIGIN             => (empty)          
+  PUREAM                        => (empty)          
+  QC_MODULE                     => (empty)          
+  RAS1                          => (empty)          
+  RAS2                          => (empty)          
+  RAS3                          => (empty)          
+  RAS4                          => (empty)          
+  RELATIVISTIC                  => (empty)          
+  RELAXED                       => (empty)          
+  RESTRICTED_DOCC               => (empty)          
+  RESTRICTED_UOCC               => (empty)          
+  RMS_MOGRAD_CONVERGENCE        => (empty)          
+  R_CONVERGENCE                 => (empty)          
+  SCF_TYPE                      => PK              !
+  SCS_TYPE                      => (empty)          
+  SOCC                          => (empty)          
+  SOS_TYPE                      => (empty)          
+  SYMMETRIZE                    => (empty)          
+  TPDM_ABCD_TYPE                => (empty)          
+  WFN                           => (empty)          
+  WFN_TYPE                      => OMP2            !
+  WRITER_FILE_LABEL             => (empty)          
 
 
  ============================================================================== 
@@ -305,41 +418,41 @@ Total time:
 
 	IRREP   FC   AOCC  BOCC  AVIR    BVIR  FV 
 	==========================================
-	   A     0     5     4     2      3     0
+	   A     0     9     9     7      7     0
 	==========================================
 
 	Computing MP2 energy using SCF MOs (ROHF-MP2)... 
 	============================================================================== 
-	Nuclear Repulsion Energy (a.u.)    :     8.00236648217342
-	SCF Energy (a.u.)                  :   -74.65925174710299
-	REF Energy (a.u.)                  :   -74.65925174710299
-	Alpha-Alpha Contribution (a.u.)    :    -0.00119753686587
-	Alpha-Beta Contribution (a.u.)     :    -0.03422467528812
-	Beta-Beta Contribution (a.u.)      :    -0.00121614384072
-	Scaled_SS Correlation Energy (a.u.):    -0.00080456023553
-	Scaled_OS Correlation Energy (a.u.):    -0.04106961034574
-	SCS-MP2 Total Energy (a.u.)        :   -74.70112591768427
-	SOS-MP2 Total Energy (a.u.)        :   -74.65925174710299
-	SCSN-MP2 Total Energy (a.u.)       :   -74.66349982514659
-	SCS-MP2-VDW Total Energy (a.u.)    :   -74.70426617182507
-	SOS-PI-MP2 Total Energy (a.u.)     :   -74.70716629250636
-	MP2 Singles Energy (a.u.)          :    -0.00097815819546
-	MP2 Doubles Energy (a.u.)          :    -0.03663835599471
-	MP2 Correlation Energy (a.u.)      :    -0.03761651419017
-	MP2 Total Energy (a.u.)            :   -74.69686826129315
+	Nuclear Repulsion Energy (a.u.)    :    42.42782559489538
+	SCF Energy (a.u.)                  :   -78.30530748038933
+	REF Energy (a.u.)                  :   -78.30530748038933
+	Alpha-Alpha Contribution (a.u.)    :    -0.00427632859996
+	Alpha-Beta Contribution (a.u.)     :    -0.09868315638032
+	Beta-Beta Contribution (a.u.)      :    -0.00427632859996
+	Scaled_SS Correlation Energy (a.u.):    -0.00285088573331
+	Scaled_OS Correlation Energy (a.u.):    -0.11841978765639
+	SCS-MP2 Total Energy (a.u.)        :   -78.42657815377900
+	SOS-MP2 Total Energy (a.u.)        :   -78.30530748038933
+	SCSN-MP2 Total Energy (a.u.)       :   -78.32036015706120
+	SCS-MP2-VDW Total Energy (a.u.)    :   -78.43589824915610
+	SOS-PI-MP2 Total Energy (a.u.)     :   -78.44346389932178
+	MP2 Singles Energy (a.u.)          :    -0.00000000000000
+	MP2 Doubles Energy (a.u.)          :    -0.10723581358025
+	MP2 Correlation Energy (a.u.)      :    -0.10723581358025
+	MP2 Total Energy (a.u.)            :   -78.41254329396958
 	============================================================================== 
 
-*** tstop() called on ws-b14-mmd at Mon Jan 20 18:26:28 2020
+*** tstop() called on ws-b14-mmd at Sun Jan 26 06:48:47 2020
 Module time:
 	user time   =       0.01 seconds =       0.00 minutes
-	system time =       0.00 seconds =       0.00 minutes
+	system time =       0.02 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.40 seconds =       0.01 minutes
-	system time =       0.01 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       0.54 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
 
-    Psi4 stopped on: Monday, 20 January 2020 06:26PM
-    Psi4 wall time for execution: 0:00:00.44
+    Psi4 stopped on: Sunday, 26 January 2020 06:48AM
+    Psi4 wall time for execution: 0:00:01.33
 
 *** Psi4 exiting successfully. Buy a developer a beer!

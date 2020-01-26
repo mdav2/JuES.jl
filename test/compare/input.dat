@@ -1,10 +1,8 @@
 memory 2 GB
 
 molecule {
-1 2
-O
-H 1 1.1
-H 1 1.1 2 104.0
+0 1
+pubchem:ethane
 symmetry c1
 }
 set reference rohf

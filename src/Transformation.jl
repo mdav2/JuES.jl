@@ -2,6 +2,7 @@ module Transformation
 using JuES.DiskTensors
 using TensorOperations
 using LinearAlgebra
+#using LoopVectorization
 #export disk_tei_transform
 #export mem_tei_transform
 export tei_transform
@@ -38,7 +39,9 @@ function tei_transform(
     temp = zeros(d, d, d, d4)
     #Quarter transform 1
     #(μ,ν,λ,σ) -> (μ,ν,λ,b)
-    @tensor begin
+#    gao = permutedims(gao,[4,1,2,3])
+    @tensoropt begin
+        #temp[μ,ν,λ,b] = C4[σ,b]*gao[σ,μ,ν,λ]
         temp[μ,ν,λ,b] = C4[σ,b]*gao[μ,ν,λ,σ]
     end
     #for b in R4
@@ -58,8 +61,9 @@ function tei_transform(
     #end
     #Quarter transform 2
     #(μ,ν,λ,b) -> (μ,ν,j,b)
+    #temp = permutedims(temp,[3,2,1,4])
     temp2 = zeros(d, d, d3, d4)
-    @tensor begin
+    @tensoropt begin
         temp2[μ,ν,j,b] = C3[λ,j]*temp[μ,ν,λ,b]
     end
     #for b in R4
@@ -79,7 +83,7 @@ function tei_transform(
     #Quarter transform 3
     #(μ,ν,j,b) -> (μ,a,j,b)
     temp = zeros(d, d2, d3, d4)
-    @tensor begin
+    @tensoropt begin
         temp[μ,a,j,b] = C2[ν,a]*temp2[μ,ν,j,b]
     end
     #for b in R4
@@ -158,15 +162,27 @@ function tei_transform(
     end
     #Quarter transform 1
     #(μ,ν,λ,σ) -> (μ,ν,λ,b)
+    ocache = zeros(d,d,d4)
+    icache = zeros(size(gao[1,:,:,:]))
+    #for μ in R
+    #    for ν in R
+    #        ocache .= 0.0#zeros(d,d4)
+    #        icache .= gao[μ,ν,:,:]
+    #        @tensoropt begin
+    #            ocache[λ,b] = C4[σ,b]*icache[λ,σ]
+    #        end
+    #        temp[μ,ν,:,:] .= ocache[:,:]
+    #    end
+    #end
     for μ in R
-        for ν in R
-            ocache = zeros(d,d4)
-            icache = gao[μ,ν,:,:]
-            @tensoropt begin
-                ocache[λ,b] = C4[σ,b]*icache[λ,σ]
-            end
-            temp[μ,ν,:,:] = ocache[:,:]
+        #for ν in R
+        ocache .= 0.0#zeros(d,d4)
+        icache .= gao[μ,:,:,:]
+        @tensoropt begin
+            ocache[ν,λ,b] = C4[σ,b]*icache[ν,λ,σ]
         end
+        temp[μ,:,:,:] .= ocache[:,:,:]
+        #end
     end
     #for μ in R
     #    for ν in R
@@ -174,7 +190,7 @@ function tei_transform(
     #        icache = gao[μ,ν,:,:]
     #        for l ∈ eachindex(d) 
     #            for b ∈ eachindex(d4)
-    #                for s ∈ eachindex(d)
+    #                @avx for s in 1:d#eachindex(d)
     #                    ocache[l,b] += C4[s,b]*icache[l,s]
     #                end
     #            end

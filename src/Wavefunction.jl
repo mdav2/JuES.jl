@@ -72,6 +72,8 @@ struct Wfn{T}
     nvirb::Int
     nmo::Int
     unrestricted::Bool
+    basis::PyObject
+    mints::PyObject
     Ca::Array{T,2} #AO->MO coefficients
     Cb::Array{T,2} #AO->MO coefficients
     Cao::Array{T,2}
@@ -201,6 +203,8 @@ function Wfn(wfn, dt, unrestricted::Bool, diskbased::Bool, name::String = "defau
         nvirb,
         nbf,
         unrestricted,
+        basis,
+        mints,
         Ca,
         Cb,
         Cao,

@@ -27,7 +27,7 @@ ccenergy::Float -> final RCCD energy.
 function do_rccd(refWfn::Wfn, maxit; doprint::Bool=false, return_T2::Bool=false)
     #goes through appropriate steps to do RCCD
     dtm = @elapsed begin
-    set_zero_subnormals(true)
+    #set_zero_subnormals(true)
     nocc = refWfn.nalpha
     nvir = refWfn.nvira
     ovov = refWfn.ijab
