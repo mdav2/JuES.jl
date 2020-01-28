@@ -18,7 +18,7 @@ mol2 = psi4.geometry("""
 					 symmetry c1
 					 """)
 e2,wfn2 = psi4.energy("hf/cc-pvtz",mol=mol2,return_wfn=true)
-JuWfn2 = Wfn(wfn2,Float64,true,false)
+JuWfn2 = Wfn(wfn2,Float64,false,false)
 #mol3 = psi4.geometry("""
 #					 1 2
 #					 O
@@ -35,5 +35,7 @@ println(@benchmark Wfn(wfn2,Float64,false,false))
 println(@benchmark do_rmp2(JuWfn2))
 #println(@benchmark do_direct_rmp2(JuWfn2))
 println(@benchmark do_df_rmp2(JuWfn2))
+println(do_rmp2(JuWfn2))
+println(do_df_rmp2(JuWfn2))
 #println(@benchmark do_ump2(JuWfn3))
 #println(@benchmark do_ump2(JuWfn4))

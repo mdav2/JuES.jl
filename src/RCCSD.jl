@@ -20,8 +20,11 @@ function do_rccsd(refWfn::Wfn, maxit; doprint::Bool=false, return_T2::Bool=false
     vvvv = permutedims(tei_transform(uvsr, Cav, Cav, Cav, Cav, "vvvv"),[1,3,2,4])
     ovvv = permutedims(tei_transform(uvsr, Cao, Cav, Cav, Cav, "ovvv"),[1,3,2,4])
     vovv = permutedims(tei_transform(uvsr, Cav, Cav, Cao, Cav, "vovv"),[1,3,2,4])
+    vovv = permutedims(vovv,[2,1,3,4])
     vvov = permutedims(tei_transform(uvsr, Cav, Cao, Cav, Cav, "vvov"),[1,3,2,4])
+    vvov = permutedims(vvov,[4,1,2,3])
     vvvo = permutedims(tei_transform(uvsr, Cav, Cav, Cav, Cao, "vvvo"),[1,3,2,4])
+    vvvo = permutedims(vvvo,[3,1,2,4])
     oovv = permutedims(refWfn.ijab,[1,3,2,4])
     ovvo = permutedims(tei_transform(uvsr, Cao, Cav, Cav, Cao, "ovvo"),[1,3,2,4])
     vovo = permutedims(tei_transform(uvsr, Cav, Cav, Cao, Cao, "vovo"),[1,3,2,4])
@@ -31,6 +34,7 @@ function do_rccsd(refWfn::Wfn, maxit; doprint::Bool=false, return_T2::Bool=false
     oovo = permutedims(tei_transform(uvsr, Cao, Cav, Cao, Cao, "oovo"),[1,3,2,4])
     ovoo = permutedims(tei_transform(uvsr, Cao, Cao, Cav, Cao, "ovoo"),[1,3,2,4])
     vooo = permutedims(tei_transform(uvsr, Cav, Cao, Cao, Cao, "vooo"),[1,3,2,4])
+    vooo = permutedims(vooo,[2,1,3,4])
     oooo = permutedims(tei_transform(uvsr, Cao, Cao, Cao, Cao, "oooo"),[1,3,2,4])
     epsa = refWfn.epsa
     T2 = zeros(dtt, nocc, nocc, nvir, nvir)
@@ -62,7 +66,7 @@ function do_rccsd(refWfn::Wfn, maxit; doprint::Bool=false, return_T2::Bool=false
                T1,tiatia,T2,Dia,Dijab)
         T1 = _T1
         T2 = _T2
-        @tensor begin
+        @tensoropt begin
             tiatia[m,n,a,f] = T1[m,a]*T1[n,f]
         end
         if doprint println(ccenergy(oovv,T1,tiatia,T2)) end
@@ -102,8 +106,8 @@ function cciter(Fae,Fmi,Fme,
     _tia = form_T1(Fae,Fmi,Fme,voov,ovov,ooov,vovv,tia,tijab,Dia)
     _tijab = form_T2(Fae,Fmi,Fme,Wabef,Wmnij,WmBeJ,WmBEj,oovv,
                      ovvo,vovo,vvvo,vvov,ovoo,vooo,tia,tiatia,tijab,Dijab)
-    tia = nothing
-    tijab = nothing
+    #tia = nothing
+    #tijab = nothing
     return _tia,_tijab
 end
                 
@@ -120,15 +124,15 @@ function form_Dia(T1, epsa)
     return Dia
 end
 function form_Fae!(Fae,maef,amef,mnef,tia,tiatia,tijab)
-    Fae .= 0.0
+    #Fae .= 0.0
     @tensoropt begin
-        Fae[a,e] = (tia[m,f]*(2*amef[a,m,e,f] - maef[m,a,e,f])
+        Fae[a,e] = (tia[m,f]*(2*amef[m,a,e,f] - maef[m,a,e,f])
                     - ((tijab[m,n,a,f] + 0.5*tiatia[m,n,a,f])*(2*mnef[m,n,e,f] - mnef[n,m,e,f])))
     end
     return Fae
 end
 function form_Fmi!(Fmi,mnie,mnef,tia,tiatia,tijab)
-    Fmi .= 0.0
+    #Fmi .= 0.0
     @tensoropt begin
         Fmi[m,i] = (tia[n,e]*(2*mnie[m,n,i,e] - mnie[n,m,i,e])
                     + ((tijab[i,n,e,f] + 0.5*tiatia[i,n,e,f])
@@ -137,14 +141,14 @@ function form_Fmi!(Fmi,mnie,mnef,tia,tiatia,tijab)
     return Fmi
 end
 function form_Fme!(Fme,mnef,tia)
-    Fme .= 0.0
+    #Fme .= 0.0
     @tensoropt begin
         Fme[m,e] = tia[n,f]*(2*mnef[m,n,e,f] - mnef[n,m,e,f])
     end
     return Fme
 end
 function form_Wmnij!(Wmnij,mnij,mnie,mnej,mnef,tia,tiatia,tijab)
-    Wmnij .= 0.0
+    #Wmnij .= 0.0
     @tensoropt begin
         Wmnij[m,n,i,j] = (mnij[m,n,i,j] + tia[j,e]*mnie[m,n,i,e]
                           + tia[i,e]*mnej[m,n,e,j]
@@ -153,16 +157,16 @@ function form_Wmnij!(Wmnij,mnij,mnie,mnej,mnef,tia,tiatia,tijab)
     return Wmnij
 end
 function form_Wabef!(Wabef,abef,amef,mbef,mnef,tia,tiatia,tijab)
-    Wabef .= 0.0
+    #Wabef .= 0.0
     @tensoropt begin
-        Wabef[a,b,e,f] = (abef[a,b,e,f] - tia[m,b]*amef[a,m,e,f]
+        Wabef[a,b,e,f] = (abef[a,b,e,f] - tia[m,b]*amef[m,a,e,f]
                           - tia[m,a]*mbef[m,b,e,f]
                           + 0.5*(tijab[m,n,a,b] + tiatia[m,n,a,b])*mnef[m,n,e,f])
     end
     return Wabef
 end
 function form_WmBeJ!(WmBeJ,mbej,mbef,mnej,mnef,tia,tiatia,tijab)
-    WmBeJ .= 0.0
+    #WmBeJ .= 0.0
     @tensoropt begin
         WmBeJ[m,b,e,j] = (mbej[m,b,e,j] + tia[j,f]*mbef[m,b,e,f]
                           - tia[n,b]*mnej[m,n,e,j]
@@ -172,7 +176,7 @@ function form_WmBeJ!(WmBeJ,mbej,mbef,mnej,mnef,tia,tiatia,tijab)
     return WmBeJ
 end
 function form_WmBEj!(WmBEj,bmej,mbfe,nmej,nmef,tia,tiatia,tijab)
-    WmBEj .= 0.0
+    #WmBEj .= 0.0
     @tensoropt begin
         WmBEj[m,b,e,j] = (-1*bmej[b,m,e,j] - tia[j,f]*mbfe[m,b,f,e]
                           + tia[n,b]*nmej[n,m,e,j]
@@ -181,21 +185,22 @@ function form_WmBEj!(WmBEj,bmej,mbfe,nmej,nmef,tia,tiatia,tijab)
     return WmBEj
 end
 function form_T1(Fae,Fmi,Fme,amie,maie,mnie,amef,tia,tijab,Dia)
-    _tia = zeros(size(tia))
+    #_tia = zeros(size(tia))
     @tensoropt begin
-        _tia[i,a] = (tia[i,e]*Fae[a,e] - tia[m,a]*Fmi[m,i]
+        _tia[i,a] := (tia[i,e]*Fae[a,e] - tia[m,a]*Fmi[m,i]
                      + Fme[m,e]*(2*tijab[i,m,a,e] - tijab[m,i,a,e])
                      + tia[m,e]*(2*amie[a,m,i,e] - maie[m,a,i,e])
                      - tijab[m,n,a,e]*(2*mnie[m,n,i,e] - mnie[n,m,i,e])
-                     + tijab[i,m,e,f]*(2*amef[a,m,e,f] - amef[a,m,f,e]))
+                     + tijab[i,m,e,f]*(2*amef[m,a,e,f] - amef[m,a,f,e]))
     end
-    _tia = _tia ./ Dia
+    _tia .= _tia ./ Dia
     return _tia
 end
 function form_T2(Fae,Fmi,Fme,Wabef,Wmnij,WmBeJ,WmBEj,ijab,mbej,amej,abej,abie,mbij,amij,tia,tiatia,tijab,Dijab)
-    _tijab = zeros(size(tijab))
+    #_tijab = zeros(size(tijab))
+    _tia = permutedims(tia,[2,1])
     @tensoropt begin
-        _tijab[i,j,a,b] = (ijab[i,j,a,b] 
+        _tijab[i,j,a,b] := (ijab[i,j,a,b] 
                            + tijab[i,j,a,e]*(Fae[b,e] - 0.5*tia[m,b]*Fme[m,e])
                            + tijab[i,j,e,b]*(Fae[a,e] - 0.5*tia[m,a]*Fme[m,e])
                            - tijab[i,m,a,b]*(Fmi[m,j] + 0.5*tia[j,e]*Fme[m,e])
@@ -212,13 +217,13 @@ function form_T2(Fae,Fmi,Fme,Wabef,Wmnij,WmBeJ,WmBEj,ijab,mbej,amej,abej,abie,mb
                            + ((tijab[j,m,b,e] - tijab[m,j,b,e])*WmBeJ[m,a,e,i]
                               - tiatia[j,m,e,b]*mbej[m,a,e,i])
                            + tijab[j,m,b,e]*(WmBeJ[m,a,e,i] + WmBEj[m,a,e,i])
-                           + tia[i,e]*abej[a,b,e,j]
-                           + tia[j,e]*abie[a,b,i,e]
+                           + _tia[e,i]*abej[e,a,b,j]
+                           + _tia[e,j]*abie[e,a,b,i]
                            - tia[m,a]*mbij[m,b,i,j]
-                           - tia[m,b]*amij[a,m,i,j]
+                           - tia[m,b]*amij[m,a,i,j]
                           )
     end
-    _tijab = _tijab ./ Dijab
+    _tijab .= _tijab ./ Dijab
     return _tijab
 end
 end #module
