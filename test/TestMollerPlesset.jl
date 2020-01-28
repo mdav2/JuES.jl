@@ -26,9 +26,13 @@ mol3 = psi4.geometry("""
 psi4.set_options(Dict("reference" => "uhf"))
 e3, wfn3 = psi4.energy("hf/sto-3g", mol = mol3, return_wfn = true)
 JuWfn3 = Wfn(wfn3, Float64, true, false)
+psi4.set_options(Dict("scf_type" => "df"))
+e4,wfn4 = psi4.energy("hf/sto-3g",mol=mol2,return_wfn=true)
+JuWfn4 = Wfn(wfn4)
 @testset "MP2" begin
     @test do_rmp2(JuWfn2) ≈ -0.04914964480386458
     @test do_ump2(JuWfn3) ≈ -0.03588729625230
     @test do_rmp2(JuWfn2) ≈ do_ump2(JuWfn2)
     @test do_direct_rmp2(JuWfn2) ≈ -0.04914964480386458
+    do_df_rmp2(JuWfn4)
 end
