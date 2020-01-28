@@ -4,7 +4,7 @@ function do_df_rmp2(refWfn::Wfn)
     nvir    = refWfn.nvira
     C       = refWfn.Ca
     bname   = refWfn.basis.blend()
-    df      = psi4.core.BasisSet.build(refWfn.basis.molecule(), "DF_BASIS_MP2", bname)
+    df      = psi4.core.BasisSet.build(refWfn.basis.molecule(), "DF_BASIS_MP2", "def2-svp-jkfit")
     #dfmints = psi4.core.MintsHelper(df)
     dfmints = refWfn.mints
     null    = psi4.core.BasisSet.zero_ao_basis_set()
@@ -12,39 +12,44 @@ function do_df_rmp2(refWfn::Wfn)
     Jpq     = dfmints.ao_eri(df,null,df,null).np
     Jpq     = squeeze(Jpq)
     pqP     = squeeze(pqP)
-    Jpqh    = Jpq^(-1/2)
-    @tensor begin
+    @inbounds @fastmath begin
+        Jpqh    = Jpq^(-1/2)
+        _Co      = C[:,1:nocc]
+        _Cv    = C[:,nocc+1:nocc+nvir]
+    end #@inbounds @fastmath
+    @tensoropt begin
         bμν[p,q,Q] := pqP[p,q,P]*Jpqh[P,Q]
     end
     #bμν     = squeeze(bμν)
-    @tensor begin
-        biν[i,ν,Q] := C[μ,i]*bμν[μ,ν,Q]
+    @tensoropt begin
+        biν[i,ν,Q] := _Co[μ,i]*bμν[μ,ν,Q]
     end
-    @tensor begin
-        bia[i,a,Q] := C[ν,a]*biν[i,ν,Q]
-    end
-    @tensor begin
-        iajb[i,a,j,b] := bia[i,a,Q]*bia[j,b,Q]
+    @tensoropt begin
+        bia[i,a,Q] := _Cv[ν,a]*biν[i,ν,Q]
     end
     dmp2 = 0.0
     eps = refWfn.epsa
-    for i in 1:nocc
+    bi = zeros(size(bia[1,:,:]))
+    bj = zeros(size(bi))
+    bAB = zeros(nvir,nvir)
+    @inbounds for i in 1:nocc
         for j in 1:nocc
-            for a in 1:nvir
-                for b in 1:nvir
-                    aa = a+nocc
-                    bb = b+nocc
-                    dmp2 += iajb[i,a,j,b]*(2*iajb[i,a,j,b] - iajb[i,b,j,a])/(eps[i] + eps[j] - eps[aa] - eps[bb])
+            bi[:,:] = bia[i,:,:]
+            bj[:,:] = bia[j,:,:]
+            @tensoropt begin
+                bAB[a,b] = bi[a,Q]*bj[b,Q]
+            end
+            bBA = transpose(bAB)
+            for b in 1:nvir
+                for a in 1:nvir
+                    iajb = bAB[a,b]
+                    ibja = bBA[a,b]
+                    dmp2 += iajb*(2*iajb - ibja)/(eps[i] + eps[j] - eps[a+nocc] - eps[b+nocc])
                 end
             end
         end
     end
-    println(dmp2)
-    #for i in 1:nocc
-    #    for j in 1:nocc
-    #        @tensoropt begin
-    #            bAB[a,b] := 
-    #        end
+    return dmp2
 end
 
 function squeeze(A::AbstractArray)
