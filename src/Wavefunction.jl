@@ -130,10 +130,10 @@ struct DirectWfn{T}
     mints::PyObject
 end
 function Wfn(wfn::PyObject)
-    Wfn(wfn, Float64, false, false)
+    Wfn(wfn, Float64)
 end
 
-function Wfn(wfn, dt, unrestricted::Bool, diskbased::Bool, name::String = "default")
+function Wfn(wfn::PyObject, dt; unrestricted::Bool=false, diskbased::Bool=false, name::String = "default", df::Bool=false)
     dummy2 = Array{dt}(undef, 0, 0) #placeholder 2D array
     dummy4 = Array{dt}(undef, 0, 0, 0, 0) #placeholder 4D array
     basis = wfn.basisset()
@@ -160,7 +160,7 @@ function Wfn(wfn, dt, unrestricted::Bool, diskbased::Bool, name::String = "defau
     hao = convert(Array{dt,2}, wfn.H().to_array()) #core hamiltonian in AO
     if diskbased
         uvsr = disk_ao(mints, basis, string("jues.", "$name", ".uvsr.0"))
-    else
+    elseif !df
         uvsr = convert(Array{dt,4}, mints.ao_eri().to_array()) #AO basis integrals
     end
     if diskbased

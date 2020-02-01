@@ -5,7 +5,6 @@ function do_df_rmp2(refWfn::Wfn)
     C       = refWfn.Ca
     bname   = refWfn.basis.blend()
     df      = psi4.core.BasisSet.build(refWfn.basis.molecule(), "DF_BASIS_MP2", "def2-svp-jkfit")
-    #dfmints = psi4.core.MintsHelper(df)
     dfmints = refWfn.mints
     null    = psi4.core.BasisSet.zero_ao_basis_set()
     pqP     = dfmints.ao_eri(refWfn.basis,refWfn.basis,df,null).np
@@ -32,7 +31,7 @@ function do_df_rmp2(refWfn::Wfn)
     bi = zeros(size(bia[1,:,:]))
     bj = zeros(size(bi))
     bAB = zeros(nvir,nvir)
-    @inbounds for i in 1:nocc
+    @fastmath @inbounds for i in 1:nocc
         for j in 1:nocc
             bi[:,:] = bia[i,:,:]
             bj[:,:] = bia[j,:,:]

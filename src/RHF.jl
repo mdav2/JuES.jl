@@ -3,26 +3,60 @@ struct RHFWfn
     basis::PyObject
     mints::PyObject
     C::Array{Float64,2}
-    h::Array{Float64,2}
+    H::Array{Float64,2}
     S::Array{Float64,2}
+    A::Array{Float64,2}
     D::Array{Float64,2}
     vnuc::Float64
+    ndocc::Int
 end
 
-function RHFWfn(molecule::PyObject,basis::String="STO-3G")
+function RHFWfn(molecule::PyObject,basis::String="STO-3G";debug=false)
     vnuc = molecule.nuclear_repulsion_energy()
     basis = psi4.core.BasisSet.build(molecule,fitrole="ORBITAL",target="STO-3G")
     mints = psi4.core.MintsHelper(basis)
     S = mints.ao_overlap().np
-    h = mints.ao_kinetic().np + mints.ao_potential().np
+    A = mints.ao_overlap()
+    A.power(-0.5,1e-16)
+    A = A.np
+    if debug println("Setup done") end
+    T = mints.ao_kinetic().np 
+    if debug println("made T") end
+    V = mints.ao_potential().np
+    if debug println("made V") end
+    H = T+V
+    if debug println("Made H") end
     C = zeros(basis.nao(),basis.nao())
+    if debug println("Made C") end
     D = zeros(basis.nao(),basis.nao())
-    RHFWfn(molecule,basis,mints,C,h,S,D,vnuc)
+    if debug println("Made D") end
+    nelec = -1*molecule.molecular_charge()
+    for i in 0:molecule.natom()-1
+        nelec += molecule.charge(i)
+    end
+    if debug println("Computed nelec") end
+    if nelec%2 != 0
+        return false
+    end
+    RHFWfn(molecule,basis,mints,C,H,S,A,D,vnuc,nelec/2)
 end
 
-function RHFCompute(wfn::RHFWfn)
-    ao_eri = RHFWfn.ao_eri().np
-
+function RHFCompute(wfn::RHFWfn;doprint=false,maxit=50)
+    I = wfn.mints.ao_eri().np
+    G = 2*I - permutedims(I,[1,3,2,4])
+    Ft = transpose(wfn.A)*wfn.H*wfn.A
+    e,Ct = eigen(Ft)
+    C = wfn.A*Ct
+    Co = C[:,1:wfn.ndocc]
+    @tensor begin
+        D[u,v] := Co[u,m]*Co[v,m]
+    end
+    @tensor begin
+        F[m,n] := D[r,s]*G[m,n,r,s]
+    end
+    F += wfn.H
+    E = RHFEnergy(D,wfn.H,F) + wfn.vnuc
+    if doprint println("@RHF 0 $E") end
 end
 """
     RHFEnergy
@@ -37,43 +71,11 @@ two electron integrals in the AO basis, as well as the desired density matrix.
 ## outputs
     E::Float            -> SCF energy
 """
-function RHFEnergy(h,g,D)
-    nao = size(h)[1]
-    R = 1:nao
-    v = zeros(size(D))
-    #form v (eqn 4b)
-    for μ in R
-        for ν in R
-            temp = 0.0
-            for ρ in R
-                for σ in R
-                    temp += (g[μ,ν,ρ,σ] - (1/2)*g[μ,σ,ρ,ν])*D[σ,ρ]
-                end
-            end
-            v[μ,ν] = temp
-        end
+function RHFEnergy(D,H,F)
+    temp = H + F
+    @tensor begin
+        E[] := D[m,n]*temp[m,n]
     end
-    #compute the energy
-    E = 0.0
-    for ν in R
-        for μ in R
-            E += (h[μ,ν] + (1/2)*v[μ,ν])*D[ν,μ]
-        end
-    end
-    return E
+    return E[]
 end
 
-"""
-    form_D
-
-form the density matrix from an AO->MO coefficient matrix.
-"""
-function form_D(nocc,C)
-    nao = size(C)[1]
-    R = 1:nao
-    D = zeros(nao,nao)
-    for μ in R
-        for ν in R
-        end
-    end
-end
