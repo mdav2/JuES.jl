@@ -20,8 +20,12 @@ function do_ump2(refWfn::Wfn)
     rvirb = refWfn.nbeta+1:refWfn.nmo
     epsa = refWfn.epsa
     epsb = refWfn.epsb
-    #spin case AAAA
-    moeri = refWfn.ijab
+    #moeri = refWfn.ijab
+    Cao = refWfn.Cao
+    Cbo = refWfn.Cbo
+    Cav = refWfn.Cav
+    Cbv = refWfn.Cbv
+    moeri = tei_transform(refWfn.uvsr, Cao, Cav, Cao, Cav, "oovv")
     for b in rvira
         for a = b+1:refWfn.nmo
             aa = a - nocca
@@ -37,7 +41,7 @@ function do_ump2(refWfn::Wfn)
         end
     end
     #spin case ABAB
-    moeri = refWfn.iJaB
+    moeri = tei_transform(refWfn.uvsr, Cao, Cav, Cbo, Cbv, "oOvV")
     for b in rvirb
         for a in rvira
             aa = a - nocca
@@ -53,7 +57,7 @@ function do_ump2(refWfn::Wfn)
         end
     end
     #spin case BBBB
-    moeri = refWfn.IJAB
+    moeri = tei_transform(refWfn.uvsr, Cbo, Cbv, Cbo, Cbv, "OOVV")
     cache = zeros(noccb, 1, noccb, 1)
     for b in rvirb
         for a = b+1:refWfn.nmo

@@ -1,18 +1,20 @@
 function do_df_rmp2(refWfn::Wfn)
     #build DF-basis
+    T = eltype(refWfn.uvsr)
     nocc    = refWfn.nalpha
     nvir    = refWfn.nvira
     C       = refWfn.Ca
-    bname   = refWfn.basis.blend()
-    df      = psi4.core.BasisSet.build(refWfn.basis.molecule(), "DF_BASIS_MP2", "def2-svp-jkfit")
-    dfmints = refWfn.mints
-    null    = psi4.core.BasisSet.zero_ao_basis_set()
-    pqP     = dfmints.ao_eri(refWfn.basis,refWfn.basis,df,null).np
-    Jpq     = dfmints.ao_eri(df,null,df,null).np
-    Jpq     = squeeze(Jpq)
-    pqP     = squeeze(pqP)
+    #bname   = refWfn.basis.blend()
+    #df      = psi4.core.BasisSet.build(refWfn.basis.molecule(), "DF_BASIS_MP2", "$bname-jkfit")
+    #dfmints = refWfn.mints
+    #null    = psi4.core.BasisSet.zero_ao_basis_set()
+    #pqP     = convert(Array{T},dfmints.ao_eri(refWfn.basis,refWfn.basis,df,null).np)
+    #Jpq     = convert(Array{T},dfmints.ao_eri(df,null,df,null).np)
+    #Jpq     = squeeze(Jpq)
+    #pqP     = squeeze(pqP)
+    pqP, Jpqh = setup_df(refWfn)
     @inbounds @fastmath begin
-        Jpqh    = Jpq^(-1/2)
+    #    Jpqh    = Jpq^(-1/2)
         _Co      = C[:,1:nocc]
         _Cv    = C[:,nocc+1:nocc+nvir]
     end #@inbounds @fastmath
@@ -28,10 +30,10 @@ function do_df_rmp2(refWfn::Wfn)
     end
     dmp2 = 0.0
     eps = refWfn.epsa
-    bi = zeros(size(bia[1,:,:]))
-    bj = zeros(size(bi))
-    bAB = zeros(nvir,nvir)
-    @fastmath @inbounds for i in 1:nocc
+    bi = zeros(T,size(bia[1,:,:]))
+    bj = zeros(T,size(bi))
+    bAB = zeros(T,nvir,nvir)
+    for i in 1:nocc
         for j in 1:nocc
             bi[:,:] = bia[i,:,:]
             bj[:,:] = bia[j,:,:]

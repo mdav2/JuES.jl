@@ -17,8 +17,8 @@ with buffered I/O. Uses HDF5 format for storing tensors. One tensor per file.
 """
 module DiskTensors
 
-include("DiskVectors.jl")
-include("DiskMatrices.jl")
+#include("DiskVectors.jl")
+#include("DiskMatrices.jl")
 include("DiskFourTensors.jl")
 
 """
@@ -35,21 +35,20 @@ end
 export squeeze
 export eltype
 export ranger
-export DiskVector
+#export DiskVector
 export blockfill!
-export printdv
-export dvwrite!
-export dvread
-export dvdot
+#export printdv
+#export dvwrite!
+#export dvread
+#export dvdot
 #export Base.getindex
-include("DiskVectorOps.jl")
+#include("DiskVectorOps.jl")
 
-export DiskMatrix
-export dmread
-export dmwrite
-export dmdot
+#export DiskMatrix
+#export dmread
+#export dmwrite
+#export dmdot
 
 export DiskFourTensor
-export d4read
     #export dmelmult
 end

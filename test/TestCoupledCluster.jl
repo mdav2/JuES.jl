@@ -17,6 +17,7 @@ mol2 = psi4.geometry("""
 psi4.set_options(Dict("basis" => "sto-3g", "scf_type" => "pk", "d_convergence" => 14))
 e, wfn2 = psi4.energy("hf/sto-3g", mol = mol2, return_wfn = true)
 JuWfn2 = Wfn(wfn2)
+JuWfn2_s = Wfn{Float32}(wfn2)
 mol3 = psi4.geometry("""
       1 2
       O
@@ -30,8 +31,10 @@ JuWfn3 = Wfn(wfn3)
 #JuWfn3 = Wfn(wfn2, Float64, true, true) #disk based CCD is currently NOT working
 @testset "CoupledCluster" begin
     @testset "Smoke" begin
-        @test RCCD.do_rccd(JuWfn2, 40, doprint=false) ≈ -0.07015050066089029
-        @test RCCSD.do_rccsd(JuWfn2, 40, doprint=false) ≈ -0.070680102078571
+        @test RCCD.do_rccd(JuWfn2) ≈ -0.07015050066089029
+        @test RCCD.do_rccd(JuWfn2_s) ≈ -0.0701504929121782
+        @test RCCSD.do_rccsd(JuWfn2) ≈ -0.070680102078571
+        @test RCCSD.do_rccsd(JuWfn2_s) ≈ -0.07068009398829002
         #ROCCD.do_roccd(JuWfn3, 40, doprint=true)
     end
 end

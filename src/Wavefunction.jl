@@ -82,12 +82,12 @@ struct Wfn{T}
     epsb::Array{T,1} #orbital eigenvalues
     uvsr::Union{Array{T,4},DiskFourTensor} #AO basis electron repulsion integrals
 
-    ijab::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
-    iJaB::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
-    iJAb::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
-    IJAB::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
-    IjAb::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
-    IjaB::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
+    #ijab::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
+    #iJaB::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
+    #iJAb::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
+    #IJAB::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
+    #IjAb::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
+    #IjaB::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
 end
 
 """
@@ -130,10 +130,11 @@ struct DirectWfn{T}
     mints::PyObject
 end
 function Wfn(wfn::PyObject)
-    Wfn(wfn, Float64)
+    Wfn{Float64}(wfn)
 end
 
-function Wfn(wfn::PyObject, dt; unrestricted::Bool=false, diskbased::Bool=false, name::String = "default", df::Bool=false)
+function Wfn{T}(wfn::PyObject; unrestricted::Bool=false, diskbased::Bool=false, name::String = "default", df::Bool=false) where T
+    dt = T
     dummy2 = Array{dt}(undef, 0, 0) #placeholder 2D array
     dummy4 = Array{dt}(undef, 0, 0, 0, 0) #placeholder 4D array
     basis = wfn.basisset()
@@ -211,13 +212,13 @@ function Wfn(wfn::PyObject, dt; unrestricted::Bool=false, diskbased::Bool=false,
         hao,
         epsa,
         epsb,
-        uvsr,
-        ijab,
-        iJaB,
-        iJAb,
-        IJAB,
-        IjAb,
-        IjaB,
+        uvsr
+        #ijab,
+        #iJaB,
+        #iJAb,
+        #IJAB,
+        #IjAb,
+        #IjaB,
     )
     return owfn
 end

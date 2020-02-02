@@ -1,4 +1,4 @@
-function form_Dijab(tiJaB, F::Array{Float64,1})
+function form_Dijab(tiJaB, F::Union{Array{Float64,1},Array{Float32,1}})
     dt = eltype(tiJaB)
     nocc = size(tiJaB, 1)
     nvir = size(tiJaB, 4)
@@ -18,7 +18,7 @@ function form_Dijab(tiJaB, F::Array{Float64,1})
     end
     return Dijab
 end
-function form_Dijab(ijab,f::Array{Float64,2})
+function form_Dijab(ijab,f::Union{Array{Float64,2},Array{Float32,2}})
     nocc = size(ijab)[1]
     nvir = size(ijab)[4]
     Dijab = zeros(size(ijab))

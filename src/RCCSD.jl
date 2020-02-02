@@ -7,35 +7,21 @@ include("Denominators.jl")
 """
     do_rccsd
 """
-function do_rccsd(refWfn::Wfn, maxit; doprint::Bool=false, return_T2::Bool=false)
+function do_rccsd(refWfn::Wfn; maxit=40, doprint::Bool=false, return_T2::Bool=false)
     #goes through appropriate steps to do RCCSD
-    dtm = @elapsed begin
     set_zero_subnormals(true)
     nocc = refWfn.nalpha
     nvir = refWfn.nvira
-    dtt = Float64#eltype(ovov)
     uvsr = refWfn.uvsr
     Cav = refWfn.Cav
     Cao = refWfn.Cao
-    vvvv = permutedims(tei_transform(uvsr, Cav, Cav, Cav, Cav, "vvvv"),[1,3,2,4])
-    ovvv = permutedims(tei_transform(uvsr, Cao, Cav, Cav, Cav, "ovvv"),[1,3,2,4])
-    vovv = permutedims(tei_transform(uvsr, Cav, Cav, Cao, Cav, "vovv"),[1,3,2,4])
-    vovv = permutedims(vovv,[2,1,3,4])
-    vvov = permutedims(tei_transform(uvsr, Cav, Cao, Cav, Cav, "vvov"),[1,3,2,4])
-    vvov = permutedims(vvov,[4,1,2,3])
-    vvvo = permutedims(tei_transform(uvsr, Cav, Cav, Cav, Cao, "vvvo"),[1,3,2,4])
-    vvvo = permutedims(vvvo,[3,1,2,4])
-    oovv = permutedims(refWfn.ijab,[1,3,2,4])
-    ovvo = permutedims(tei_transform(uvsr, Cao, Cav, Cav, Cao, "ovvo"),[1,3,2,4])
-    vovo = permutedims(tei_transform(uvsr, Cav, Cav, Cao, Cao, "vovo"),[1,3,2,4])
-    ovov = permutedims(tei_transform(uvsr, Cao, Cao, Cav, Cav, "ovov"),[1,3,2,4])
-    voov = permutedims(tei_transform(uvsr, Cav, Cao, Cao, Cav, "voov"),[1,3,2,4])
-    ooov = permutedims(tei_transform(uvsr, Cao, Cao, Cao, Cav, "ooov"),[1,3,2,4]) 
-    oovo = permutedims(tei_transform(uvsr, Cao, Cav, Cao, Cao, "oovo"),[1,3,2,4])
-    ovoo = permutedims(tei_transform(uvsr, Cao, Cao, Cav, Cao, "ovoo"),[1,3,2,4])
-    vooo = permutedims(tei_transform(uvsr, Cav, Cao, Cao, Cao, "vooo"),[1,3,2,4])
-    vooo = permutedims(vooo,[2,1,3,4])
-    oooo = permutedims(tei_transform(uvsr, Cao, Cao, Cao, Cao, "oooo"),[1,3,2,4])
+    dtt = eltype(uvsr)
+
+    vvvv, ovvv, vovv,
+    vvov, vvvo, oovv,
+    ovvo, vovo, ovov,
+    voov, ooov, oovo,
+    ovoo, vooo, oooo = make_rccsd_integrals(uvsr,Cao,Cav)
     epsa = refWfn.epsa
     T2 = zeros(dtt, nocc, nocc, nvir, nvir)
     T1 = zeros(dtt,nocc,nvir)
@@ -71,14 +57,38 @@ function do_rccsd(refWfn::Wfn, maxit; doprint::Bool=false, return_T2::Bool=false
         end
         if doprint println(ccenergy(oovv,T1,tiatia,T2)) end
     end
-    end
     if return_T2
         return ccenergy(oovv,T1,tiatia,T2),T2
     else
         return ccenergy(oovv,T1,tiatia,T2)
     end
 end
-
+function make_rccsd_integrals(uvsr,Cao,Cav)
+    vvvv = permutedims(tei_transform(uvsr, Cav, Cav, Cav, Cav, "vvvv"),[1,3,2,4])
+    ovvv = permutedims(tei_transform(uvsr, Cao, Cav, Cav, Cav, "ovvv"),[1,3,2,4])
+    vovv = permutedims(tei_transform(uvsr, Cav, Cav, Cao, Cav, "vovv"),[1,3,2,4])
+    vvov = permutedims(tei_transform(uvsr, Cav, Cao, Cav, Cav, "vvov"),[1,3,2,4])
+    vvvo = permutedims(tei_transform(uvsr, Cav, Cav, Cav, Cao, "vvvo"),[1,3,2,4])
+    oovv = permutedims(tei_transform(uvsr, Cao, Cav, Cao, Cav, "oovv"),[1,3,2,4])
+    ovvo = permutedims(tei_transform(uvsr, Cao, Cav, Cav, Cao, "ovvo"),[1,3,2,4])
+    vovo = permutedims(tei_transform(uvsr, Cav, Cav, Cao, Cao, "vovo"),[1,3,2,4])
+    ovov = permutedims(tei_transform(uvsr, Cao, Cao, Cav, Cav, "ovov"),[1,3,2,4])
+    voov = permutedims(tei_transform(uvsr, Cav, Cao, Cao, Cav, "voov"),[1,3,2,4])
+    ooov = permutedims(tei_transform(uvsr, Cao, Cao, Cao, Cav, "ooov"),[1,3,2,4]) 
+    oovo = permutedims(tei_transform(uvsr, Cao, Cav, Cao, Cao, "oovo"),[1,3,2,4])
+    ovoo = permutedims(tei_transform(uvsr, Cao, Cao, Cav, Cao, "ovoo"),[1,3,2,4])
+    vooo = permutedims(tei_transform(uvsr, Cav, Cao, Cao, Cao, "vooo"),[1,3,2,4])
+    oooo = permutedims(tei_transform(uvsr, Cao, Cao, Cao, Cao, "oooo"),[1,3,2,4])
+    vvov = permutedims(vvov,[4,1,2,3])
+    vvvo = permutedims(vvvo,[3,1,2,4])
+    vovv = permutedims(vovv,[2,1,3,4])
+    vooo = permutedims(vooo,[2,1,3,4])
+    return vvvv, ovvv, vovv,
+           vvov, vvvo, oovv,
+           ovvo, vovo, ovov,
+           voov, ooov, oovo,
+           ovoo, vooo, oooo
+end
 function ccenergy(ijab,tia,tiatia,tijab)
     @tensoropt begin
         ecc[] := ijab[i,j,a,b]*(2*tijab[i,j,a,b] + 2*tiatia[i,j,a,b] 

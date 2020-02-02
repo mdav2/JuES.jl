@@ -2,7 +2,7 @@ import Base.getindex
 import Base.setindex!
 import Base.+
 import Base.eltype
-struct DiskFourTensor
+struct DiskFourTensor{T}
     """
     Data structure for Rank 4 tensors
     """
@@ -18,15 +18,14 @@ function squeeze(A::AbstractArray)
     #singleton_dims = tuple((d for d in 1:ndims(A) if size(A, d) == 1)...)
     return dropdims(A, dims = (findall(size(A) .== 1)...,))
 end
-function DiskFourTensor(
+function DiskFourTensor{T}(
     fname::String,
-    dtype::Type,
     sz1::Int,
     sz2::Int,
     sz3::Int,
     sz4::Int,
     mode::String = "r+",
-)
+) where T
     """
     Constructor for DiskFourTensor objects
     """

@@ -14,7 +14,10 @@ function do_rmp2(refWfn::Wfn)
     rocc = 1:1:refWfn.nalpha
     rvir = nocc+1:1:nocc+refWfn.nvira
     #    @views moeri = permutedims(refWfn.pqrs,[1,3,2,4])
-    moeri = permutedims(refWfn.ijab, [1, 3, 2, 4])
+    #
+    Cao = refWfn.Cao
+    Cav = refWfn.Cav
+    moeri = permutedims(tei_transform(refWfn.uvsr, Cao, Cav, Cao, Cav, "oovv"), [1, 3, 2, 4])
     epsa = refWfn.epsa
     for b in rvir
         for a in rvir

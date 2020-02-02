@@ -4,10 +4,6 @@ using TensorOperations
 using JuES.Transformation
 include("Denominators.jl")
 export do_rccd
-function do_rccd(refWfn::Wfn)
-    #implicit maxit = 40
-    return do_rccd(refWfn, 40)
-end
 """
     do_rccd
 
@@ -24,25 +20,13 @@ doprint::Bool=false -> whether or not to print energy and timing information to
 ## output
 ccenergy::Float -> final RCCD energy. 
 """
-function do_rccd(refWfn::Wfn, maxit; doprint::Bool=false, return_T2::Bool=false)
-    #goes through appropriate steps to do RCCD
-    dtm = @elapsed begin
-    #set_zero_subnormals(true)
+function do_rccd(refWfn::Wfn; maxit=40, doprint=false, return_T2=false)
     nocc = refWfn.nalpha
     nvir = refWfn.nvira
-    ovov = refWfn.ijab
-    oovv = permutedims(ovov,[1,3,2,4])
-    dtt = Float64#eltype(ovov)
-    vvvv = tei_transform(refWfn.uvsr, refWfn.Cav, refWfn.Cav, refWfn.Cav, refWfn.Cav, "vvvv")
-    vvvv = permutedims(vvvv,[1,3,2,4])
-    ovvo = tei_transform(refWfn.uvsr, refWfn.Cao, refWfn.Cav, refWfn.Cav, refWfn.Cao, "ovvo")
-    ovvo = permutedims(ovvo,[1,3,2,4])
-    _oovv = tei_transform(refWfn.uvsr, refWfn.Cao, refWfn.Cao, refWfn.Cav, refWfn.Cav, "oovv")
-    ovov = permutedims(_oovv,[1,3,2,4])
-    oooo = tei_transform(refWfn.uvsr, refWfn.Cao, refWfn.Cao, refWfn.Cao, refWfn.Cao, "oooo")
-    oooo = permutedims(oooo,[1,3,2,4])
     epsa = refWfn.epsa
-    T2 = zeros(dtt, nocc, nocc, nvir, nvir)
+    T = eltype(refWfn.uvsr)
+    oovv,ovov,ovvo,oooo,vvvv = make_rccd_integrals(refWfn.uvsr,refWfn.Cao,refWfn.Cav) 
+    T2 = zeros(T, nocc, nocc, nvir, nvir)
     Dijab = form_Dijab(T2, epsa)
     T2_init!(T2, ovov, Dijab)
     if doprint
@@ -77,13 +61,26 @@ function do_rccd(refWfn::Wfn, maxit; doprint::Bool=false, return_T2::Bool=false)
     if doprint
         println("CCD iterations computed in $dt s")
     end
-    end
     if doprint println("CCD complete in $dtm s") end
     if return_T2
         return ccenergy(T2, oovv), T2
     else
         return ccenergy(T2, oovv)
     end
+end
+
+function make_rccd_integrals(gao::Array,Cao,Cav)
+    oovv = tei_transform(gao, Cao, Cav, Cao, Cav, "oovv")
+    vvvv = tei_transform(gao, Cav, Cav, Cav, Cav, "vvvv")
+    ovvo = tei_transform(gao, Cao, Cav, Cav, Cao, "ovvo")
+    ovov = tei_transform(gao, Cao, Cao, Cav, Cav, "oovv")
+    oooo = tei_transform(gao, Cao, Cao, Cao, Cao, "oooo")
+    oovv = permutedims(oovv,[1,3,2,4])
+    ovov = permutedims(ovov,[1,3,2,4])
+    ovvo = permutedims(ovvo,[1,3,2,4])
+    oooo = permutedims(oooo,[1,3,2,4])
+    vvvv = permutedims(vvvv,[1,3,2,4])
+    return oovv,ovov,ovvo,oooo,vvvv
 end
 
 function ccenergy(tiJaB, ijab)

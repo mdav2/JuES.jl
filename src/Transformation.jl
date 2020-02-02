@@ -25,11 +25,11 @@ function tei_transform(gao::DiskFourTensor,
 end
 
 function tei_transform(
-    gao::Array{Float64,4},
-    C1::Array{Float64,2},
-    C2::Array{Float64,2},
-    C3::Array{Float64,2},
-    C4::Array{Float64,2},
+                       gao::Union{Array{Float64,4},Array{Float32,4}},
+                       C1::Union{Array{Float64,2},Array{Float32,2}},
+                       C2::Union{Array{Float64,2},Array{Float32,2}},
+                       C3::Union{Array{Float64,2},Array{Float32,2}},
+                       C4::Union{Array{Float64,2},Array{Float32,2}},
     name::String,
 )
     """
@@ -81,17 +81,17 @@ function tei_transform(
 end
 function tei_transform(
     gao::DiskFourTensor,
-    C1::Array{Float64,2},
-    C2::Array{Float64,2},
-    C3::Array{Float64,2},
-    C4::Array{Float64,2},
+    C1::Union{Array{Float64,2},Array{Float32,2}},
+    C2::Union{Array{Float64,2},Array{Float32,2}},
+    C3::Union{Array{Float64,2},Array{Float32,2}},
+    C4::Union{Array{Float64,2},Array{Float32,2}},
     name::String,
 )
     """
     general spin orbital transformation
      
     """
-    T = typeof(gao)
+    T = eltype(gao)
     norb = size(C1)[1]
     d = size(C1)[1]
     d1 = size(C1)[2]
@@ -108,12 +108,8 @@ function tei_transform(
     R2 = collect(rr2)
     R3 = collect(rr3)
     R4 = collect(rr4)
-    if T == Array{Float64,4}
-        temp = zeros(d, d, d, d4)
-    elseif T == DiskFourTensor
-        temp = DiskFourTensor("/tmp/jues.$name.temp.0", Float64, d, d, d, d4, "w")
-        blockfill!(temp, 0.0)
-    end
+    temp = DiskFourTensor("/tmp/jues.$name.temp.0", T, d, d, d, d4, "w")
+    blockfill!(temp, 0.0)
     #Quarter transform 1
     #(μ,ν,λ,σ) -> (μ,ν,λ,b)
     ocache = zeros(d,d,d4)
@@ -130,12 +126,8 @@ function tei_transform(
     end
     #Quarter transform 2
     #(μ,ν,λ,b) -> (μ,ν,j,b)
-    if T == Array{Float64,4}
-        temp2 = zeros(d, d, d3, d4)
-    elseif T == DiskFourTensor
-        temp2 = DiskFourTensor("/tmp/jues.$name.temp2.0", Float64, d, d, d3, d4, "w")
-        blockfill!(temp2, 0.0)
-    end
+    temp2 = DiskFourTensor("/tmp/jues.$name.temp2.0", T, d, d, d3, d4, "w")
+    blockfill!(temp2, 0.0)
     for μ in R
         for ν in R
             ocache = zeros(d3,d4)
@@ -148,12 +140,8 @@ function tei_transform(
     end
     #Quarter transform 3
     #(μ,ν,j,b) -> (μ,a,j,b)
-    if T == Array{Float64,4}
-        temp = zeros(d, d2, d3, d4)
-    elseif T == DiskFourTensor
-        temp = DiskFourTensor("/tmp/jues.$name.temp.0", Float64, d, d2, d3, d4, "w")
-        blockfill!(temp, 0.0)
-    end
+    temp = DiskFourTensor("/tmp/jues.$name.temp.0", T, d, d2, d3, d4, "w")
+    blockfill!(temp, 0.0)
     for b in R4
         for j in R3
             ocache = zeros(d, d2)
@@ -171,12 +159,8 @@ function tei_transform(
     #Quarter transform 4
     #(μ,a,j,b) -> (i,a,j,b)
 
-    if T == Array{Float64,4}
-        temp2 = zeros(d1, d2, d3, d4)
-    elseif T == DiskFourTensor
-        temp2 = DiskFourTensor("/tmp/jues.$name.temp2.0", Float64, d1, d2, d3, d4, "w")
-        blockfill!(temp2, 0.0)
-    end
+    temp2 = DiskFourTensor("/tmp/jues.$name.temp2.0", T, d1, d2, d3, d4, "w")
+    blockfill!(temp2, 0.0)
     for b in R4
         for j in R3
             icache = temp[:, :, j, b]

@@ -11,6 +11,8 @@ module MollerPlesset
 using JuES.Wavefunction
 using JuES.DiskTensors
 using JuES.Direct
+using JuES.Transformation
+using JuES.DF
 using JuES
 using TensorOperations
 
