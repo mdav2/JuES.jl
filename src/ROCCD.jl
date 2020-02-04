@@ -218,7 +218,7 @@ function form_FAE!(FAE,fb,oOvV,OOVV,tIJAB,tiJaB)
     @tensoropt begin
         Fae[a,e] := (-0.5*tIJAB[m,n,a,f]*OOVV[m,n,e,f])
         Fae[a,e] -= (-1*tiJaB[n,m,f,a]*oOvV[n,m,f,e])
-        #Fae[a,e] -= (-0.5*tIJAB[m,n,a,f]*OOVV[m,n,e,f])
+        Fae[a,e] -= (-0.5*tIJAB[m,n,a,f]*OOVV[m,n,e,f])
     end
     FAE += fb - diagm(diag(fb))
     return FAE
@@ -262,9 +262,11 @@ function form_WmNiJ!(WmNiJ,oOoO,oOvV,tiJaB)
     return WmNiJ
 end
 function form_WMniJ!(WMniJ,oOoO,oOvV,tiJaB)
+    println(size(tiJaB))
+    println(size(oOvV))
     @tensoropt begin
-        WMniJ[m,n,i,j] = (-1*oOoO[n,m,i,j])
-                          #- (1/4)*tiJaB[i,j,e,f]*oOvV[m,n,f,e]
+        WMniJ[m,n,i,j] = (-1*oOoO[n,m,i,j]
+                          - (1/4)*tiJaB[i,j,e,f]*oOvV[m,n,f,e])
                           #- (1/4)*tiJaB[i,j,f,e]*oOvV[m,n,e,f])
     end
     return WMniJ
