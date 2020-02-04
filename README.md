@@ -1,11 +1,12 @@
 # JuES : Documentation
 ## Overview and Motivations
-> **(!)** This project is preliminary. I'm still quite new to Julia, and any feedback (including recommending a complete refactoring!) is very welcome! 
+> **(!)** This project is preliminary. I'm still quite new to Julia, and any feedback is very welcome! 
 
 JuES (pronounced "juice") is a programming environment for writing arbitrary electronic structure and quantum chemical computations in the Julia programming language. Julia shows a lot of promise as a language for scientific computing, with many fields writing domain-specific applications in Julia. This project is intended to demonstrate some ways of working in this language, and showcase a proposed style of programming for expansion into a complete set of electronic structure programs.
 
 ## Installing JuES
 These instructions are lifted from [this helpful site](https://tlienart.github.io/pub/julia/dev-pkg.html). 
+In addition to the instructions below, there are some dependencies required. Please raise an issue if there is any difficulty with dependencies.
 Make a directory where you will be placing JuES. I'll use `<DEVDIR>` to represent that directory. Clone JuES.
 ```
 mkdir <DEVDIR>
@@ -88,7 +89,7 @@ This module contains necessary code for integral direct computations. Currently 
 > **(!) Help** Function for contracting integrals for a fixed index is implemented. For most purpses, storing a 3-index quantity in memory is feasible; so incorporating this into energy routines would be very helpful.
 ### MatrixElement.jl
 This module defines an interface for obtaining matrix elements for CI matrices.
->**(!) Help** This is just a skeleton at this point. Contributions to this module will greatly help a functioning FCI and arbitrary order CI code. Basic equations and citation to Szabo and Ostlund are in docstrings. 
+>**(!) Help** This is just a skeleton at this point. Contributions to this module will greatly help a functioning FCI and arbitrary order CI code. Basic equations and citation to Szabo and Ostlund are in docstrings to help the intrepid contributor. 
 ### MollerPlesset.jl
 Routines for Moller-Plesset perturbation theory computations are implemented here. Currently in-core and disk based RMP2 and UMP2 are implemented. 
 >**(!) Help** Direct UMP2 would be an excellent contribution. 
@@ -96,5 +97,5 @@ Routines for Moller-Plesset perturbation theory computations are implemented her
 Specialized routines for computing configuration-interaction singles excited state wavefunctions are defined here. Corrections such as CIS(D) and variants defined here as well. Keep seperate from general CI code. Only in-core RCIS is implemented, and is currently not working.
 >**(!) Help** UCIS, disk-based, and direct implementations are excellent targets. 
 ### CoupledCluster.jl
-Routines for computing ground state coupled cluster energies are contained here. Currently there is RHF-CCD and RHF-CCSD implemented. UHF codes are in the works.
+Routines for computing ground state coupled cluster energies are contained here. Currently there is RHF-CCD and RHF-CCSD implemented. UHF and ROHF codes are in the works.
 >**(!) Help** Working on UHF-CC codes would be greatly appreciated. Coding a perturbative triples correction would be a straightforward addition. CCD and CCSD code could be updated to be able to use DiskTensors for Fxy and Wvxyz intermediates.
