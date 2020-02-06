@@ -4,14 +4,6 @@ function do_df_rmp2(refWfn::Wfn)
     nocc    = refWfn.nalpha
     nvir    = refWfn.nvira
     C       = refWfn.Ca
-    #bname   = refWfn.basis.blend()
-    #df      = psi4.core.BasisSet.build(refWfn.basis.molecule(), "DF_BASIS_MP2", "$bname-jkfit")
-    #dfmints = refWfn.mints
-    #null    = psi4.core.BasisSet.zero_ao_basis_set()
-    #pqP     = convert(Array{T},dfmints.ao_eri(refWfn.basis,refWfn.basis,df,null).np)
-    #Jpq     = convert(Array{T},dfmints.ao_eri(df,null,df,null).np)
-    #Jpq     = squeeze(Jpq)
-    #pqP     = squeeze(pqP)
     pqP, Jpqh = setup_df(refWfn)
     @inbounds @fastmath begin
     #    Jpqh    = Jpq^(-1/2)

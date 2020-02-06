@@ -2,7 +2,7 @@ using Test
 using PyCall
 using JuES
 using JuES.Wavefunction
-using JuES.CoupledCluster: RCCSD, RCCD, ROCCD
+using JuES.CoupledCluster: RCCSD, RCCD, ROCCD, DFRCCD
 
 
 psi4.core.be_quiet() #turn off output
@@ -16,8 +16,12 @@ mol2 = psi4.geometry("""
       """)
 psi4.set_options(Dict("basis" => "sto-3g", "scf_type" => "pk", "d_convergence" => 14))
 e, wfn2 = psi4.energy("hf/sto-3g", mol = mol2, return_wfn = true)
+psi4.set_options(Dict("scf_type"=>"df"))
+e, wfn2_df = psi4.energy("hf/sto-3g", mol = mol2, return_wfn = true)
+psi4.set_options(Dict("scf_type"=>"pk"))
 JuWfn2 = Wfn(wfn2)
 JuWfn2_s = Wfn{Float32}(wfn2)
+JuWfn2_df = Wfn(wfn2_df)
 mol3 = psi4.geometry("""
       1 2
       O
@@ -35,6 +39,7 @@ JuWfn3 = Wfn(wfn3)
         @test RCCD.do_rccd(JuWfn2_s) ≈ -0.0701504929121782
         @test RCCSD.do_rccsd(JuWfn2) ≈ -0.070680102078571
         @test RCCSD.do_rccsd(JuWfn2_s) ≈ -0.07068009398829002
+        println(DFRCCD.do_df_rccd(JuWfn2_df))
         #ROCCD.do_roccd(JuWfn3, 40, doprint=true)
     end
 end

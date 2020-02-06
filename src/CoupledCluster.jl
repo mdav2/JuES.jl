@@ -27,6 +27,7 @@ using LinearAlgebra
 using Dates
 
 include("RCCD.jl")
+include("DF-RCCD.jl")
 include("RCCSD.jl")
 include("ROCCD.jl")
 end #module CC
