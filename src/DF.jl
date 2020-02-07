@@ -1,3 +1,10 @@
+"""
+Module for Density Fitting (DF) utility routines
+
+exports:
+functions
+    setup_df
+"""
 module DF
 
 using TensorOperations
@@ -7,7 +14,20 @@ using JuES.DiskTensors
 
 export setup_df
 
-function setup_df(refWfn::Wfn; dfbname="default")
+"""
+    setup_df
+
+inputs
+---
+
+refWfn::JuES.Wavefunction.Wfn object
+
+kwargs
+---
+
+dfbname::String="default"
+"""
+function setup_df(refWfn::Wfn; dfbname::String="default")
     T = eltype(refWfn.uvsr)
     bname = refWfn.basis.blend()
     if dfbname == "default"
