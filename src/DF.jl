@@ -32,9 +32,9 @@ function setup_df(refWfn::Wfn; dfbname::String="default")
     bname = refWfn.basis.blend()
     if dfbname == "default"
         if bname == "STO-3G"
-            dfbname = "def2-svp-jkfit"
+            dfbname = "def2-svp-ri"
         else
-            dfbname = "$bname-jkfit"
+            dfbname = "$bname-ri"
         end
     end
     df = psi4.core.BasisSet.build(refWfn.basis.molecule(),"DF_BASIS_MP2",dfbname)
