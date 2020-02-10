@@ -5,9 +5,7 @@ short term goal is RCCD and UCCD
 medium term goal is RCCSD and UCCSD
 long term goal is RCCSD(T) and UCCSD(T)
 
-Implemented --> RCCD
-			--> 
-Optimized --> RCCD
+Implemented --> RCCD, RCCSD, DF-RCCD
 
 
 usage --> methods should be defined like do_<r/u><method> and take in
