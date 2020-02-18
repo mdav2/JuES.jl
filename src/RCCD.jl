@@ -61,7 +61,6 @@ function do_rccd(refWfn::Wfn; maxit=40, doprint=false, return_T2=false)
     if doprint
         println("CCD iterations computed in $dt s")
     end
-    if doprint println("CCD complete in $dtm s") end
     if return_T2
         return ccenergy(T2, oovv), T2
     else
