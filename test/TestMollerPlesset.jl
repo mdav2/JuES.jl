@@ -3,6 +3,7 @@ using PyCall
 #using BenchmarkTools
 using JuES.Wavefunction
 using JuES.MollerPlesset
+using JuES.CoupledCluster: UCCSD
 using JuES
 psi4.core.be_quiet() #turn off output
 # > setup

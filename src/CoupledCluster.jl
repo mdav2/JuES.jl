@@ -30,4 +30,5 @@ include("RCCD.jl")
 include("DF-RCCD.jl")
 include("RCCSD.jl")
 include("ROCCD.jl")
+include("UCCSD.jl")
 end #module CC

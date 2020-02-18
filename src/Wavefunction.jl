@@ -63,6 +63,7 @@ PqRs::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case BABA)
 PqrS::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case BAAB)
 """
 struct Wfn{T}
+    vnuc
     nalpha::Int
     nbeta::Int
     nvira::Int
@@ -137,6 +138,7 @@ function Wfn{T}(wfn::PyObject; unrestricted::Bool=false, diskbased::Bool=false, 
     dt = T
     dummy2 = Array{dt}(undef, 0, 0) #placeholder 2D array
     dummy4 = Array{dt}(undef, 0, 0, 0, 0) #placeholder 4D array
+    vnuc = wfn.molecule().nuclear_repulsion_energy()
     basis = wfn.basisset()
     mints = psi4.core.MintsHelper(basis) #to generate integrals
     nbf = wfn.nmo()
@@ -195,6 +197,7 @@ function Wfn{T}(wfn::PyObject; unrestricted::Bool=false, diskbased::Bool=false, 
     end
     #create the Wfn object and return it!
     owfn = Wfn{dt}(
+        vnuc,
         nocca,
         noccb,
         nvira,

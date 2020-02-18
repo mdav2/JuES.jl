@@ -1,3 +1,16 @@
+function form_Dia(oovv,F::Union{Array{Float64,2},Array{Float32,2}})
+    dt = eltype(F)
+    nocc = size(oovv)[1]
+    nvir = size(oovv)[4]
+    Dia = zeros(nocc,nvir)
+    for i in 1:nocc
+        for a in 1:nvir
+            aa = a+nocc
+            Dia[i,a] = F[i,i] - F[aa,aa]
+        end
+    end
+    return Dia
+end
 function form_Dijab(tiJaB, F::Union{Array{Float64,1},Array{Float32,1}})
     dt = eltype(tiJaB)
     nocc = size(tiJaB, 1)
