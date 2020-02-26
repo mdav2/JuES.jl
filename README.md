@@ -68,6 +68,10 @@ This project uses other electronic structure programs to compute basic quantitie
 
 As of now there is an interface to the Psi4 programs via the `psi4numpy` interface. This is simply the interface that I know the best, and should be extended in the future. There are plans for interfacing with the PySCF project and the NWChem project. If someone with knowledge wants to implement an interface to other programs e.g. Q-Chem, CFOUR, ORCA, Turbomole, or MOLPRO, they are very welcome. It is intended that the most robust interfaces should be to free and/or open source programs. 
 
+Through the `psi4numpy` interface, RHF and UHF wavefunctions are obtained. For cases
+of problematic spin contamination, the CUHF reference may be used to form a spin-restricted
+UHF solution. 
+
 ### Naming
 It is customary for Julia modules and data structures to have CamelCase names, such as `Wavefunction.jl`. Please follow this aesthetically pleasing convention! 
 

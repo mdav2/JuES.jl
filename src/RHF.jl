@@ -9,9 +9,22 @@ struct RHFWfn
     D::Array{Float64,2}
     vnuc::Float64
     ndocc::Int
+    grad::Bool
+    hess::Bool
+    GradN::Array{Float64,2}
+    GradS::Array{Float64,2}
+    GradSp::Array{Float64,2}
+    GradV::Array{Float64,2}
+    GradT::Array{Float64,2}
+    GradJ::Array{Float64,2}
+    GradK::Array{Float64,2}
+    Grad::Array{Float64,2}
 end
 
-function RHFWfn(molecule::PyObject,basis::String="STO-3G";debug=false)
+function RHFWfn(molecule::PyObject,basis::String="STO-3G";debug=false,grad=false,hess=false)
+    dummy2 = Array{Float64}(undef,0,0)
+    dummy4 = Array{Float64}(undef,0,0,0,0)
+    natoms = molecule.natom()
     vnuc = molecule.nuclear_repulsion_energy()
     basis = psi4.core.BasisSet.build(molecule,fitrole="ORBITAL",target="STO-3G")
     mints = psi4.core.MintsHelper(basis)
@@ -38,7 +51,19 @@ function RHFWfn(molecule::PyObject,basis::String="STO-3G";debug=false)
     if nelec%2 != 0
         return false
     end
-    RHFWfn(molecule,basis,mints,C,H,S,A,D,vnuc,nelec/2)
+    if ! grad
+        GradN = dummy2
+        GradS = dummy2
+        GradSp = dummy2
+        GradV = dummy2
+        GradT = dummy2
+        GradJ = dummy2
+        GradK = dummy2
+        Grad = dummy2
+        
+    end
+    RHFWfn(molecule,basis,mints,C,H,S,A,D,vnuc,nelec/2,grad,hess,GradN,GradS,
+          GradSp,GradV,GradT,GradJ,GradK,Grad)
 end
 
 function RHFCompute(wfn::RHFWfn;doprint=false,maxit=50,Etol=1E-7,Dtol=1E-7)

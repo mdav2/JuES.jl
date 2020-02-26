@@ -27,7 +27,7 @@ mol3 = psi4.geometry("""
       H 1 1.1 2 104.0
       symmetry c1
       """)
-psi4.set_options(Dict("reference" => "uhf"))
+psi4.set_options(Dict("reference" => "cuhf"))
 e3, wfn3 = psi4.energy("hf/sto-3g", mol = mol3, return_wfn = true)
 JuWfn2 = Wfn{Float64}(wfn2; unrestricted=true)
 JuWfn3 = Wfn{Float64}(wfn3; unrestricted=true)
