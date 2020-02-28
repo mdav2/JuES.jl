@@ -70,8 +70,8 @@ struct Wfn{T}
     nvirb::Int
     nmo::Int
     unrestricted::Bool
-    basis::PyObject
-    mints::PyObject
+    basis
+    mints
     Ca::Array{T,2} #AO->MO coefficients
     Cb::Array{T,2} #AO->MO coefficients
     Cao::Array{T,2}

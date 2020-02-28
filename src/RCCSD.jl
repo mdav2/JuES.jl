@@ -50,6 +50,9 @@ function do_rccsd(refWfn::Wfn; maxit=40, doprint::Bool=false, return_T2::Bool=fa
                vvvo,vvov,ovoo,
                vooo,
                T1,tiatia,T2,Dia,Dijab)
+        if i == 1
+            println(Fmi)
+        end
         T1 = _T1
         T2 = _T2
         @tensoropt begin

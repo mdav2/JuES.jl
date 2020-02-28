@@ -28,6 +28,9 @@ kwargs
 dfbname::String="default"
 """
 function setup_df(refWfn::Wfn; dfbname::String="default")
+    if refWfn.basis == nothing
+        return false
+    end
     T = eltype(refWfn.uvsr)
     bname = refWfn.basis.blend()
     if dfbname == "default"
