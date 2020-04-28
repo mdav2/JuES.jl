@@ -28,9 +28,15 @@ function do_rccd(refWfn::Wfn; maxit=40, doprint=false, return_T2=false)
     epsa = refWfn.epsa
     T = eltype(refWfn.uvsr)
     oovv,ovov,ovvo,oooo,vvvv = make_rccd_integrals(refWfn.uvsr,refWfn.Cao,refWfn.Cav) 
-    T2 = zeros(T, nocc, nocc, nvir, nvir)
-    Dijab = form_Dijab(T2, epsa)
-    T2_init!(T2, ovov, Dijab)
+    oovv = CuArray(oovv)
+    ovov = CuArray(ovov)
+    ovvo = CuArray(ovvo)
+    oooo = CuArray(oooo)
+    vvvv = CuArray(vvvv)
+    T2 = cuzeros(T, nocc, nocc, nvir, nvir)
+    T2new = cuzeros(T,nocc,nocc,nvir,nvir)
+    Dijab = CuArray(form_Dijab(T2, epsa))
+    T2_init!(T2, oovv, Dijab)
     if doprint
         println("@RMP2 ", ccenergy(T2, oovv))
     end
@@ -41,7 +47,8 @@ function do_rccd(refWfn::Wfn; maxit=40, doprint=false, return_T2=false)
     WmBeJ = form_WmBeJ(ovvo, oovv, T2)
     WmBEj = form_WmBEj(oovv, ovov, T2)
     dt = @elapsed for i in 0:maxit-1 #TODO: implement RMS check
-        T2 = cciter(
+        cciter(
+            T2new
             T2,
             oovv,
             vvvv,
@@ -59,6 +66,7 @@ function do_rccd(refWfn::Wfn; maxit=40, doprint=false, return_T2=false)
         if doprint
             println("$i @CCD ", ccenergy(T2, oovv))
         end
+        T2 .= T2new
     end
     if doprint
         println("CCD iterations computed in $dt s")
@@ -85,26 +93,17 @@ function make_rccd_integrals(gao::Array,Cao,Cav)
 end
 
 function ccenergy(tiJaB, ijab)
-    ecc = 0.0
+    #ecc = 0.0
     nocc = size(tiJaB, 1)
     nvir = size(tiJaB, 4)
     rocc = collect(UnitRange(1, nocc))
     rvir = collect(UnitRange(1, nvir))
-    for i in rocc
-        for j in rocc
-            #cache = ijab[i,j,:,:]
-            for a in rvir
-                for b in rvir
-                    ecc += ijab[i,j,a,b] * 2 * tiJaB[i, j, a, b]
-                    ecc -= ijab[i,j,a,b] * tiJaB[j, i, a, b]
-                end
-            end
-        end
-    end
-    return ecc
+    @tensoropt ecc[] := ijab[i,j,a,b]*2*tiJaB[i,j,a,b] - ijab[i,j,a,b]*tiJaB[j,i,a,b]
+    return ecc[]
 end
 
 @inbounds @fastmath function cciter(
+    tiJaB_d,
     tiJaB_i,
     oovv,
     vvvv,
@@ -126,7 +125,7 @@ end
     form_Fae!(Fae, tiJaB_i, oovv)
     form_Fmi!(Fmi, tiJaB_i, oovv)
 
-    tiJaB_d = form_T2(tiJaB_i, Fae, Fmi, WmBeJ, WmBEj, Wabef, Wmnij, oovv, Dijab)
+    tiJaB_d = form_T2(tiJaB_d,tiJaB_i, Fae, Fmi, WmBeJ, WmBEj, Wabef, Wmnij, oovv, Dijab)
     return tiJaB_d
 end
 
@@ -135,22 +134,13 @@ function T2_init!(tiJaB, iajb, Dijab)
     nvir = size(tiJaB, 4)
     rocc = UnitRange(1, nocc)
     rvir = UnitRange(1, nvir)
-    for i in rocc
-        for j in rocc
-            cache = iajb[i,:,j,:]
-            for a in rvir
-                for b in rvir
-                    tiJaB[i,j,a,b] = cache[a,b] / Dijab[i,j,a,b]
-                end
-            end
-        end
-    end
+    tiJaB .= iajb ./ Dijab
 end
 
 function form_Fae(tiJaB, menf)
     dt = eltype(menf)
     nvir = size(tiJaB, 4)
-    Fae = zeros(dt, nvir, nvir)
+    Fae = cuzeros(dt, nvir, nvir)
     form_Fae!(Fae, tiJaB, menf)
     return Fae
 end
@@ -159,10 +149,6 @@ function form_Fae!(Fae, tiJaB, mnef)
     nvir = size(tiJaB, 4)
     rocc = UnitRange(1, nocc)
     rvir = UnitRange(1, nvir)
-    Fae .= 0.0
-    #cache1 = zeros(eltype(menf), nocc, nocc)
-    #cache2 = zeros(eltype(menf), nocc, nocc)
-    #mnef = permutedims(menf,[1,3,2,4])
     @tensoropt begin
         Fae[a,e] = -1*(mnef[m,n,e,f]*(2*tiJaB[m,n,a,f] - tiJaB[n,m,a,f]))
     end
@@ -172,7 +158,7 @@ function form_Fmi(tiJaB, menf)
     dt = eltype(menf)
     nocc = size(tiJaB, 1)
     nvir = size(tiJaB, 4)
-    Fmi = zeros(dt, nocc, nocc)
+    Fmi = cuzeros(dt, nocc, nocc)
     form_Fmi!(Fmi, tiJaB, menf)
     return Fmi
 end
@@ -181,28 +167,25 @@ function form_Fmi!(Fmi, tiJaB, mnef)
     nvir = size(tiJaB, 4)
     rocc = UnitRange(1, nocc)
     rvir = UnitRange(1, nvir)
-    Fmi .= 0.0
-    _Fmi = CuArray(Fmi)
-    _mnef = CuArray(mnef)
-    _tiJaB = CuArray(tiJaB)
-    @tensor begin
-        _Fmi[m,i] = _mnef[m,n,e,f]*_tiJaB[i,n,e,f] 
+    @tensoropt begin
+        Fmi[m,i] = mnef[m,n,e,f]*(2*tiJaB[i,n,e,f] - tiJaB[i,n,f,e])
     end
-    Fmi = Array(_Fmi)
     return Fmi
 end
 
-function form_T2(tiJaB_i, Fae, Fmi, WmBeJ, WmBEj, Wabef, Wmnij, ijab, Dijab)
+function form_T2(tiJaB_d,tiJaB_i, Fae, Fmi, WmBeJ, WmBEj, Wabef, Wmnij, ijab, Dijab)
     dtt = eltype(tiJaB_i)
     nocc = size(Wmnij, 1)
     nvir = size(tiJaB_i, 4)
     rocc = 1:nocc
     rvir = 1:nvir 
-    #ijab = permutedims(iajb,[1,3,2,4])
-    tiJaB_d = zeros(size(ijab[:,:,:,:]))
-    @tensor begin
-        tiJaB_d[i,j,a,b] = (ijab[i,j,a,b] + tiJaB_i[i,j,a,e]*Fae[b,e] + tiJaB_i[j,i,b,e]*Fae[a,e]
-                           - tiJaB_i[i,m,a,b]*Fmi[m,j] - tiJaB_i[m,j,a,b]*Fmi[m,i]
+    #tiJaB_d = cuzeros(eltype(tiJaB_i),size(ijab[:,:,:,:]))
+    #tiJaB_d = CuArray(tiJaB_d)
+    @tensoropt begin
+        tiJaB_d[i,j,a,b] = (ijab[i,j,a,b] + tiJaB_i[i,j,a,e]*Fae[b,e] 
+                            + tiJaB_i[j,i,b,e]*Fae[a,e]
+                           - tiJaB_i[i,m,a,b]*Fmi[m,j] 
+                           - tiJaB_i[m,j,a,b]*Fmi[m,i]
                            + tiJaB_i[m,n,a,b]*Wmnij[m,n,i,j]
                            + tiJaB_i[i,j,e,f]*Wabef[a,b,e,f] 
                            + tiJaB_i[i,m,a,e]*WmBeJ[m,b,e,j]*2
@@ -215,195 +198,61 @@ function form_T2(tiJaB_i, Fae, Fmi, WmBeJ, WmBEj, Wabef, Wmnij, ijab, Dijab)
                            + tiJaB_i[j,m,b,e]*WmBEj[m,a,e,i])
 
     end
-    #for b in rvir
-    #    for a in rvir
-    #        cache_iajb = iajb[:,a,:,b]
-    #        cache_tijab = tiJaB_d[:,:,a,b]
-    #        for j in rocc
-    #            for i in rocc
-    #                temp = 0.0
-    #                temp += ijab[i,j,a,b]#cache_iajb[i, j]
-    #                #@views temp += dot(tiJaB_i[i,j,:,:], Wabef[a,b,:,:])
-    #                @views temp += dot(tiJaB_i[i,j,a,:], Fae[b,:])
-    #                @views temp += dot(tiJaB_i[j,i,b,:], Fae[a,:])
-    #                #for e in rvir
-    #                #    temp += tiJaB_i[i, j, a, e] * Fae[b, e]
-    #                #    temp += tiJaB_i[j, i, b, e] * Fae[a, e]
-    #                #    for f in rvir
-    #                #        temp += tiJaB_i[i, j, e, f] * Wabef[a, b, e, f]
-    #                #    end
-    #                #end
-    #                for m in rocc
-    #                    temp -= tiJaB_i[i, m, a, b] * Fmi[m, j]
-    #                    temp -= tiJaB_i[m, j, a, b] * Fmi[m, i]
-    #                    for n in rocc
-    #                        temp += tiJaB_i[m, n, a, b] * Wmnij[m, n, i, j]
-    #                    end
-    #                    for e in rvir
-    #                        c1 = WmBeJ[m,b,e,j]
-    #                        c2 = tiJaB_i[i,m,a,e]
-    #                        c3 = WmBeJ[m,a,e,i]
-    #                        c4 = tiJaB_i[j,m,b,e]
-    #                        temp += (2 *( c2 * c1 + ( c4 * c3)) - (tiJaB_i[m, i, a, e] * c1) + (c2 * WmBEj[m, b, e, j])
-    #                                 + (tiJaB_i[m, i, b, e] * WmBEj[m, a, e, j])
-    #                                 + (tiJaB_i[m, j, a, e] * WmBEj[m, b, e, i])
-    #                                 - (tiJaB_i[m, j, b, e] * c3)
-    #                                 + (c4 * WmBEj[m, a, e, i]))
-    #                    end
-    #                end
-    #                cache_tijab[i,j] += temp
-    #            end
-    #        end
-    #        tiJaB_d[:,:,a,b] += cache_tijab# ./ Dijab[:,:,a,b]
-    #    end
-    #end
-    #tiJaB_i = nothing
-    #tiJaB_d = convert(Array,tiJaB_d)
-    tiJaB_d = tiJaB_d ./ Dijab
+    tiJaB_d .= tiJaB_d ./ Dijab
     return tiJaB_d
 end
 function form_Wmnij(minj, menf, tiJaB)
     dtt = eltype(menf)
     nocc = size(tiJaB, 1)
     nvir = size(tiJaB, 4)
-    Wmnij = zeros(dtt, nocc, nocc, nocc, nocc)
+    Wmnij = cuzeros(dtt, nocc, nocc, nocc, nocc)
     form_Wmnij!(Wmnij, minj, menf, tiJaB)
     return Wmnij
 end
 function form_Wmnij!(Wmnij, mnij, mnef, tiJaB)
-    eps = 1E-10
     nocc = size(tiJaB, 1)
     nvir = size(tiJaB, 4)
     rocc = UnitRange(1, nocc)
     rvir = UnitRange(1, nvir)
-    #Wmnij = convert(SharedArray,Wmnij)
-    #mnij = permutedims(minj,[1,3,2,4])
-    #mnef = permutedims(menf,[1,3,2,4])
-    #tiJaB2 = zeros(nocc^2,nvir^2)
-    #mnef2 = zeros(nocc^2,nvir^2)
-    #for i=1:nocc,j=1:nocc,a=1:nvir,b=1:nvir
-    #    tiJaB2[(i-1)*nocc+j,(a-1)*nvir+b] = abs(tiJaB[i,j,a,b]) > eps ? tiJaB[i,j,a,b] : 0
-    #    mnef2[(i-1)*nocc+j,(a-1)*nvir+b]  = abs(mnef[i,j,a,b]) > eps ? mnef[i,j,a,b] : 0
-    #end
-    #print(tiJaB2)
-    #test = sparse(tiJaB2)
-    #test2 = sparse(mnef2)
-    #dropzeros!(test)
-    #dropzeros!(test2)
-    #print(size(test))
-    #print(nnz(test))
-    #print(size(test2))
-    #print(nnz(test2))
-    #tiJaBmnef2 = test*transpose(mnef2)
-    #tiJaBmnef  = zeros(nocc,nocc,nocc,nocc)
-    #for m=1:nocc,n=1:nocc,i=1:nocc,j=1:nocc
-    #    tiJaBmnef[m,n,i,j] = tiJaBmnef2[(i-1)*nocc+j,(m-1)*nocc+n]
-    #end
     @tensoropt begin
         Wmnij[m,n,i,j] = mnij[m,n,i,j] + tiJaB[i,j,e,f]*mnef[m,n,e,f]/2
     end
-    #for m in rocc
-    #    for n in rocc
-    #        cache_minj = minj[m,:,n,:]
-    #        cache_menf = menf[m,:,n,:]
-    #        for i in rocc
-    #            for j in rocc
-    #                Wmnij[m, n, i, j] = cache_minj[i, j]
-    #                @views Wmnij[m, n, i, j] += dot(tiJaB[i,j,:,:],cache_menf[:,:])/2.0
-    #                #for f in rvir
-    #                #    @simd for e in rvir
-    #                #        Wmnij[m, n, i, j] += tiJaB[i, j, e, f] * cache_menf[e, f]/2.0 
-    #                #    end
-    #                #end
-    #            end
-    #        end
-    #    end
-    #end
-    #Wmnij = convert(Array,Wmnij)
 end
 
 function form_Wabef(aebf, mnef, tiJaB)
     dt = eltype(aebf)
     nvir = size(tiJaB, 4)
-    Wabef = zeros(dt, nvir, nvir, nvir, nvir)
+    Wabef = cuzeros(dt, nvir, nvir, nvir, nvir)
     form_Wabef!(Wabef, aebf, mnef, tiJaB)
     return Wabef
 end
 function form_Wabef!(Wabef, abef, mnef, tiJaB)
-    dtt = eltype(Wabef)
     nocc = size(tiJaB, 1)
     nvir = size(tiJaB, 4)
     rocc = UnitRange(1, nocc)
     rvir = UnitRange(1, nvir)
-    #mnef = permutedims(menf,[1,3,2,4])
-    #abef = permutedims(aebf,[1,3,2,4])
     @tensoropt begin
         Wabef[a,b,e,f] = tiJaB[m,n,a,b]*mnef[m,n,e,f]/2 + abef[a,b,e,f]
     end
-    #for f in rvir
-    #    for e in rvir
-    #        cache_aebf = aebf[:,e,:,f]
-    #        cache_menf = menf[:,e,:,f]
-    #        for b in rvir
-    #            for a in rvir
-    #                #Wabef[a, b, e, f] = 0 
-    #                @views Wabef[a, b, e, f] = dot(tiJaB[:,:,a,b], cache_menf[:,:])/2.0
-    #                #for n in rocc
-    #                #    @simd for m in rocc
-    #                #        Wabef[a, b, e, f] += tiJaB[m, n, a, b] * cache_menf[m, n] 
-    #                #    end
-    #                #end
-    #                #Wabef[a, b, e, f] /= 2.0
-    #                Wabef[a, b, e, f] += cache_aebf[a, b]
-    #            end
-    #        end
-    #    end
-    #end
 end
 
 function form_WmBeJ(mebj, iajb, tiJaB)
     dtt = eltype(iajb)
     nocc = size(tiJaB, 1)
     nvir = size(tiJaB, 4)
-    WmBeJ = zeros(dtt, nocc, nvir, nvir, nocc)
+    WmBeJ = cuzeros(dtt, nocc, nvir, nvir, nocc)
     form_WmBeJ!(WmBeJ, mebj, iajb, tiJaB)
     return WmBeJ
 end
 function form_WmBeJ!(WmBeJ, mbej, mnef, tiJaB)
-    dtt = eltype(WmBeJ)
     nocc = size(tiJaB, 1)
     nvir = size(tiJaB, 4)
-    #WmBeJ .= 0 
     rocc = UnitRange(1, nocc)
     rvir = UnitRange(1, nvir)
-    #mbej = permutedims(mebj,[1,3,2,4])
-    #mnef = permutedims(iajb,[1,3,2,4])
     @tensoropt begin
         WmBeJ[m,b,e,j] = (mbej[m,b,e,j] + mnef[m,n,e,f]*(2*tiJaB[n,j,f,b] - tiJaB[j,n,f,b])/2
                           - mnef[n,m,e,f]*tiJaB[n,j,f,b]/2)
     end
-    #for e in rvir
-    #    for m in rocc
-    #        cache_mebj = mebj[m,e,:,:]
-    #        cache_iajb1 = iajb[m,e,:,:]
-    #        cache_iajb2 = iajb[:,e,m,:]
-    #        for b in rvir
-    #            for j in rocc
-    #                WmBeJ[m, b, e, j] = 0#cache_mebj[b, j]
-    #                for f in rvir
-    #                    @simd for n in rocc
-    #                        WmBeJ[m, b, e, j] +=
-    #                            cache_iajb1[n, f] *
-    #                            (2 * tiJaB[n, j, f, b] - tiJaB[j, n, f, b])
-    #                        WmBeJ[m, b, e, j] -= cache_iajb2[n, f] * tiJaB[n, j, f, b]
-    #                    end
-    #                end
-    #                WmBeJ[m, b, e, j] /= 2.0
-    #                WmBeJ[m, b, e, j] += cache_mebj[b, j]
-    #            end
-    #        end
-    #    end
-    #end
 end
 
 
@@ -411,7 +260,7 @@ function form_WmBEj(nemf, mjbe, tiJaB)
     dtt = eltype(nemf)
     nocc = size(tiJaB, 1)
     nvir = size(tiJaB, 4)
-    WmBEj = zeros(dtt, nocc, nvir, nvir, nocc)
+    WmBEj = cuzeros(dtt, nocc, nvir, nvir, nocc)
     form_WmBEj!(WmBEj, nemf, mjbe, tiJaB)
     return WmBEj
 end
@@ -421,30 +270,9 @@ function form_WmBEj!(WmBEj, nmef, mbje, tiJaB)
     nvir = size(tiJaB, 4)
     rocc = UnitRange(1, nocc)
     rvir = UnitRange(1, nvir)
-    #mbje = permutedims(mjbe,[1,3,2,4])
-    #nmef = permutedims(nemf,[1,3,2,4])
     @tensoropt begin
         WmBEj[m,b,e,j] = -mbje[m,b,j,e] + tiJaB[j,n,f,b]*nmef[n,m,e,f]/2.0
     end
-    #for e in rvir
-    #    for m in rocc
-    #        cache_mjbe = mjbe[m,:,:,e]
-    #        cache_nemf = nemf[:,e,m,:]
-    #        for b in rvir
-    #            for j in rocc
-    #                #WmBEj[m, b, e, j] = 0#-cache_mjbe[j, b]
-    #                @views WmBEj[m, b, e, j] = dot(tiJaB[j, :, :, b], cache_nemf[:, :])/2.0
-    #                #for f in rvir
-    #                #    @simd for n in rocc
-    #                #        WmBEj[m, b, e, j] += tiJaB[j, n, f, b] * cache_nemf[n, f] 
-    #                #    end
-    #                #end
-    #                #WmBEj[m, b, e, j] /= 2.0
-    #                WmBEj[m, b, e, j] += -cache_mjbe[j, b]
-    #            end
-    #        end
-    #    end
-    #end
     return WmBEj
 end
 end #module
