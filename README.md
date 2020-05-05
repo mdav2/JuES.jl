@@ -13,6 +13,7 @@ Make a directory where you will be placing JuES. I'll use `<DEVDIR>` to represen
 
 ### Linking to Psi4Numpy
 > **(!) Temporary** Due to a conflict between Numpy and MKL, if you want to use Intel MKL, which can boost performance for tensor contractions, currently you must obtain MKL.jl from [this repo](https://github.com/fgerick/MKL.jl) NOT the JuliaComputing master branch (currently). 
+
 Please do the following to make the Psi4Numpy interface visible to Julia.
 ```
 conda create -n p4env python=3.7 psi4 -c psi4
