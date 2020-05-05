@@ -10,6 +10,24 @@ In the benchmark and test folders, there are some files that act as examples for
 These instructions are lifted from [this helpful site](https://tlienart.github.io/pub/julia/dev-pkg.html). 
 In addition to the instructions below, there are some dependencies required. Please raise an issue if there is any difficulty with dependencies.
 Make a directory where you will be placing JuES. I'll use `<DEVDIR>` to represent that directory. Clone JuES.
+
+### Linking to Psi4Numpy
+Please do the following to make the Psi4Numpy interface visible to Julia.
+```
+conda create -n p4env python=3.7 psi4 -c psi4
+```
+To get the path to the Python executable,
+```
+$ conda activate p4env
+$ which python
+```
+Then make this python visible to Julia:
+```julia-repl
+julia>ENV["PYTHON"] = <path-to-p4env-python>
+julia>] build PyCall
+```
+
+### Making Julia aware of JuES
 ```
 mkdir <DEVDIR>
 cd <DEVDIR>
