@@ -5,7 +5,7 @@ using JuES.Wavefunction
 using JuES.MollerPlesset
 using JuES.CoupledCluster: UCCSD
 using JuES
-psi4.core.be_quiet() #turn off output
+#psi4.core.be_quiet() #turn off output
 # > setup
 tol = 1E-14
 psi4.set_options(Dict("D_CONVERGENCE" => 10, "scf_type" => "pk"))
@@ -27,7 +27,7 @@ mol3 = psi4.geometry("""
       H 1 1.1 2 104.0
       symmetry c1
       """)
-psi4.set_options(Dict("reference" => "rohf"))
+psi4.set_options(Dict("reference" => "uhf"))
 e3, wfn3 = psi4.energy("hf/sto-3g", mol = mol3, return_wfn = true)
 JuWfn2 = Wfn{Float64}(wfn2; unrestricted=true)
 JuWfn3 = Wfn{Float64}(wfn3; unrestricted=true)

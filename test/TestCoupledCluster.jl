@@ -34,7 +34,6 @@ e, wfn3 = psi4.energy("hf/sto-3g",mol=mol3,return_wfn=true)
 JuWfn3 = Wfn(wfn3)
 psi4.set_options(Dict("reference" => "uhf", "scf_type" => "pk"))
 e,wfn4 = psi4.energy("hf/sto-3g",mol=mol3,return_wfn=true)
-println(e)
 JuWfn4 = Wfn{Float64}(wfn4; unrestricted=true)
 #JuWfn3 = Wfn(wfn2, Float64, true, true) #disk based CCD is currently NOT working
 @testset "CoupledCluster" begin
@@ -43,7 +42,7 @@ JuWfn4 = Wfn{Float64}(wfn4; unrestricted=true)
         @test RCCD.do_rccd(JuWfn2_s) ≈ -0.0701504929121782
         @test RCCSD.do_rccsd(JuWfn2) ≈ -0.070680102078571
         @test RCCSD.do_rccsd(JuWfn2_s) ≈ -0.07068009398829002
-        E = UCCSD.do_uccsd(JuWfn2; doprint=true)
+        #E = UCCSD.do_uccsd(JuWfn2; doprint=true)
         #println(DFRCCD.do_df_rccd(JuWfn2_df; doprint=true))
         #ROCCD.do_roccd(JuWfn3, 40, doprint=true)
     end

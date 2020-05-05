@@ -1,10 +1,11 @@
 using Test
 using PyCall
 #using BenchmarkTools
+using JuES
 using JuES.Wavefunction
 using JuES.MollerPlesset
-psi4 = pyimport("psi4")
-psi4.core.be_quiet() #turn off output
+#psi4 = pyimport("psi4")
+#psi4.core.be_quiet() #turn off output
 # > setup
 tol = 1E-14
 mol = psi4.geometry("""

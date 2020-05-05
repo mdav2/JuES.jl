@@ -26,7 +26,7 @@ mol3 = psi4.geometry("""
       """)
 psi4.set_options(Dict("reference" => "uhf"))
 e3, wfn3 = psi4.energy("hf/sto-3g", mol = mol3, return_wfn = true)
-JuWfn3 = Wfn(wfn3, Float64; unrestricted=true)
+JuWfn3 = Wfn{Float64}(wfn3; unrestricted=true)
 @testset "Integral Transformation" begin
     @testset "SmokeRHF" begin
         disk = tei_transform(JuWfn2.uvsr, JuWfn2.Ca, "testdisk")

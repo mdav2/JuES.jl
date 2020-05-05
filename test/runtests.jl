@@ -36,8 +36,8 @@ psi4.core.be_quiet() #turn off output
 
 @testset "JuES" begin
     include("TestWavefunction.jl")
-    include("TestCISingles.jl")
-    include("TestDiskTensors.jl")
+#    include("TestCISingles.jl")
+#    include("TestDiskTensors.jl")
     include("TestCoupledCluster.jl")
     include("TestTransformation.jl")
     include("TestMollerPlesset.jl")
