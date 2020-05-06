@@ -1,0 +1,14 @@
+molecule = """
+0 1
+O
+H 1 1.1
+H 1 1.1 2 104.0
+"""
+--
+options = Dict(
+    "rhf" => true,
+    "basis" => "cc-pvdz",
+    "doprint" => true
+)
+--
+command = JuES.CoupledCluster.RCCSD.do_rccsd
