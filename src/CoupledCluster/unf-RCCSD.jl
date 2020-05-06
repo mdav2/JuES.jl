@@ -10,10 +10,10 @@ function update_energy(T1::Array{Float64, 2}, T2::Array{Float64, 4}, f::Array{Fl
     E::Float64 = 0
     @tensoropt begin
         CC_energy = 2.0*f[k,c]*T1[k,c]
-        B_OVOV[l,c,k,d] := -1.0*T1[l,c]*T1[k,d]
-        B_OVOV[l,c,k,d] += -1.0*T2[l,k,c,d]
-        B_OVOV[l,c,k,d] += 2.0*T2[k,l,c,d]
-        CC_energy += B_OVOV[l,c,k,d]*V[k,l,c,d]
+        B[l,c,k,d] := -1.0*T1[l,c]*T1[k,d]
+        B[l,c,k,d] += -1.0*T2[l,k,c,d]
+        B[l,c,k,d] += 2.0*T2[k,l,c,d]
+        CC_energy += B[l,c,k,d]*V[k,l,c,d]
         CC_energy += 2.0*T1[l,c]*T1[k,d]*V[l,k,c,d]
     end
     
