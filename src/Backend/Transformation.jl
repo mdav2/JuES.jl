@@ -11,7 +11,6 @@ using TensorOperations
 using LinearAlgebra
 
 export tei_transform
-export get_eri
 
 function tei_transform(gao::Array{Float64,4},
                        C::Array{Float64,2},
