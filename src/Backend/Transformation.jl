@@ -4,12 +4,14 @@
 this module manages all _complete_ integral transformations,
 either disk-cached or in-core.
 """
+
 module Transformation
 using JuES.DiskTensors
 using TensorOperations
 using LinearAlgebra
 
 export tei_transform
+export get_eri
 
 function tei_transform(gao::Array{Float64,4},
                        C::Array{Float64,2},
@@ -179,5 +181,4 @@ function tei_transform(
     return temp2
 end
 
-
-end
+end # Module

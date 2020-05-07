@@ -1,6 +1,6 @@
 module UNFRCCSD
 using JuES.Wavefunction
-using JuES.Transformation
+using JuES.IntegralTransformation
 using TensorOperations
 using LinearAlgebra
 using Printf
@@ -135,7 +135,7 @@ end
 function get_integrals(wfn::Wfn, info::Dict)
 
     C = wfn.Ca
-    gao = wfn.uvsr
+    gao = wfn.ao_eri
     @tensoropt begin
         Vchem[i,a,j,b] := C[σ,b]*C[λ,j]*C[ν,a]*C[μ,i]*gao[μ,ν,λ,σ]
     end
@@ -172,85 +172,82 @@ function get_integrals(wfn::Wfn, info::Dict)
     fock_OV = f[o,v]
     f = (fock_OO, fock_OV, fock_VV)
 
-    # Save slices of two-electron repulsion integral
-    @tensor begin
-        Vphys[p,r,q,s] := Vchem[p,q,r,s]
-    end
-
-    V = (Vphys[o,o,o,o], Vphys[o,o,o,v], Vphys[o,o,v,v], Vphys[o,v,o,v], Vphys[o,v,v,v], Vphys[v,v,v,v])
-
-    return fd, f, V
+    return fd, f
 
 end
 
 function do_rccsd(wfn::Wfn)
-info = Dict()
-# Check if the number foe electrons is even
-info["nelec"] = wfn.nalpha + wfn.nbeta
-info["nelec"] % 2 == 0 ? nothing : throw(DomainError(info["nelec"], "Number of electrons must be even for RHF"))
-info["nmo"] = wfn.nmo
-info["ndocc"] = Int(info["nelec"]/2)
-info["nvir"] = info["nmo"] - info["ndocc"]
+    info = Dict()
+    # Check if the number foe electrons is even
+    info["nelec"] = wfn.nalpha + wfn.nbeta
+    info["nelec"] % 2 == 0 ? nothing : throw(DomainError(info["nelec"], "Number of electrons must be even for RHF"))
+    info["nmo"] = wfn.nmo
+    info["ndocc"] = Int(info["nelec"]/2)
+    info["nvir"] = info["nmo"] - info["ndocc"]
+    
+    
+    println("Number of electrons:              $(info["nelec"])")
+    println("Number of Doubly Occupied MOs:    $(info["ndocc"])")
+    println("Number of MOs:                    $(info["nmo"])")
+    
+    fd, f = get_integrals(wfn, info)
 
-
-println("Number of electrons:              $(info["nelec"])")
-println("Number of Doubly Occupied MOs:    $(info["ndocc"])")
-println("Number of MOs:                    $(info["nmo"])")
-
-fd, f, V = get_integrals(wfn, info)
-
-# Auxiliar D matrix
-fock_Od, fock_Vd = fd
-d = [i - a for i = fock_Od, a = fock_Vd]
-d = inv.(d)
-
-D = [i + j - a - b for i = fock_Od, j = fock_Od, a = fock_Vd, b = fock_Vd]
-D = inv.(D)
-
-# Initial Amplitude
-T1 = f[2].*d
-T2 = D.*V[3]
-
-# Get MP2 energy
-
-Ecc = update_energy(T1, T2, f[2], V[3])
-
-@printf("MP2 Energy:   %15.10f\n", Ecc)
-
-# Set up iteration options
-r1 = 1
-r2 = 1
-dE = 1
-ite = 1
-rms_LIM = 10^-8
-E_LIM = 10^-12
-rms = 1
-
-println("======================================")
-
-
-# Start CC iterations
-
-while abs(dE) > E_LIM || rms > rms_LIM
-    if ite > 50
-        break
-    end
-    t = @elapsed begin
-        T1, T2, r1, r2 = update_amp(T1, T2, f, V, d, D, info)
-    end
-    rms = max(r1,r2)
-    oldE = Ecc
+    # Get Necessary ERIs
+    V = (get_eri(wfn, "OOOO"), get_eri(wfn, "OOOV"), get_eri(wfn, "OOVV"), get_eri(wfn, "OVOV"), get_eri(wfn, "OVVV"), get_eri(wfn, "VVVV"))
+    
+    # Auxiliar D matrix
+    fock_Od, fock_Vd = fd
+    d = [i - a for i = fock_Od, a = fock_Vd]
+    d = inv.(d)
+    
+    D = [i + j - a - b for i = fock_Od, j = fock_Od, a = fock_Vd, b = fock_Vd]
+    D = inv.(D)
+    
+    # Initial Amplitude
+    T1 = f[2].*d
+    T2 = D.*V[3]
+    
+    # Get MP2 energy
+    
     Ecc = update_energy(T1, T2, f[2], V[3])
-    dE = Ecc - oldE
-    @printf("Iteration %.0f\n", ite)
-    @printf("CC Correlation energy: %15.10f\n", Ecc)
-    @printf("Energy change:         %15.10f\n", dE)
-    @printf("Max RMS residue:       %15.10f\n", rms)
-    @printf("Time required:         %15.10f\n", t)
+    
+    @printf("MP2 Energy:   %15.10f\n", Ecc)
+    
+    # Set up iteration options
+    r1 = 1
+    r2 = 1
+    dE = 1
+    ite = 1
+    rms_LIM = 10^-8
+    E_LIM = 10^-12
+    rms = 1
+    
     println("======================================")
-    ite += 1
-end
+    
+    
+    # Start CC iterations
+    
+    while abs(dE) > E_LIM || rms > rms_LIM
+        if ite > 50
+            break
+        end
+        t = @elapsed begin
+            T1, T2, r1, r2 = update_amp(T1, T2, f, V, d, D, info)
+        end
+        rms = max(r1,r2)
+        oldE = Ecc
+        Ecc = update_energy(T1, T2, f[2], V[3])
+        dE = Ecc - oldE
+        @printf("Iteration %.0f\n", ite)
+        @printf("CC Correlation energy: %15.10f\n", Ecc)
+        @printf("Energy change:         %15.10f\n", dE)
+        @printf("Max RMS residue:       %15.10f\n", rms)
+        @printf("Time required:         %15.10f\n", t)
+        println("======================================")
+        ite += 1
+    end
+    
+    @printf("Final CCSD Energy:     %15.10f\n", Ecc)
+    end
 
-@printf("CCSD Energy:     %15.10f\n", Ecc)
-end
 end #End Module
