@@ -134,6 +134,9 @@ function Wfn(wfn::PyObject)
     Wfn{Float64}(wfn)
 end
 
+"""
+    Wfn{T}(wfn::PyObject; unrestricted::Bool=false, diskbased::Bool=false, name::String = "default", df::Bool=false) where T
+"""
 function Wfn{T}(wfn::PyObject; unrestricted::Bool=false, diskbased::Bool=false, name::String = "default", df::Bool=false) where T
     dt = T
     dummy2 = Array{dt}(undef, 0, 0) #placeholder 2D array

@@ -4,6 +4,9 @@
 ```@docs
 JuES.CoupledCluster
 ```
+```@docs
+JuES.CoupledCluster.
+```
 
 ## Moller-Plesset
 ```@docs
