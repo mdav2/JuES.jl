@@ -16,7 +16,6 @@ include("ConfigurationInteraction/Determinant.jl")
 include("ConfigurationInteraction/MatrixElement.jl")
 include("HartreeFock/HartreeFock.jl")
 include("MollerPlesset/MollerPlesset.jl")
-#include("CISingles.jl")
 include("CoupledCluster/CoupledCluster.jl")
 
 end # module
