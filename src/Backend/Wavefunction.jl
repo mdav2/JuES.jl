@@ -11,7 +11,6 @@ module Wavefunction
 
 using JuES.DiskTensors
 using JuES.Transformation
-using JuES.Integrals
 using JuES
 using PyCall
 
@@ -48,7 +47,7 @@ epsa::Array{T,1} orbital eigenvalues for alpha MO's
 
 epsb::Array{T,1} orbtial eigenvalues for beta MO's
 
-uvsr::Union{Array{T,4},DiskFourTensor} AO basis TEI
+ao_eri::Union{Array{T,4},DiskFourTensor} AO basis TEI
 
 pqrs::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case AAAA)
 
@@ -81,7 +80,7 @@ struct Wfn{T}
     hao::Array{T,2} #Core hamiltonian
     epsa::Array{T,1} #orbital eigenvalues
     epsb::Array{T,1} #orbital eigenvalues
-    uvsr::Union{Array{T,4},DiskFourTensor} #AO basis electron repulsion integrals
+    ao_eri::Union{Array{T,4},DiskFourTensor} #AO basis electron repulsion integrals
 
     #ijab::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
     #iJaB::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
@@ -164,31 +163,32 @@ function Wfn{T}(wfn::PyObject; unrestricted::Bool=false, diskbased::Bool=false, 
     Ca = convert(Array{dt,2}, _Ca.to_array())
     Cb = convert(Array{dt,2}, _Cb.to_array())
     hao = convert(Array{dt,2}, wfn.H().to_array()) #core hamiltonian in AO
+     
     if diskbased
-        uvsr = disk_ao(mints, basis, string("jues.", "$name", ".uvsr.0"))
+        ao_eri = disk_ao(mints, basis, string("jues.", "$name", ".ao_eri.0"))
     elseif !df
-        uvsr = convert(Array{dt,4}, mints.ao_eri().to_array()) #AO basis integrals
+        ao_eri = convert(Array{dt,4}, mints.ao_eri().to_array()) #AO basis integrals
     end
     if diskbased
-        ijab = tei_transform(uvsr, Cao, Cav, Cao, Cav, "ijab")
+        ijab = tei_transform(ao_eri, Cao, Cav, Cao, Cav, "ijab")
     else
         #pqrs  = convert(Array{dt,4},mints.mo_eri(_Ca,_Ca,_Ca,_Ca).to_array()) #MO basis integrals
-        ijab = tei_transform(uvsr, Cao, Cav, Cao, Cav, "ijab")
+        ijab = tei_transform(ao_eri, Cao, Cav, Cao, Cav, "ijab")
     end
     if unrestricted #avoid making these if not an unrestricted or open shell wfn
         #various spin cases notation --> alpha BETA
         if diskbased
-            iJaB = tei_transform(uvsr, Cao, Cav, Cbo, Cbv, string("$name", ".iJaB"))
-            iJAb = tei_transform(uvsr, Cao, Cbv, Cbo, Cav, string("$name", ".iJAb"))
-            IJAB = tei_transform(uvsr, Cbo, Cbv, Cbo, Cbv, string("$name", ".IJAB"))
-            IjAb = tei_transform(uvsr, Cbo, Cbv, Cao, Cav, string("$name", ".IjAb"))
-            IjaB = tei_transform(uvsr, Cbo, Cav, Cao, Cbv, string("$name", ".IjaB"))
+            iJaB = tei_transform(ao_eri, Cao, Cav, Cbo, Cbv, string("$name", ".iJaB"))
+            iJAb = tei_transform(ao_eri, Cao, Cbv, Cbo, Cav, string("$name", ".iJAb"))
+            IJAB = tei_transform(ao_eri, Cbo, Cbv, Cbo, Cbv, string("$name", ".IJAB"))
+            IjAb = tei_transform(ao_eri, Cbo, Cbv, Cao, Cav, string("$name", ".IjAb"))
+            IjaB = tei_transform(ao_eri, Cbo, Cav, Cao, Cbv, string("$name", ".IjaB"))
         else
-            iJaB = tei_transform(uvsr, Cao, Cav, Cbo, Cbv, string("$name", ".iJaB"))
-            iJAb = tei_transform(uvsr, Cao, Cbv, Cbo, Cav, string("$name", ".iJAb"))
-            IJAB = tei_transform(uvsr, Cbo, Cbv, Cbo, Cbv, string("$name", ".IJAB"))
-            IjAb = tei_transform(uvsr, Cbo, Cbv, Cao, Cav, string("$name", ".IjAb"))
-            IjaB = tei_transform(uvsr, Cbo, Cav, Cao, Cbv, string("$name", ".IjaB"))
+            iJaB = tei_transform(ao_eri, Cao, Cav, Cbo, Cbv, string("$name", ".iJaB"))
+            iJAb = tei_transform(ao_eri, Cao, Cbv, Cbo, Cav, string("$name", ".iJAb"))
+            IJAB = tei_transform(ao_eri, Cbo, Cbv, Cbo, Cbv, string("$name", ".IJAB"))
+            IjAb = tei_transform(ao_eri, Cbo, Cbv, Cao, Cav, string("$name", ".IjAb"))
+            IjaB = tei_transform(ao_eri, Cbo, Cav, Cao, Cbv, string("$name", ".IjaB"))
         end
     else
         #just fill with placeholder for RHF case
@@ -198,7 +198,7 @@ function Wfn{T}(wfn::PyObject; unrestricted::Bool=false, diskbased::Bool=false, 
         IjAb = dummy4
         IjaB = dummy4
     end
-    #create the Wfn object and return it!
+    # create the Wfn object and return it!
     owfn = Wfn{dt}(
         vnuc,
         nocca,
@@ -218,7 +218,7 @@ function Wfn{T}(wfn::PyObject; unrestricted::Bool=false, diskbased::Bool=false, 
         hao,
         epsa,
         epsb,
-        uvsr
+        ao_eri 
         #ijab,
         #iJaB,
         #iJAb,
@@ -265,4 +265,52 @@ function DirectWfn(wfn)
         mints,
     )
 end
+
+"""
+    disk_ao
+
+computes all AO basis TEI and fills a DiskFourTensor object with those
+"""
+function disk_ao(mints::PyObject, basis::PyObject, name::String = "default")
+    integ = mints.integral()
+    si = integ.shells_iterator()
+    si.first()
+    nao = basis.nbf()
+    ao_eri = DiskFourTensor("/tmp/disk_gao.$name.jues.0", Float64, nao, nao, nao, nao, "w")
+    blockfill!(ao_eri, 0.0)
+    while !si.is_done()
+        p, q, r, s = (si.p, si.q, si.r, si.s)
+        pf = basis.shell_to_basis_function(p) + 1
+        qf = basis.shell_to_basis_function(q) + 1
+        rf = basis.shell_to_basis_function(r) + 1
+        sf = basis.shell_to_basis_function(s) + 1
+        shell = mints.ao_eri_shell(p, q, r, s).to_array()
+        pn, qn, rn, sn = size(shell)
+        pn -= 1
+        qn -= 1
+        rn -= 1
+        sn -= 1
+        ao_eri[pf:pf+pn, qf:qf+qn, rf:rf+rn, sf:sf+sn] = shell
+        ao_eri[qf:qf+qn, pf:pf+pn, rf:rf+rn, sf:sf+sn] = permutedims(shell, [2, 1, 3, 4])
+        ao_eri[pf:pf+pn, qf:qf+qn, sf:sf+sn, rf:rf+rn] = permutedims(shell, [1, 2, 4, 3])
+        ao_eri[qf:qf+qn, pf:pf+pn, sf:sf+sn, rf:rf+rn] =
+            permutedims(permutedims(shell, [2, 1, 3, 4]), [1, 2, 4, 3])
+        ao_eri[rf:rf+rn, sf:sf+sn, pf:pf+pn, qf:qf+qn] =
+            permutedims(permutedims(shell, [3, 2, 1, 4]), [1, 4, 3, 2])
+        ao_eri[sf:sf+sn, rf:rf+rn, pf:pf+pn, qf:qf+qn] = permutedims(
+            permutedims(permutedims(shell, [3, 2, 1, 4]), [1, 4, 3, 2]),
+            [2, 1, 3, 4],
+        )
+        ao_eri[rf:rf+rn, sf:sf+sn, qf:qf+qn, pf:pf+pn] = permutedims(
+            permutedims(permutedims(shell, [3, 2, 1, 4]), [1, 4, 3, 2]),
+            [1, 2, 4, 3],
+        )
+        ao_eri[sf:sf+sn, rf:rf+rn, qf:qf+qn, pf:pf+pn] =
+            permutedims(permutedims(shell, [4, 2, 3, 1]), [1, 3, 2, 4])
+        si.next()
+    end
+    return ao_eri
+
 end
+
+end # Module

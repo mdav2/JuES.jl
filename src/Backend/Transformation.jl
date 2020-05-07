@@ -4,6 +4,7 @@
 this module manages all _complete_ integral transformations,
 either disk-cached or in-core.
 """
+
 module Transformation
 using JuES.DiskTensors
 using TensorOperations
@@ -190,5 +191,4 @@ function tei_transform(
     return temp2
 end
 
-
-end
+end # Module
