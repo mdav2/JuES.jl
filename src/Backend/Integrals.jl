@@ -52,4 +52,25 @@ function disk_ao(mints::PyObject, basis::PyObject, name::String = "default")
 
 end
 
+"""
+    get_eri 
+
+return a specified ERI array.
+
+Arguments:
+
+wfn        -> Wavefunctions object
+eri_string -> String with length 4 identifying the type of ERI. 
+              Characters must be (o, O, v, V). Each indicating Occupied and Virtual for ALPHA and beta.
+
+notation   -> OPTIONAL. Values: "chem" or "phys". Retuning the array in Chemist's or Physicists' notation.
+
+"""
+
+function get_eri(wfn::Wfn, eri_string::String, notation::String = "phys")
+
+    # Get C1, C2, C3, C4 for the integral transformation
+
+end
+
 end #module
