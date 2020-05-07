@@ -28,7 +28,7 @@ to add a test:
 using Test
 using PyCall
 using JuES.Wavefunction
-using JuES.CISingles
+#using JuES.CISingles
 using JuES.CoupledCluster
 using JuES.DiskTensors
 psi4 = pyimport("psi4")

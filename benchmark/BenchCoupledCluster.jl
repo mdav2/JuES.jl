@@ -1,11 +1,14 @@
 using Test
 using PyCall
 using BenchmarkTools
+using JuES
 using JuES.Wavefunction
 using JuES.CoupledCluster: RCCSD,RCCD,DFRCCD
 
 psi4.core.be_quiet() #turn off output
 psi4.set_num_threads(6)
+using LinearAlgebra
+BLAS.set_num_threads(6)
 # > setup
 tol = 1E-14
 psi4.set_options(Dict("D_CONVERGENCE" => 14,
@@ -25,7 +28,7 @@ e3,wfn3 = psi4.energy("hf/cc-pvtz",mol=mol2,return_wfn=true)
 JuWfn3 = Wfn(wfn3)
 JuWfn2 = Wfn(wfn2)
 printdo=false
-println(@btime RCCD.do_rccd(JuWfn2; doprint=printdo))
+#println(@btime RCCD.do_rccd(JuWfn2; doprint=printdo))
 println(@btime RCCSD.do_rccsd(JuWfn2; doprint=printdo))
-println(@btime DFRCCD.do_df_rccd(JuWfn3; doprint=printdo))
+#println(@btime DFRCCD.do_df_rccd(JuWfn3; doprint=printdo))
 #println(psi4.energy("ccsd/sto-3g",mol=mol2) - e2)

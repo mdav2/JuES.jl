@@ -5,6 +5,7 @@ function __init__()
     copy!(psi4, pyimport("psi4"))
 end
 export psi4
+include("Input/Input.jl")
 include("DiskTensors/DiskTensors.jl")
 include("Backend/Transformation.jl")
 include("Backend/Integrals.jl")

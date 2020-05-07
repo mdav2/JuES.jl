@@ -50,9 +50,6 @@ function do_rccsd(refWfn::Wfn; maxit=40, doprint::Bool=false, return_T2::Bool=fa
                vvvo,vvov,ovoo,
                vooo,
                T1,tiatia,T2,Dia,Dijab)
-        if i == 1
-            println(Fmi)
-        end
         T1 = _T1
         T2 = _T2
         @tensoropt begin
@@ -212,7 +209,7 @@ end
 function form_T2(Fae,Fmi,Fme,Wabef,Wmnij,WmBeJ,WmBEj,ijab,mbej,amej,abej,abie,mbij,amij,tia,tiatia,tijab,Dijab)
     #_tijab = zeros(size(tijab))
     _tia = permutedims(tia,[2,1])
-    @tensoropt begin
+    @tensoropt (i=>x,j=>x,m=>x,n=>x,a=>11*x,b=>11*x,e=>11*x,f=>11*x) begin
         _tijab[i,j,a,b] := (ijab[i,j,a,b] 
                            + tijab[i,j,a,e]*(Fae[b,e] - 0.5*tia[m,b]*Fme[m,e])
                            + tijab[i,j,e,b]*(Fae[a,e] - 0.5*tia[m,a]*Fme[m,e])
