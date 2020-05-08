@@ -49,7 +49,9 @@ function exec(cont)
     mol = psi4.geometry(cont["molecule"])
     psi4_options = Dict()
     JuES_options = Dict(
-                       "doprint"=>false
+                       :doprint=>false,
+                       :maxit=>40,
+                       :return_T=>false
                       )
     for option in keys(cont["options"]) #sort through options to discern psi4 keywords vs JuES keywords
         if option in psi4_opt_list
@@ -64,7 +66,7 @@ function exec(cont)
     e,wfn = psi4.energy("hf/$(psi4_options["basis"])",return_wfn=true)
     JuWfn = JuES.Wavefunction.Wfn(wfn)
     com = cont["command"]
-    E = com(JuWfn;doprint=JuES_options["doprint"])
+    E = com(JuWfn; JuES_options...)
     return E
 end
 

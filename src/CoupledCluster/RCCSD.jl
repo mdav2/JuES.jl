@@ -7,12 +7,22 @@ include("Denominators.jl")
 """
     do_rccsd
 """
-function do_rccsd(refWfn::Wfn; maxit=40, doprint::Bool=false, return_T2::Bool=false)
+function do_rccsd(refWfn::Wfn; kwargs...)
+    defaults = Dict(
+                    :diis => false
+                   )
+    for arg in (:doprint,:maxit,:return_T,:diis)
+        if arg in keys(kwargs)
+            @eval $arg = $(kwargs[arg])
+        else
+            @eval $arg = $(defaults[arg])
+        end
+    end
     #goes through appropriate steps to do RCCSD
     set_zero_subnormals(true)
     nocc = refWfn.nalpha
     nvir = refWfn.nvira
-    uvsr = refWfn.uvsr
+    uvsr = refWfn.ao_eri
     Cav = refWfn.Cav
     Cao = refWfn.Cao
     dtt = eltype(uvsr)
@@ -57,7 +67,7 @@ function do_rccsd(refWfn::Wfn; maxit=40, doprint::Bool=false, return_T2::Bool=fa
         end
         if doprint println(ccenergy(oovv,T1,tiatia,T2)) end
     end
-    if return_T2
+    if return_T
         return ccenergy(oovv,T1,tiatia,T2),T2
     else
         return ccenergy(oovv,T1,tiatia,T2)
