@@ -132,50 +132,6 @@ function update_amp(T1::Array{Float64, 2}, T2::Array{Float64, 4}, f::Tuple, V::T
 end
 
 
-function get_integrals(wfn::Wfn, info::Dict)
-
-    C = wfn.Ca
-    gao = wfn.ao_eri
-    @tensoropt begin
-        Vchem[i,a,j,b] := C[σ,b]*C[λ,j]*C[ν,a]*C[μ,i]*gao[μ,ν,λ,σ]
-    end
-    hao = wfn.hao
-
-    # Slices
-    o = 1:info["ndocc"]
-    v = info["ndocc"]+1:info["nmo"]
-
-    # Auxiliar slices for the F matrix
-    A = view(Vchem, :, :, o, o)
-    B = view(Vchem, :, o, :, o)
-
-    # Form the full Fock matrices
-    @tensoropt begin
-        h[p,q]  := C[u,p]*C[v,q]*hao[u,v]
-        Va[p,q] := A[p,q,k,k]
-        Vb[p,q] := B[p,k,q,k]
-    end
-
-    f  = h + 2Va - Vb
-
-    # Save diagonal terms
-    fock_Od = diag(f)[o]
-    fock_Vd = diag(f)[v]
-    fd = (fock_Od, fock_Vd)
-
-    # Erase diagonal elements from original matrix
-    f = f - Diagonal(f)
-
-    # Save useful slices
-    fock_OO = f[o,o]
-    fock_VV = f[v,v]
-    fock_OV = f[o,v]
-    f = (fock_OO, fock_OV, fock_VV)
-
-    return fd, f
-
-end
-
 function do_rccsd(wfn::Wfn)
     info = Dict()
     # Check if the number foe electrons is even
@@ -190,7 +146,26 @@ function do_rccsd(wfn::Wfn)
     println("Number of Doubly Occupied MOs:    $(info["ndocc"])")
     println("Number of MOs:                    $(info["nmo"])")
     
-    fd, f = get_integrals(wfn, info)
+    # Slices
+    o = 1:info["ndocc"]
+    v = info["ndocc"]+1:info["nmo"]
+
+    # Get fock matrix
+    f = get_fock(wfn, "alpha")
+
+    # Save diagonal terms
+    fock_Od = diag(f)[o]
+    fock_Vd = diag(f)[v]
+    fd = (fock_Od, fock_Vd)
+
+    # Erase diagonal elements from original matrix
+    f = f - Diagonal(f)
+
+    # Save useful slices
+    fock_OO = f[o,o]
+    fock_VV = f[v,v]
+    fock_OV = f[o,v]
+    f = (fock_OO, fock_OV, fock_VV)
 
     # Get Necessary ERIs
     V = (get_eri(wfn, "OOOO"), get_eri(wfn, "OOOV"), get_eri(wfn, "OOVV"), get_eri(wfn, "OVOV"), get_eri(wfn, "OVVV"), get_eri(wfn, "VVVV"))
