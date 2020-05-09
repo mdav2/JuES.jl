@@ -6,9 +6,10 @@ H 1 1.1 2 104.0
 """
 --
 options = Dict(
-    "rhf" => true,
+    "reference" => "rhf",
     "basis" => "cc-pvdz",
-    "doprint" => true
+    :doprint => true,
+    :quiet => true
 )
 --
 command = JuES.CoupledCluster.RCCSD.do_rccsd
