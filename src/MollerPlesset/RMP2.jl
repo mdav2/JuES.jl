@@ -9,17 +9,25 @@ refWfn::Wfn -> wavefunction to which MP2 will be applied.
 dmp2::Float MP2 energy correction
 """
 function do_rmp2(refWfn::Wfn)
+    #@output "Moller-Plesset Perturbation Theory"
+    print_header()
     dmp2 = 0.0
     nocc = refWfn.nalpha
+    @output "*  executing restricted MP2\n"
+    @output "   nocc: %d\n" refWfn.nalpha
+    @output "   nvir: %d\n" refWfn.nvira
     rocc = 1:1:refWfn.nalpha
     rvir = nocc+1:1:nocc+refWfn.nvira
     #    @views moeri = permutedims(refWfn.pqrs,[1,3,2,4])
     #
     Cao = refWfn.Cao
     Cav = refWfn.Cav
-    moeri = permutedims(tei_transform(refWfn.uvsr, Cao, Cav, Cao, Cav, "oovv"), [1, 3, 2, 4])
     epsa = refWfn.epsa
-    for b in rvir
+    @output "*  performing AO->MO integral transformation ... "
+    t = @elapsed moeri = permutedims(tei_transform(refWfn.ao_eri, Cao, Cav, Cao, Cav, "oovv"), [1, 3, 2, 4])
+    @output "done in %5.2fs\n" t
+    @output "*  Computing MP2 energy ... "
+    t = @elapsed for b in rvir
         for a in rvir
             for j in rocc
                 for i in rocc
@@ -34,5 +42,7 @@ function do_rmp2(refWfn::Wfn)
             end
         end
     end
+    @output "done in %5.2fs\n" t
+    @output "   @RMP2 %20.17f Eh\n" dmp2
     return dmp2
 end
