@@ -5,7 +5,7 @@ using JuES.Wavefunction
 using JuES.MollerPlesset
 using JuES.CoupledCluster: UCCSD
 using JuES
-#psi4.core.be_quiet() #turn off output
+psi4.core.be_quiet() #turn off output
 # > setup
 tol = 1E-14
 psi4.set_options(Dict("D_CONVERGENCE" => 10, "scf_type" => "pk"))
