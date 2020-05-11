@@ -93,7 +93,7 @@ of problematic spin contamination, the CUHF reference may be used to form a spin
 UHF solution. 
 
 ### Naming
-It is customary for Julia modules and data structures to have CamelCase names, such as `Wavefunction.jl`. Please follow this aesthetically pleasing convention! 
+It is customary for Julia modules and data structures to have CamelCase names, such as `CoupledCluster.jl`. Please follow this aesthetically pleasing convention! 
 
 ## Submodules
 This section contains a description of some preliminary modules in the JuES environment. Many aspects are aspirational, and the description is not so much a description of current functionality as a statement of intent.
