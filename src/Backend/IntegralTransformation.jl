@@ -1,3 +1,16 @@
+"""
+## IntegralTransformation
+    JuES.IntegralTransformation
+
+Module to handle integral transformations from AO to MO.
+
+_Functions:_
+
+get_eri  -> From a Wavefunction object, return a specified ERI array.
+
+get_fock -> From a Wavefunction object, return the Fock matrix.
+
+"""
 module IntegralTransformation
 using TensorOperations
 using JuES.Wavefunction
@@ -6,17 +19,19 @@ export get_eri
 export get_fock
 
 """
-    get_eri 
+## get_eri 
+    JuES.IntegralTransformation.get_eri(wfn, eri_string, notation="phys")
 
-return a specified ERI array.
+From a Wavefunction object, return a specified ERI array.
 
-Arguments:
+_Arguments:_
 
-wfn        -> Wavefunctions object
+wfn        -> Wavefunction object.
+
 eri_string -> String with length 4 identifying the type of ERI. 
               Characters must be (o, O, v, V). Each indicating Occupied and Virtual for ALPHA and beta.
 
-notation   -> OPTIONAL. Values: "chem" or "phys". Retuning the array in Chemist's or Physicists' notation.
+notation   -> OPTIONAL. Values: "chem" or "phys". Return the array in Chemist's or Physicists' notation.
 
 """
 function get_eri(wfn::Wfn, eri_string::String, notation::String = "phys")
@@ -57,14 +72,16 @@ function get_eri(wfn::Wfn, eri_string::String, notation::String = "phys")
 end
 
 """
-    get_fock
+## get_fock
+    JuES.IntegralTransformation.get_fock(wfn, spin ="alpha")
 
-return a specified spin case of the Fock matrix.
+From a Wavefunction object, return the Fock matrix.
 
-Arguments:
+_Arguments:_
 
-wfn  -> Wavefunction object
-spin -> OPTIONAL. String indicated which spin the Fock matrix has. Accept: "alpha", "a" or "up" for alpha arrays and "Beta", "b", "down" for beta arrays.
+wfn  -> Wavefunction object.
+
+spin -> OPTIONAL. String indicating the spin of the Fock matrix. Accept: "alpha", "a" or "up" for alpha arrays and "Beta", "b", "down" for beta arrays.
         Case insensitive. 
 
 """
