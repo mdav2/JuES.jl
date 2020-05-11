@@ -25,6 +25,17 @@ function tei_transform(gao::DiskFourTensor,
     tei_transform(gao,C,C,C,C,name)
 end
 
+"""
+    tei_transform(
+                  gao::Union{Array{Float64,4},Array{Float32,4}},
+                  C1::Union{Array{Float64,2},Array{Float32,2}},
+                  C2::Union{Array{Float64,2},Array{Float32,2}},
+                  C3::Union{Array{Float64,2},Array{Float32,2}},
+                  C4::Union{Array{Float64,2},Array{Float32,2}},
+                  name::String
+                  )
+Transform `gao` to the MO basis defined by C1,C2,C3,C4. 
+"""
 function tei_transform(
                        gao::Union{Array{Float64,4},Array{Float32,4}},
                        C1::Union{Array{Float64,2},Array{Float32,2}},
