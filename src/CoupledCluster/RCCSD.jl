@@ -1,10 +1,16 @@
+"""
+    JuES.CoupledCluster.RCCSD
+
+## Functions
+
+    JuES.CoupledCluster.RCCSD.do_rccsd
+"""
 module RCCSD
 using JuES.Wavefunction
 using JuES.Transformation
 using JuES.Output
 using Printf
 using JuES
-#import JuES.CoupledCluster.print_header
 using TensorOperations
 include("Denominators.jl")
 

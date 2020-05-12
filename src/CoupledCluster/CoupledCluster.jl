@@ -2,7 +2,6 @@
 Module for running CC computations in Julia.
 
 Implemented --> RCCD, RCCSD, DF-RCCD
-
 """
 module CoupledCluster
 
