@@ -23,10 +23,17 @@ function print_header()
     @output repeat("=",80)*"\n"
 end
 
+defaults = Dict(
+                :cc_max_iter => 50,
+                :cc_max_rms => 10^-10,
+                :cc_e_conv => 10^-10,
+                :diis => false
+               )
+
 include("RCCD.jl")
 include("DF-RCCD.jl")
 include("ROCCD.jl")
 include("RCCSD.jl")
 include("UCCSD.jl")
-include("unf-RCCSD.jl")
+include("AutoRCCSD.jl")
 end #module CC

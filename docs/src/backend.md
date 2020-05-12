@@ -20,6 +20,20 @@ JuES.Wavefunction.Wfn
 ```@docs
 JuES.Transformation
 ```
+## IntegralTransformation.jl
+This module contain functions used to convert AO integrals into MO integrals.
+It can be used to get ERI arrays and Fock matrices.
+```@docs
+JuES.IntegralTransformation
+```
+
+```@docs
+JuES.IntegralTransformation.get_eri
+```
+
+```@docs
+JuES.IntegralTransformation.get_fock
+```
 
 ```@docs
 JuES.Transformation.tei_transform

@@ -1,14 +1,12 @@
 """
-## IntegralTransformation
     JuES.IntegralTransformation
 
 Module to handle integral transformations from AO to MO.
 
-_Functions:_
+**Functions:**
 
-get_eri  -> From a Wavefunction object, return a specified ERI array.
-
-get_fock -> From a Wavefunction object, return the Fock matrix.
+    get_eri   From a Wavefunction object, return a specified ERI array.
+    get_fock  From a Wavefunction object, return the Fock matrix.
 
 """
 module IntegralTransformation
@@ -19,19 +17,22 @@ export get_eri
 export get_fock
 
 """
-## get_eri 
-    JuES.IntegralTransformation.get_eri(wfn, eri_string, notation="phys")
+    JuES.IntegralTransformation.get_eri(wfn::Wfn, eri_string::String, notation::String = "phys")
 
 From a Wavefunction object, return a specified ERI array.
 
-_Arguments:_
+**Arguments**
 
-wfn        -> Wavefunction object.
+    wfn         Wavefunction object.
+    eri_string  String with length 4 identifying the type of ERI. 
+                Characters must be (o, O, v, V). Each indicating 
+                Occupied and Virtual for ALPHA and beta.
 
-eri_string -> String with length 4 identifying the type of ERI. 
-              Characters must be (o, O, v, V). Each indicating Occupied and Virtual for ALPHA and beta.
+**Kwargs**
 
-notation   -> OPTIONAL. Values: "chem" or "phys". Return the array in Chemist's or Physicists' notation.
+    notation    {"chem", "phys"}
+                Return the array in Chemist's or Physicists' notation.
+                Default: "phys".
 
 """
 function get_eri(wfn::Wfn, eri_string::String, notation::String = "phys")
@@ -72,17 +73,19 @@ function get_eri(wfn::Wfn, eri_string::String, notation::String = "phys")
 end
 
 """
-## get_fock
-    JuES.IntegralTransformation.get_fock(wfn, spin ="alpha")
+    JuES.IntegralTransformation.get_fock(wfn::Wfn, spin::String = "alpha")
 
 From a Wavefunction object, return the Fock matrix.
 
-_Arguments:_
+**Arguments**
 
-wfn  -> Wavefunction object.
+    wfn  Wavefunction object.
 
-spin -> OPTIONAL. String indicating the spin of the Fock matrix. Accept: "alpha", "a" or "up" for alpha arrays and "Beta", "b", "down" for beta arrays.
-        Case insensitive. 
+**Kwargs**
+
+    spin    {"alpha", "a", "up", "beta", "b", "down"}
+            String indicating the spin of the Fock matrix. 
+            Case insensitive. 
 
 """
 function get_fock(wfn::Wfn, spin::String = "alpha")
