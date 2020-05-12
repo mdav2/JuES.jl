@@ -1,6 +1,7 @@
 module Output
 import JuES
 using Printf
+using Formatting
 import Printf.decode_dec
 import Printf.fix_dec
 import Printf.print_fixed
@@ -8,46 +9,71 @@ import Printf.print_fixed
 
 #printstyle = JuES.Options.printstyle
 printstyle = "stdout"
+export output
 export @output
 
 if printstyle == "stdout"
+    function output(str,x...)
+        f = format(str,x...)
+        print(f)
+    end
     macro output(str,x...)
-        if length(x) >= 1
-            :(@printf $((str)) $(esc(x...)))
-        else
-            :(@printf $((str)) )#$(esc(x[1:end])))
+        return quote
+            local f = format($str, $(x...))
+            print(f)
         end
-
     end
 elseif printstyle == "file"
+    function output(str,x...)
+        f = format(str,x...)
+        open("output.dat","a") do file
+            write(file,f)
+            flush(file)
+        end
+    end
     macro output(str,x...)
-        if length(x) >= 1
-            :(open("output.dat","a") do f
-                  write(f,@sprintf $str $(esc(x...)))
-              end)
-        else
-            :(open("output.dat","a") do f
-                  write(f,@sprintf $str)
-              end)
+        return quote
+            local f = format($str, $(x...))
+            open("output.dat","a") do file
+                write(file,f)
+                flush(file)
+            end
         end
     end
 elseif printstyle == "both"
+    function output(str,x...)
+        f = format(str,x...)
+        print(f)
+        open("output.dat","a") do file
+            write(file,f)
+            flush(file)
+        end
+    end
     macro output(str,x...)
         if length(x) >= 1
-            :(open("output.dat","a") do f
-                  write(f,@sprintf $str $(esc(x...)))
-                  @printf $((str)) $(esc(x...))
-              end)
+            return quote
+                local f = format($str, $([esc(i) for i in x]...))
+                open("output.dat","a") do file
+                    write(file,f)
+                    flush(file)
+                end
+                print(f)
+            end
         else
-            :(open("output.dat","a") do f
-                  write(f,@sprintf $str)
-                  @printf $((str)) 
-              end)
+            return quote
+                local f = format($str)
+                open("output.dat","a") do file
+                    write(file,f)
+                    flush(file)
+                end
+                print(f)
+            end
         end
     end
 elseif printstyle == "none"
+    function output(str,x...)
+    end
     macro output(str,x...)
-        return nothing
     end
 end
 

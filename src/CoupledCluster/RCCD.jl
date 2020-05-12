@@ -1,3 +1,12 @@
+"""
+    JuES.CoupledCluster.RCCD
+
+performs coupled cluster doubles (CCD) computations.
+
+## Functions
+
+    JuES.CoupledCluster.RCCD.do_rccd
+"""
 module RCCD
 using JuES.Wavefunction
 using TensorOperations
@@ -21,6 +30,7 @@ doprint::Bool=false -> whether or not to print energy and timing information to
 ccenergy::Float -> final RCCD energy. 
 """
 function do_rccd(refWfn::Wfn; maxit=40, doprint=false, return_T2=false)
+    JuES.CoupledCluster.print_header()
     nocc = refWfn.nalpha
     nvir = refWfn.nvira
     epsa = refWfn.epsa
