@@ -1,24 +1,44 @@
 module RCCSD
 using JuES.Wavefunction
 using JuES.Transformation
+using JuES.Output
+using Printf
+using JuES
+#import JuES.CoupledCluster.print_header
 using TensorOperations
 include("Denominators.jl")
 
 """
-    do_rccsd
+    JuES.CoupledCluster.RCCSD.do_rccsd(refWfn::Wfn; kwargs...)
+
+## Arguments
+    refWfn::Wfn
+reference wavefunction to compute RCCSD on.
+
+    kwargs::Any
+keyword arguments for various options.
+
+## Kwargs
+    :doprint::Bool  print or no? deprecated
+    :maxit::Int     max number of iterations for RCCSD equations
+    :return_T::Bool do return the converged cluster amplitudes?
+    :diis::Bool     do DIIS extrapolation? currently dummy  
 """
 function do_rccsd(refWfn::Wfn; kwargs...)
+    JuES.CoupledCluster.print_header()
+    @output "*   executing CCSD\n"
     defaults = Dict(
+                    :maxit => 40,
+                    :return_T => false,
                     :diis => false
                    )
-    for arg in (:doprint,:maxit,:return_T,:diis)
+    for arg in (:maxit,:return_T,:diis)
         if arg in keys(kwargs)
             @eval $arg = $(kwargs[arg])
         else
             @eval $arg = $(defaults[arg])
         end
     end
-    #goes through appropriate steps to do RCCSD
     set_zero_subnormals(true)
     nocc = refWfn.nalpha
     nvir = refWfn.nvira
@@ -27,11 +47,15 @@ function do_rccsd(refWfn::Wfn; kwargs...)
     Cao = refWfn.Cao
     dtt = eltype(uvsr)
 
-    vvvv, ovvv, vovv,
-    vvov, vvvo, oovv,
-    ovvo, vovo, ovov,
-    voov, ooov, oovo,
-    ovoo, vooo, oooo = make_rccsd_integrals(uvsr,Cao,Cav)
+    @output "    Forming MO basis integrals ... "
+    t = @elapsed begin
+        vvvv, ovvv, vovv,
+        vvov, vvvo, oovv,
+        ovvo, vovo, ovov,
+        voov, ooov, oovo,
+        ovoo, vooo, oooo = make_rccsd_integrals(uvsr,Cao,Cav)
+    end
+    @output "done in {:>5.2f}s\n" t
     epsa = refWfn.epsa
     T2 = zeros(dtt, nocc, nocc, nvir, nvir)
     T1 = zeros(dtt,nocc,nvir)
@@ -48,7 +72,10 @@ function do_rccsd(refWfn::Wfn; kwargs...)
     @tensor begin
         tiatia[m,n,a,f] := T1[m,a]*T1[n,f]
     end
-    if doprint println(ccenergy(oovv,T1,tiatia,T2)) end
+    @output "    @MP2 {:>20.17f}\n" ccenergy(oovv,T1,tiatia,T2)
+    @output "    Starting CC iterations\n\n"
+    @output "{:>7s} {:>20}\n" "Iter." "E[CCSD]"
+    @output repeat("~",80)*"\n"
     for i in 1:maxit
         _T1,_T2 = cciter(Fae,Fmi,Fme,
                Wabef,Wmnij,WmBeJ,WmBEj,
@@ -65,8 +92,13 @@ function do_rccsd(refWfn::Wfn; kwargs...)
         @tensoropt begin
             tiatia[m,n,a,f] = T1[m,a]*T1[n,f]
         end
-        if doprint println(ccenergy(oovv,T1,tiatia,T2)) end
+        output("    {:<3d} {:>20.17f}\n",i,ccenergy(oovv,T1,tiatia,T2))
+
     end
+    output(repeat("~",80)*"\n")
+    @output "    CC iterations completed\n"
+    @output "    CC final energy:\n"
+    @output "        @CCSD {:>20.17f}\n" ccenergy(oovv,T1,tiatia,T2)
     if return_T
         return ccenergy(oovv,T1,tiatia,T2),T2
     else
