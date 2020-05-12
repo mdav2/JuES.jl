@@ -1,3 +1,12 @@
+"""
+    JuES.CoupledCluster.GPRCCD
+
+module for performing GPU accelerated RCCD computations
+
+## Functions
+
+    JuES.CoupledCluster.GPRCCD.do_rccd
+"""
 module GPRCCD
 using JuES.Wavefunction
 using CuArrays

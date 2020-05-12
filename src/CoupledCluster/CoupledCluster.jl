@@ -1,28 +1,27 @@
 """
-Basic module for running CC computations in Julia.
-
-short term goal is RCCD and UCCD
-medium term goal is RCCSD and UCCSD
-long term goal is RCCSD(T) and UCCSD(T)
+Module for running CC computations in Julia.
 
 Implemented --> RCCD, RCCSD, DF-RCCD
-
-
-usage --> methods should be defined like do_<r/u><method> and take in
-	  --> a Wavefunction.jl Wfn object as their sole _required_ input.
-	  --> optional inputs such as maxit, convergence, etc can be defined
-	  --> via multiple dispatch
 """
 module CoupledCluster
 
 using JuES.Wavefunction
 using JuES.Transformation
+using JuES.Output
+using Printf
 using Base.Threads
 #using SharedArrays
 #using Distributed
 using TensorOperations
 using LinearAlgebra
 using Dates
+
+function print_header()
+    @output repeat("=",80)*"\n"
+    @output "|   {:<74} |\n" "Coupled Cluster"
+    @output "|       {:<70} |\n" "Module by M.M. Davis and G.J.R. Aroeira"
+    @output repeat("=",80)*"\n"
+end
 
 include("RCCD.jl")
 include("DF-RCCD.jl")
