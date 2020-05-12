@@ -19,7 +19,7 @@ if printstyle == "stdout"
     end
     macro output(str,x...)
         return quote
-            local f = format($str, $(x...))
+            local f = format($str, $([esc(i) for i in x]...))
             print(f)
         end
     end
@@ -33,7 +33,7 @@ elseif printstyle == "file"
     end
     macro output(str,x...)
         return quote
-            local f = format($str, $(x...))
+            local f = format($str, $([esc(i) for i in x]...))
             open("output.dat","a") do file
                 write(file,f)
                 flush(file)
