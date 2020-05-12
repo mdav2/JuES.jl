@@ -1,3 +1,12 @@
+"""
+    JuES.CoupledCluster.RCCD
+
+performs coupled cluster doubles (CCD) computations.
+
+## Functions
+
+    JuES.CoupledCluster.RCCD.do_rccd
+"""
 module RCCD
 using JuES.Wavefunction
 using TensorOperations
