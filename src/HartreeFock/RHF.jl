@@ -67,45 +67,55 @@ function RHFWfn(molecule::PyObject,basis::String="STO-3G";debug=false,grad=false
 end
 
 function RHFCompute(wfn::RHFWfn;doprint=false,maxit=50,Etol=1E-7,Dtol=1E-7)
-    I = wfn.mints.ao_eri().np
+    print_header()
+    @output "    executing RHF\n"
+    @output "    computing AO basis integrals ... "
+    t = @elapsed I = wfn.mints.ao_eri().np
     G = 2*I - permutedims(I,[1,3,2,4])
-    Ft = transpose(wfn.A)*wfn.H*wfn.A
-    e,Ct = eigen(Ft)
-    C = wfn.A*Ct
-    Co = C[:,1:wfn.ndocc]
-    @tensor begin
-        D[u,v] := Co[u,m]*Co[v,m]
-    end
-    @tensor begin
-        F[m,n] := D[r,s]*G[m,n,r,s]
-    end
-    F += wfn.H
-    E = RHFEnergy(D,wfn.H,F) + wfn.vnuc
-    if doprint println("@RHF 0 $E") end
-    for i in 1:maxit
-        @tensor begin
-            F[m,n] := wfn.H[m,n] + D[r,s]*G[m,n,r,s]
-        end
-        Eelec = RHFEnergy(D,wfn.H,F)
-        Enew = Eelec + wfn.vnuc
-        Ft = transpose(wfn.A)*F*wfn.A
-        Ft = Symmetric(Ft)
-        e,Ct = eigen(Ft)#,sortby = x->-abs(x))
+    @output "done in {:>5.2f}s\n" t
+    @output "    Forming initial Fock matrix ... "
+    t = @elapsed begin
+        Ft = transpose(wfn.A)*wfn.H*wfn.A
+        e,Ct = eigen(Ft)
         C = wfn.A*Ct
         Co = C[:,1:wfn.ndocc]
-        @tensor begin
-            Dnew[u,v] := Co[u,m]*Co[v,m]
+    end
+    @output "done in {:>5.2f}s\n" t
+    @tensor D[u,v] := Co[u,m]*Co[v,m]
+    @tensor F[m,n] := D[r,s]*G[m,n,r,s]
+    F += wfn.H
+    E = 0#RHFEnergy(D,wfn.H,F) + wfn.vnuc
+    #if doprint println("@RHF 0 $E") end
+
+    @output "\n"
+    @output " Iter.   {:<20} {:>11} {:>11} {:>8}\n" "E[RHF]" "dE" "√|D|²" "t"
+    @output repeat("~",80)*"\n"
+    t = @elapsed for i in 1:maxit
+        t_iter = @elapsed begin
+            @tensor F[m,n] := wfn.H[m,n] + D[r,s]*G[m,n,r,s]
+            Eelec = RHFEnergy(D,wfn.H,F)
+            Enew = Eelec + wfn.vnuc
+            Ft = transpose(wfn.A)*F*wfn.A
+            Ft = Symmetric(Ft)
+            e,Ct = eigen(Ft)#,sortby = x->-abs(x))
+            C = wfn.A*Ct
+            Co = C[:,1:wfn.ndocc]
+            @tensor Dnew[u,v] := Co[u,m]*Co[v,m]
+            dD = Dnew - D
+            Drms = sqrt(sum(dD)^2)
+            dE = Enew - E
+            D = Dnew
+            E = Enew
         end
-        dD = Dnew - D
-        Drms = sqrt(sum(dD)^2)
-        dE = Enew - E
-        D = Dnew
-        E = Enew
-        if doprint println("@RHF $i $E $dE $Drms") end
+        #if doprint println("@RHF $i $E $dE $Drms") end
+        @output "    {:<3} {:>20.17f} {:>11.3e} {:>11.3e} {:>8.2f}\n" i E dE Drms t_iter
         if (dE < Etol) & (Drms < Dtol)
             break
         end
     end
+    @output repeat("~",80)*"\n"
+    @output "    RHF done in {:>5.2f}s\n" t
+    @output "    @E[RHF] = {:>20.17f}" E
 end
 """
     RHFEnergy
