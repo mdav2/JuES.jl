@@ -50,7 +50,7 @@ function exec(cont)
     psi4_options = Dict{Any,Any}(
                        "scf_type"=>"pk"
     )
-    JuES_options = Dict(
+    JuES_options = Dict{Any,Any}(
                        :doprint=>false,
                        :maxit=>40,
                        :return_T=>false,
@@ -67,8 +67,7 @@ function exec(cont)
         psi4.core.be_quiet()
     end
     psi4.set_options(psi4_options)
-    e,wfn = psi4.energy("hf/$(psi4_options["basis"])",return_wfn=true)
-    println(e)
+    e,wfn = psi4.energy("scf",return_wfn=true)
     JuWfn = JuES.Wavefunction.Wfn(wfn)
     com = cont["command"]
     E = com(JuWfn; JuES_options...)

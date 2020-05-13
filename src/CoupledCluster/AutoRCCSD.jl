@@ -188,7 +188,10 @@ Perform the RCCSD computation.
 """
 function do_rccsd(wfn::Wfn; kwargs...)
 
+    # Print intro
     JuES.CoupledCluster.print_header()
+    @output "\n    • Computing CCSD with the AutoRCCSD module.\n\n"
+
     
     # Process options
     for arg in keys(JuES.CoupledCluster.defaults)
@@ -198,6 +201,7 @@ function do_rccsd(wfn::Wfn; kwargs...)
             @eval $arg = $(JuES.CoupledCluster.defaults[arg])
         end
     end
+
 
     # Check if the number of electrons is even
     nelec = wfn.nalpha + wfn.nbeta
@@ -245,6 +249,7 @@ function do_rccsd(wfn::Wfn; kwargs...)
     # Get MP2 energy. Note that f[2] = fock_OV and V[3] = Voovv.
     Ecc = update_energy(T1, T2, f[2], V[3])
     
+    @output "Initial Amplitudes Guess: MP2\n"
     @output "MP2 Energy:   {:15.10f}\n\n" Ecc
     
     r1 = 1
@@ -253,11 +258,17 @@ function do_rccsd(wfn::Wfn; kwargs...)
     rms = 1
     
     # Start CC iterations
-    println("======================================")
+
+    @output "    Starting CC Iterations\n\n"
+    @output "Iteration Options:\n"
+    @output "   cc_max_iter →  {:3.0d}\n" Int(cc_max_iter)
+    @output "   cc_e_conv   →  {:2.0e}\n" cc_e_conv
+    @output "   cc_max_rms  →  {:2.0e}\n\n" cc_max_rms
+    @output "{:10s}    {:15s}    {:12s}    {:12s}    {:10s}\n" "Iteration" "CC Energy" "ΔE" "Max RMS" "Time (s)"
     ite = 1
     while abs(dE) > cc_e_conv || rms > cc_max_rms
         if ite > cc_max_iter
-            @printf("CC Equations did not converge in %1.0d iterations.", cc_max_iter)
+            @output "\n⚠️  CC Equations did not converge in {:1.0d} iterations.\n" cc_max_iter
             break
         end
         t = @elapsed begin
@@ -267,16 +278,14 @@ function do_rccsd(wfn::Wfn; kwargs...)
         oldE = Ecc
         Ecc = update_energy(T1, T2, f[2], V[3])
         dE = Ecc - oldE
-        @printf("Iteration %.0f\n", ite)
-        @printf("CC Correlation energy: %15.10f\n", Ecc)
-        @printf("Energy change:         %15.10f\n", dE)
-        @printf("Max RMS residue:       %15.10f\n", rms)
-        @printf("Time required:         %15.10f\n", t)
-        println("======================================")
+        @output "    {:<5.0d}    {:<15.10f}    {:<12.10f}    {:<12.10f}    {:<10.5f}\n" ite Ecc dE rms t
         ite += 1
     end
-    
-    @printf("Final CCSD Energy:     %15.10f\n", Ecc)
-end
 
+    # Converged?
+    if abs(dE) < cc_e_conv && rms < cc_max_rms
+        @output "\n 🍾 Equations Converged!\n"
+    end
+    @output "\n⇒ Final CCSD Energy:     {:15.10f}\n" Ecc
+end
 end #End Module
