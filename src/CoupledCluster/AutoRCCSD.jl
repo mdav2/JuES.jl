@@ -1,11 +1,12 @@
-module UNFRCCSD
+module AutoRCCSD
+using JuES
 using JuES.Wavefunction
 using JuES.IntegralTransformation
 using TensorOperations
 using LinearAlgebra
 using Printf
 
-function update_energy(T1::Array{Float64, 2}, T2::Array{Float64, 4}, f::Array{Float64,2}, V::Array{Float64, 4})
+function update_energy(T1::Array{Float64, 2}, T2::Array{Float64, 4}, f::Array{Float64,2}, Voovv::Array{Float64, 4})
 
     E::Float64 = 0
     @tensoropt begin
@@ -13,14 +14,14 @@ function update_energy(T1::Array{Float64, 2}, T2::Array{Float64, 4}, f::Array{Fl
         B[l,c,k,d] := -1.0*T1[l,c]*T1[k,d]
         B[l,c,k,d] += -1.0*T2[l,k,c,d]
         B[l,c,k,d] += 2.0*T2[k,l,c,d]
-        CC_energy += B[l,c,k,d]*V[k,l,c,d]
-        CC_energy += 2.0*T1[l,c]*T1[k,d]*V[l,k,c,d]
+        CC_energy += B[l,c,k,d]*Voovv[k,l,c,d]
+        CC_energy += 2.0*T1[l,c]*T1[k,d]*Voovv[l,k,c,d]
     end
     
     return CC_energy
 end
 
-function update_amp(T1::Array{Float64, 2}, T2::Array{Float64, 4}, f::Tuple, V::Tuple, d::Array{Float64, 2}, D::Array{Float64, 4}, info::Dict)
+function update_amp(T1::Array{Float64, 2}, T2::Array{Float64, 4}, f::Tuple, V::Tuple, d::Array{Float64, 2}, D::Array{Float64, 4})
 
     Voooo, Vooov, Voovv, Vovov, Vovvv, Vvvvv = V
     fock_OO, fock_OV, fock_VV = f
@@ -83,9 +84,9 @@ function update_amp(T1::Array{Float64, 2}, T2::Array{Float64, 4}, f::Tuple, V::T
         newT2[i,j,a,b] += T1[i,c]*T1[j,d]*T2[l,k,a,b]*Voovv[l,k,c,d]
         newT2[i,j,a,b] += T1[k,a]*T1[l,b]*T2[i,j,d,c]*Voovv[l,k,c,d]
         P_OoVv[i,j,a,b] := -1.0*fock_OO[i,k]*T2[k,j,a,b]
-        P_OoVv[i,j,a,b] += 1.0*fock_VV[c,a]*T2[i,j,c,b]
+        P_OoVv[i,j,a,b] += fock_VV[c,a]*T2[i,j,c,b]
         P_OoVv[i,j,a,b] += -1.0*T1[k,b]*Vooov[j,i,k,a]
-        P_OoVv[i,j,a,b] += 1.0*T1[j,c]*Vovvv[i,c,a,b]
+        P_OoVv[i,j,a,b] += T1[j,c]*Vovvv[i,c,a,b]
         P_OoVv[i,j,a,b] += -1.0*fock_OV[k,c]*T1[i,c]*T2[k,j,a,b]
         P_OoVv[i,j,a,b] += -1.0*fock_OV[k,c]*T1[k,a]*T2[i,j,c,b]
         P_OoVv[i,j,a,b] += -1.0*T2[k,i,a,c]*Voovv[k,j,c,b]
@@ -95,36 +96,38 @@ function update_amp(T1::Array{Float64, 2}, T2::Array{Float64, 4}, f::Tuple, V::T
         P_OoVv[i,j,a,b] += -1.0*T2[i,k,a,c]*Vovov[j,c,k,b]
         P_OoVv[i,j,a,b] += -1.0*T2[k,j,a,c]*Vovov[i,c,k,b]
         P_OoVv[i,j,a,b] += -2.0*T1[l,b]*T2[i,k,a,c]*Vooov[l,k,j,c]
-        P_OoVv[i,j,a,b] += 1.0*T1[l,b]*T2[k,i,a,c]*Vooov[l,k,j,c]
+        P_OoVv[i,j,a,b] += T1[l,b]*T2[k,i,a,c]*Vooov[l,k,j,c]
         P_OoVv[i,j,a,b] += -1.0*T1[j,c]*T2[i,k,d,b]*Vovvv[k,a,c,d]
         P_OoVv[i,j,a,b] += -1.0*T1[j,c]*T2[k,i,a,d]*Vovvv[k,b,d,c]
         P_OoVv[i,j,a,b] += -1.0*T1[j,c]*T2[i,k,a,d]*Vovvv[k,b,c,d]
-        P_OoVv[i,j,a,b] += 1.0*T1[j,c]*T2[l,k,a,b]*Vooov[l,k,i,c]
-        P_OoVv[i,j,a,b] += 1.0*T1[l,b]*T2[i,k,a,c]*Vooov[k,l,j,c]
+        P_OoVv[i,j,a,b] += T1[j,c]*T2[l,k,a,b]*Vooov[l,k,i,c]
+        P_OoVv[i,j,a,b] += T1[l,b]*T2[i,k,a,c]*Vooov[k,l,j,c]
         P_OoVv[i,j,a,b] += -1.0*T1[k,a]*T2[i,j,d,c]*Vovvv[k,b,d,c]
-        P_OoVv[i,j,a,b] += 1.0*T1[k,a]*T2[i,l,c,b]*Vooov[l,k,j,c]
+        P_OoVv[i,j,a,b] += T1[k,a]*T2[i,l,c,b]*Vooov[l,k,j,c]
         P_OoVv[i,j,a,b] += 2.0*T1[j,c]*T2[i,k,a,d]*Vovvv[k,b,d,c]
         P_OoVv[i,j,a,b] += -1.0*T1[k,c]*T2[i,j,a,d]*Vovvv[k,b,d,c]
         P_OoVv[i,j,a,b] += 2.0*T1[k,c]*T2[i,j,a,d]*Vovvv[k,b,c,d]
-        P_OoVv[i,j,a,b] += 1.0*T1[k,c]*T2[i,l,a,b]*Vooov[k,l,j,c]
+        P_OoVv[i,j,a,b] += T1[k,c]*T2[i,l,a,b]*Vooov[k,l,j,c]
         P_OoVv[i,j,a,b] += -2.0*T1[k,c]*T2[i,l,a,b]*Vooov[l,k,j,c]
-        P_OoVv[i,j,a,b] += 1.0*T2[j,k,c,d]*T2[i,l,a,b]*Voovv[k,l,c,d]
+        P_OoVv[i,j,a,b] += T2[j,k,c,d]*T2[i,l,a,b]*Voovv[k,l,c,d]
         P_OoVv[i,j,a,b] += -2.0*T1[k,c]*T1[j,d]*T2[i,l,a,b]*Voovv[k,l,c,d]
-        P_OoVv[i,j,a,b] += 1.0*T1[k,c]*T1[j,d]*T2[i,l,a,b]*Voovv[l,k,c,d]
+        P_OoVv[i,j,a,b] += T1[k,c]*T1[j,d]*T2[i,l,a,b]*Voovv[l,k,c,d]
         P_OoVv[i,j,a,b] += -2.0*T1[k,c]*T1[l,a]*T2[i,j,d,b]*Voovv[k,l,c,d]
-        P_OoVv[i,j,a,b] += 1.0*T1[k,c]*T1[l,a]*T2[i,j,d,b]*Voovv[l,k,c,d]
-        P_OoVv[i,j,a,b] += 1.0*T1[i,c]*T1[k,a]*T2[l,j,b,d]*Voovv[k,l,c,d]
+        P_OoVv[i,j,a,b] += T1[k,c]*T1[l,a]*T2[i,j,d,b]*Voovv[l,k,c,d]
+        P_OoVv[i,j,a,b] += T1[i,c]*T1[k,a]*T2[l,j,b,d]*Voovv[k,l,c,d]
         P_OoVv[i,j,a,b] += -2.0*T1[i,c]*T1[k,a]*T2[j,l,b,d]*Voovv[k,l,c,d]
-        P_OoVv[i,j,a,b] += 1.0*T1[i,c]*T1[k,a]*T2[l,j,d,b]*Voovv[l,k,c,d]
-        P_OoVv[i,j,a,b] += 1.0*T1[i,c]*T1[l,b]*T2[k,j,a,d]*Voovv[k,l,c,d]
+        P_OoVv[i,j,a,b] += T1[i,c]*T1[k,a]*T2[l,j,d,b]*Voovv[l,k,c,d]
+        P_OoVv[i,j,a,b] += T1[i,c]*T1[l,b]*T2[k,j,a,d]*Voovv[k,l,c,d]
         P_OoVv[i,j,a,b] += -2.0*T2[i,k,d,c]*T2[l,j,a,b]*Voovv[k,l,c,d]
         
         newT2[i,j,a,b] += P_OoVv[i,j,a,b] + P_OoVv[j,i,b,a]
     end
 
+    # Apply the resolvent
     newT1 = newT1.*d
     newT2 = newT2.*D
 
+    # Compute residues 
     r1 = sqrt(sum((newT1 - T1).^2))/length(T1)
     r2 = sqrt(sum((newT2 - T2).^2))/length(T2)
 
@@ -132,23 +135,26 @@ function update_amp(T1::Array{Float64, 2}, T2::Array{Float64, 4}, f::Tuple, V::T
 end
 
 
-function do_rccsd(wfn::Wfn)
-    info = Dict()
-    # Check if the number foe electrons is even
-    info["nelec"] = wfn.nalpha + wfn.nbeta
-    info["nelec"] % 2 == 0 ? nothing : throw(DomainError(info["nelec"], "Number of electrons must be even for RHF"))
-    info["nmo"] = wfn.nmo
-    info["ndocc"] = Int(info["nelec"]/2)
-    info["nvir"] = info["nmo"] - info["ndocc"]
-    
-    
-    println("Number of electrons:              $(info["nelec"])")
-    println("Number of Doubly Occupied MOs:    $(info["ndocc"])")
-    println("Number of MOs:                    $(info["nmo"])")
+function do_rccsd(wfn::Wfn; kwargs...)
+    # Process options
+    for arg in keys(JuES.CoupledCluster.defaults)
+        if arg in keys(kwargs)
+            @eval $arg = $(kwargs[arg])
+        else
+            @eval $arg = $(JuES.CoupledCluster.defaults[arg])
+        end
+    end
+
+    # Check if the number of electrons is even
+    nelec = wfn.nalpha + wfn.nbeta
+    nelec % 2 == 0 ? nothing : error("Number of electrons must be even for RHF. Given $nelec")
+    nmo = wfn.nmo
+    ndocc = Int(nelec/2)
+    nvir = nmo - ndocc
     
     # Slices
-    o = 1:info["ndocc"]
-    v = info["ndocc"]+1:info["nmo"]
+    o = 1:ndocc
+    v = ndocc+1:nmo
 
     # Get fock matrix
     f = get_fock(wfn, "alpha")
@@ -178,36 +184,30 @@ function do_rccsd(wfn::Wfn)
     D = [i + j - a - b for i = fock_Od, j = fock_Od, a = fock_Vd, b = fock_Vd]
     D = inv.(D)
     
-    # Initial Amplitude
+    # Initial Amplitude. Note that f[2] = fock_OV and V[3] = Voovv.
     T1 = f[2].*d
     T2 = D.*V[3]
     
-    # Get MP2 energy
-    
+    # Get MP2 energy. Note that f[2] = fock_OV and V[3] = Voovv.
     Ecc = update_energy(T1, T2, f[2], V[3])
     
     @printf("MP2 Energy:   %15.10f\n", Ecc)
     
-    # Set up iteration options
     r1 = 1
     r2 = 1
     dE = 1
-    ite = 1
-    rms_LIM = 10^-8
-    E_LIM = 10^-12
     rms = 1
     
-    println("======================================")
-    
-    
     # Start CC iterations
-    
-    while abs(dE) > E_LIM || rms > rms_LIM
-        if ite > 50
+    println("======================================")
+    ite = 1
+    while abs(dE) > cc_e_conv || rms > cc_max_rms
+        if ite > cc_max_iter
+            @printf("CC Equations did not converge in %1.0d iterations.", CC_MAX_ITER)
             break
         end
         t = @elapsed begin
-            T1, T2, r1, r2 = update_amp(T1, T2, f, V, d, D, info)
+            T1, T2, r1, r2 = update_amp(T1, T2, f, V, d, D)
         end
         rms = max(r1,r2)
         oldE = Ecc
@@ -223,6 +223,6 @@ function do_rccsd(wfn::Wfn)
     end
     
     @printf("Final CCSD Energy:     %15.10f\n", Ecc)
-    end
+end
 
 end #End Module
