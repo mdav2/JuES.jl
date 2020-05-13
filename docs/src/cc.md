@@ -19,3 +19,13 @@ JuES.CoupledCluster.RCCSD
 ```@docs
 JuES.CoupledCluster.RCCSD.do_rccsd
 ```
+
+## AutoRCCSD
+Module that performs Restricted CCSD using auto factorized equations.
+```@docs
+JuES.CoupledCluster.AutoRCCSD
+```
+```@docs
+JuES.CoupledCluster.AutoRCCSD.update_energy
+```
+

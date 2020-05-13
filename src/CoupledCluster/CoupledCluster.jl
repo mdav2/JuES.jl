@@ -20,7 +20,7 @@ function print_header()
     @output repeat("=",80)*"\n"
     @output "|   {:<74} |\n" "Coupled Cluster"
     @output "|       {:<70} |\n" "Module by M.M. Davis and G.J.R. Aroeira"
-    @output repeat("=",80)*"\n"
+    @output repeat("=",80)*"\n\n"
 end
 
 defaults = Dict(
