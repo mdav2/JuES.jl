@@ -1,4 +1,3 @@
-#module Options
-#export 
-##optdict = 
-#end
+module Options
+optdict = Dict("printstyle" => "stdout")
+end
