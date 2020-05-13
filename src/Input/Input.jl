@@ -13,7 +13,7 @@ include("psi4keywords.dat")
 
 read and execute the input file specified by fname. 
 """
-function run(fname)
+function run(fname::String = "input.dat")
     cont = read(fname)
     exec(cont)
 end
@@ -47,11 +47,14 @@ function exec(cont)
         cont["molecule"] *= "symmetry c1"
     end
     mol = psi4.geometry(cont["molecule"])
-    psi4_options = Dict()
+    psi4_options = Dict{Any,Any}(
+                       "scf_type"=>"pk"
+    )
     JuES_options = Dict(
                        :doprint=>false,
                        :maxit=>40,
-                       :return_T=>false
+                       :return_T=>false,
+                       :quiet=>true
                       )
     for option in keys(cont["options"]) #sort through options to discern psi4 keywords vs JuES keywords
         if option in psi4_opt_list
@@ -60,10 +63,12 @@ function exec(cont)
             JuES_options[option] = cont["options"][option]
         end
     end
-    if "quiet" in keys(JuES_options) && JuES_options["quiet"] == true
+    if JuES_options[:quiet] == true
         psi4.core.be_quiet()
     end
+    psi4.set_options(psi4_options)
     e,wfn = psi4.energy("hf/$(psi4_options["basis"])",return_wfn=true)
+    println(e)
     JuWfn = JuES.Wavefunction.Wfn(wfn)
     com = cont["command"]
     E = com(JuWfn; JuES_options...)
