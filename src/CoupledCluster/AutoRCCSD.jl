@@ -12,9 +12,9 @@ Module that performs Restricted CCSD using auto factorized equations.
 """
 module AutoRCCSD
 using JuES
+using JuES.Output
 using JuES.Wavefunction
 using JuES.IntegralTransformation
-using JuES.Output
 using TensorOperations
 using LinearAlgebra
 using Printf
@@ -33,8 +33,7 @@ Compute CC energy from amplitudes arrays.
 """
 function update_energy(T1::Array{Float64, 2}, T2::Array{Float64, 4}, f::Array{Float64,2}, Voovv::Array{Float64, 4})
 
-    E::Float64 = 0
-    @tensoropt begin
+    @tensoropt (k=>x, l=>x, c=>100x, d=>100x)  begin
         CC_energy = 2.0*f[k,c]*T1[k,c]
         B[l,c,k,d] := -1.0*T1[l,c]*T1[k,d]
         B[l,c,k,d] += -1.0*T2[l,k,c,d]
@@ -215,7 +214,7 @@ function do_rccsd(wfn::Wfn; kwargs...)
     v = ndocc+1:nmo
 
     # Get fock matrix
-    f = get_fock(wfn, "alpha")
+    f = get_fock(wfn; spin="alpha")
 
     # Save diagonal terms
     fock_Od = diag(f)[o]
@@ -286,6 +285,7 @@ function do_rccsd(wfn::Wfn; kwargs...)
     if abs(dE) < cc_e_conv && rms < cc_max_rms
         @output "\n 🍾 Equations Converged!\n"
     end
-    @output "\n⇒ Final CCSD Energy:     {:15.10f}\n" Ecc
+    @output "\n⇒ Final CCSD Energy:     {:15.10f}\n" Ecc+wfn.energy
+    return Ecc, T1, T2
 end
 end #End Module

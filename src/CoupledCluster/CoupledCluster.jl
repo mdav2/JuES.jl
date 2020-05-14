@@ -10,23 +10,14 @@ using JuES.Transformation
 using JuES.Output
 using Printf
 using Base.Threads
-#using SharedArrays
-#using Distributed
 using TensorOperations
 using LinearAlgebra
 using Dates
 
-#function print_header()
-#    @output repeat("=",80)*"\n"
-#    @output "|   {:<74} |\n" "Coupled Cluster"
-#    @output "|       {:<70} |\n" "Module by M.M. Davis and G.J.R. Aroeira"
-#    @output repeat("=",80)*"\n\n"
-#end
-
 function print_header()
-    @output repeat("=",80)*"\n"
     banner = 
 raw"""
+================================================================================
 //    _____                   _          _   _____ _           _              \\ 
 //   /  __ \                 | |        | | /  __ \ |         | |             \\   
 //   | /  \/ ___  _   _ _ __ | | ___  __| | | /  \/ |_   _ ___| |_ ___ _ __   \\   
@@ -37,9 +28,9 @@ raw"""
 //                    |_|                                                     \\   
 //                                                                            \\     
 //                 Module by M.M. Davis and G.J.R. Aroeira                    \\       
+================================================================================
 """
-    @output "{}" banner
-    @output repeat("=",80)*"\n"
+    @output "\n{}\n" banner
 end
 
 defaults = Dict(
@@ -55,4 +46,5 @@ include("ROCCD.jl")
 include("RCCSD.jl")
 include("UCCSD.jl")
 include("AutoRCCSD.jl")
+include("PerturbativeTriples.jl")
 end #module CC

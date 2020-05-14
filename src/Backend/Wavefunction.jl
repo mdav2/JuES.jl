@@ -24,6 +24,8 @@ Data structure for storing integrals, MO coefficients, and misc information abou
 a reference (HF) wavefunction.
 
 ## Fields
+energy::T energy of the reference wavefunction
+
 nalpha::Int number of alpha electrons
 
 nbeta::Int number of beta electrons
@@ -62,6 +64,7 @@ PqRs::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case BABA)
 PqrS::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case BAAB)
 """
 struct Wfn{T}
+    energy
     vnuc
     nalpha::Int
     nbeta::Int
@@ -138,6 +141,7 @@ end
 """
 function Wfn{T}(wfn::PyObject; unrestricted::Bool=false, diskbased::Bool=false, name::String = "default", df::Bool=false) where T
     dt = T
+    energy = wfn.energy()
     dummy2 = Array{dt}(undef, 0, 0) #placeholder 2D array
     dummy4 = Array{dt}(undef, 0, 0, 0, 0) #placeholder 4D array
     vnuc = wfn.molecule().nuclear_repulsion_energy()
@@ -200,6 +204,7 @@ function Wfn{T}(wfn::PyObject; unrestricted::Bool=false, diskbased::Bool=false, 
     end
     # create the Wfn object and return it!
     owfn = Wfn{dt}(
+        energy,
         vnuc,
         nocca,
         noccb,
