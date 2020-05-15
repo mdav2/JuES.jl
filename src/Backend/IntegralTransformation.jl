@@ -17,7 +17,7 @@ export get_eri
 export get_fock
 
 """
-    JuES.IntegralTransformation.get_eri(wfn::Wfn, eri_string::String, notation::String = "phys")
+    JuES.IntegralTransformation.get_eri(wfn::Wfn, eri_string::String; notation::String = "phys")
 
 From a Wavefunction object, return a specified ERI array.
 
@@ -35,7 +35,7 @@ From a Wavefunction object, return a specified ERI array.
                 Default: "phys".
 
 """
-function get_eri(wfn::Wfn, eri_string::String, notation::String = "phys")
+function get_eri(wfn::Wfn, eri_string::String; notation::String = "phys")
 
     # Size of eri_string must be 4.
     if sizeof(eri_string) != 4
@@ -73,7 +73,7 @@ function get_eri(wfn::Wfn, eri_string::String, notation::String = "phys")
 end
 
 """
-    JuES.IntegralTransformation.get_fock(wfn::Wfn, spin::String = "alpha")
+    JuES.IntegralTransformation.get_fock(wfn::Wfn; spin::String = "alpha")
 
 From a Wavefunction object, return the Fock matrix.
 
@@ -88,7 +88,7 @@ From a Wavefunction object, return the Fock matrix.
             Case insensitive. 
 
 """
-function get_fock(wfn::Wfn, spin::String = "alpha")
+function get_fock(wfn::Wfn; spin = "alpha")
 
     if lowercase(spin) in ["alpha", "up", "a"]
         C  = wfn.Ca

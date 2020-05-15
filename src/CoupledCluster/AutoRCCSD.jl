@@ -1,15 +1,39 @@
+"""
+    JuES.CoupledCluster.AutoRCCSD
+
+Module that performs Restricted CCSD using auto factorized equations.
+
+**Functions:**
+
+    update_energy   Compute CC energy from amplitudes arrays.
+    update_amp      Update produces new set of amplitudes from old ones. 
+    do_rccsd        Compute RCCSD.
+
+"""
 module AutoRCCSD
 using JuES
+using JuES.Output
 using JuES.Wavefunction
 using JuES.IntegralTransformation
 using TensorOperations
 using LinearAlgebra
 using Printf
 
+"""
+    JuES.CoupledCluster.AutoRCCSD.update_energy(T1::Array{Float64, 2}, T2::Array{Float64, 4}, f::Array{Float64,2}, Voovv::Array{Float64, 4})
+
+Compute CC energy from amplitudes arrays.
+
+**Arguments**
+
+    T1     T1 CC amplitudes array.
+    T2     T2 CC amplitudes array.
+    f      Fock matrix f(i,a).
+    Voovv  ERI tensor V(i,j,a,b).
+"""
 function update_energy(T1::Array{Float64, 2}, T2::Array{Float64, 4}, f::Array{Float64,2}, Voovv::Array{Float64, 4})
 
-    E::Float64 = 0
-    @tensoropt begin
+    @tensoropt (k=>x, l=>x, c=>100x, d=>100x)  begin
         CC_energy = 2.0*f[k,c]*T1[k,c]
         B[l,c,k,d] := -1.0*T1[l,c]*T1[k,d]
         B[l,c,k,d] += -1.0*T2[l,k,c,d]
@@ -21,6 +45,20 @@ function update_energy(T1::Array{Float64, 2}, T2::Array{Float64, 4}, f::Array{Fl
     return CC_energy
 end
 
+"""
+    JuES.CoupledCluster.AutoRCCSD.update_amp(T1::Array{Float64, 2}, T2::Array{Float64, 4}, f::Tuple, V::Tuple, d::Array{Float64, 2}, D::Array{Float64, 4})
+
+Compute new set of T1 and T2 amplitudes from old ones.
+
+**Arguments**
+
+    T1     T1 CC amplitudes array.
+    T2     T2 CC amplitudes array.
+    f      Tuple containing slices of the full Fock matrix.
+    V      Tuple containing slices of the full ERI tensor.
+    d      Resolvent tensor D(i,a)
+    D      Resolvent tensor D(i,j,a,b)
+"""
 function update_amp(T1::Array{Float64, 2}, T2::Array{Float64, 4}, f::Tuple, V::Tuple, d::Array{Float64, 2}, D::Array{Float64, 4})
 
     Voooo, Vooov, Voovv, Vovov, Vovvv, Vvvvv = V
@@ -134,8 +172,26 @@ function update_amp(T1::Array{Float64, 2}, T2::Array{Float64, 4}, f::Tuple, V::T
     return newT1, newT2, r1, r2
 end
 
+"""
+    JuES.CoupledCluster.AutoRCCSD.do_rccsd(wfn::Wfn; kwargs...)
 
+Perform the RCCSD computation.
+
+**Arguments**
+
+    wfn     Wavefunction object.
+
+**Kwargs**
+
+    kwargs...   Options from JuES.
+"""
 function do_rccsd(wfn::Wfn; kwargs...)
+
+    # Print intro
+    JuES.CoupledCluster.print_header()
+    @output "\n    • Computing CCSD with the AutoRCCSD module.\n\n"
+
+    
     # Process options
     for arg in keys(JuES.CoupledCluster.defaults)
         if arg in keys(kwargs)
@@ -144,6 +200,7 @@ function do_rccsd(wfn::Wfn; kwargs...)
             @eval $arg = $(JuES.CoupledCluster.defaults[arg])
         end
     end
+
 
     # Check if the number of electrons is even
     nelec = wfn.nalpha + wfn.nbeta
@@ -157,7 +214,7 @@ function do_rccsd(wfn::Wfn; kwargs...)
     v = ndocc+1:nmo
 
     # Get fock matrix
-    f = get_fock(wfn, "alpha")
+    f = get_fock(wfn; spin="alpha")
 
     # Save diagonal terms
     fock_Od = diag(f)[o]
@@ -191,7 +248,8 @@ function do_rccsd(wfn::Wfn; kwargs...)
     # Get MP2 energy. Note that f[2] = fock_OV and V[3] = Voovv.
     Ecc = update_energy(T1, T2, f[2], V[3])
     
-    @printf("MP2 Energy:   %15.10f\n", Ecc)
+    @output "Initial Amplitudes Guess: MP2\n"
+    @output "MP2 Energy:   {:15.10f}\n\n" Ecc
     
     r1 = 1
     r2 = 1
@@ -199,11 +257,17 @@ function do_rccsd(wfn::Wfn; kwargs...)
     rms = 1
     
     # Start CC iterations
-    println("======================================")
+
+    @output "    Starting CC Iterations\n\n"
+    @output "Iteration Options:\n"
+    @output "   cc_max_iter →  {:3.0d}\n" Int(cc_max_iter)
+    @output "   cc_e_conv   →  {:2.0e}\n" cc_e_conv
+    @output "   cc_max_rms  →  {:2.0e}\n\n" cc_max_rms
+    @output "{:10s}    {: 15s}    {: 12s}    {:12s}    {:10s}\n" "Iteration" "CC Energy" "ΔE" "Max RMS" "Time (s)"
     ite = 1
     while abs(dE) > cc_e_conv || rms > cc_max_rms
         if ite > cc_max_iter
-            @printf("CC Equations did not converge in %1.0d iterations.", CC_MAX_ITER)
+            @output "\n⚠️  CC Equations did not converge in {:1.0d} iterations.\n" cc_max_iter
             break
         end
         t = @elapsed begin
@@ -213,16 +277,15 @@ function do_rccsd(wfn::Wfn; kwargs...)
         oldE = Ecc
         Ecc = update_energy(T1, T2, f[2], V[3])
         dE = Ecc - oldE
-        @printf("Iteration %.0f\n", ite)
-        @printf("CC Correlation energy: %15.10f\n", Ecc)
-        @printf("Energy change:         %15.10f\n", dE)
-        @printf("Max RMS residue:       %15.10f\n", rms)
-        @printf("Time required:         %15.10f\n", t)
-        println("======================================")
+        @output "    {:<5.0d}    {:<15.10f}    {:<12.10f}    {:<12.10f}    {:<10.5f}\n" ite Ecc dE rms t
         ite += 1
     end
-    
-    @printf("Final CCSD Energy:     %15.10f\n", Ecc)
-end
 
+    # Converged?
+    if abs(dE) < cc_e_conv && rms < cc_max_rms
+        @output "\n 🍾 Equations Converged!\n"
+    end
+    @output "\n⇒ Final CCSD Energy:     {:15.10f}\n" Ecc+wfn.energy
+    return Ecc, T1, T2
+end
 end #End Module
