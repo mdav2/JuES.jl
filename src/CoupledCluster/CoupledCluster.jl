@@ -45,6 +45,7 @@ include("DF-RCCD.jl")
 include("ROCCD.jl")
 include("RCCSD.jl")
 include("UCCSD.jl")
+include("mRCCD.jl")
 include("AutoRCCSD.jl")
 include("PerturbativeTriples.jl")
 end #module CC

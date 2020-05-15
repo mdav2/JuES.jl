@@ -8,30 +8,37 @@ import Printf.print_fixed
 #using JuES.Options
 
 #printstyle = JuES.Options.printstyle
-printstyle = "stdout"
+printstyle = ["none"]
 export output
 export @output
 
-if printstyle == "stdout"
-    function output(str,x...)
+function output(str,x...)
+    if JuES.Output.printstyle[1] == "stdout"
         f = format(str,x...)
         print(f)
-    end
-    macro output(str,x...)
-        return quote
-            local f = format($str, $([esc(i) for i in x]...))
-            print(f)
-        end
-    end
-elseif printstyle == "file"
-    function output(str,x...)
+    elseif JuES.Output.printstyle[1] == "file"
         f = format(str,x...)
         open("output.dat","a") do file
             write(file,f)
             flush(file)
         end
+    elseif JuES.Output.printstyle[1] == "both"
+        f = format(str,x...)
+        print(f)
+        open("output.dat","a") do file
+            write(file,f)
+            flush(file)
+        end
+    elseif JuES.Output.printstyle[1] == "none"
     end
-    macro output(str,x...)
+end
+macro output(str,x...)
+    if JuES.Output.printstyle[1] == "stdout"
+        return quote
+            local f = format($str, $([esc(i) for i in x]...))
+            print(f)
+        end
+    elseif JuES.Output.printstyle[1] == "file"
         return quote
             local f = format($str, $([esc(i) for i in x]...))
             open("output.dat","a") do file
@@ -39,17 +46,7 @@ elseif printstyle == "file"
                 flush(file)
             end
         end
-    end
-elseif printstyle == "both"
-    function output(str,x...)
-        f = format(str,x...)
-        print(f)
-        open("output.dat","a") do file
-            write(file,f)
-            flush(file)
-        end
-    end
-    macro output(str,x...)
+    elseif JuES.Output.printstyle[1] == "both"
         if length(x) >= 1
             return quote
                 local f = format($str, $([esc(i) for i in x]...))
@@ -66,15 +63,9 @@ elseif printstyle == "both"
                     write(file,f)
                     flush(file)
                 end
-                print(f)
             end
         end
-    end
-elseif printstyle == "none"
-    function output(str,x...)
-    end
-    macro output(str,x...)
+    elseif JuES.Output.printstyle[1] == "none"
     end
 end
-
 end #module

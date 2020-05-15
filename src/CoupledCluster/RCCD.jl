@@ -11,6 +11,7 @@ module RCCD
 using JuES.Wavefunction
 using TensorOperations
 using JuES.Transformation
+using JuES
 include("Denominators.jl")
 export do_rccd
 """
@@ -34,8 +35,8 @@ function do_rccd(refWfn::Wfn; maxit=40, doprint=false, return_T2=false)
     nocc = refWfn.nalpha
     nvir = refWfn.nvira
     epsa = refWfn.epsa
-    T = eltype(refWfn.uvsr)
-    oovv,ovov,ovvo,oooo,vvvv = make_rccd_integrals(refWfn.uvsr,refWfn.Cao,refWfn.Cav) 
+    T = eltype(refWfn.ao_eri)
+    oovv,ovov,ovvo,oooo,vvvv = make_rccd_integrals(refWfn.ao_eri,refWfn.Cao,refWfn.Cav) 
     T2 = zeros(T, nocc, nocc, nvir, nvir)
     Dijab = form_Dijab(T2, epsa)
     T2_init!(T2, ovov, Dijab)
