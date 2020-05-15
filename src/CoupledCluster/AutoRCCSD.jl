@@ -263,7 +263,7 @@ function do_rccsd(wfn::Wfn; kwargs...)
     @output "   cc_max_iter →  {:3.0d}\n" Int(cc_max_iter)
     @output "   cc_e_conv   →  {:2.0e}\n" cc_e_conv
     @output "   cc_max_rms  →  {:2.0e}\n\n" cc_max_rms
-    @output "{:10s}    {:15s}    {:12s}    {:12s}    {:10s}\n" "Iteration" "CC Energy" "ΔE" "Max RMS" "Time (s)"
+    @output "{:10s}    {: 15s}    {: 12s}    {:12s}    {:10s}\n" "Iteration" "CC Energy" "ΔE" "Max RMS" "Time (s)"
     ite = 1
     while abs(dE) > cc_e_conv || rms > cc_max_rms
         if ite > cc_max_iter
