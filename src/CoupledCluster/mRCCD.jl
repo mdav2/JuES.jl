@@ -16,6 +16,7 @@ using JuES.Output
 using TensorOperations
 using LinearAlgebra
 using JuES.Transformation
+using JuES.IntegralTransformation
 include("Denominators.jl")
 export do_rccd
 """
@@ -34,7 +35,6 @@ doprint::Bool=false -> whether or not to print energy and timing information to
 ## output
 ccenergy::Float -> final RCCD energy. 
 """
-flat(arr::Array) = mapreduce(x -> isa(x, Array) ? flat(x) : x, append!, arr,init=[])
 function do_rccd(refWfn::Wfn; maxit=40, doprint=false, return_T2=false)
     do_diis = true
     #DIIS ripped straight from psi4numpy
@@ -43,7 +43,7 @@ function do_rccd(refWfn::Wfn; maxit=40, doprint=false, return_T2=false)
     nvir = refWfn.nvira
     epsa = refWfn.epsa
     T = eltype(refWfn.ao_eri)
-    oovv,ovov,ovvo,oooo,vvvv = make_rccd_integrals(refWfn.ao_eri,refWfn.Cao,refWfn.Cav) 
+    oovv,ovov,ovvo,oooo,vvvv = make_rccd_integrals(refWfn) 
     T2 = zeros(T, nocc, nocc, nvir, nvir)
     Dijab = form_Dijab(T2, epsa)
     T2_init!(T2, oovv, Dijab)
@@ -61,10 +61,10 @@ function do_rccd(refWfn::Wfn; maxit=40, doprint=false, return_T2=false)
     Wabef = form_Wabef(vvvv, oovv, T2)
     WmBeJ = form_WmBeJ(ovvo, oovv, T2)
     WmBEj = form_WmBEj(oovv, ovov, T2)
-    diis_vals_t2 = [convert(Array{Float64},deepcopy(T2))]
-    diis_errors = [zeros(Float64,0)]
+    diis_vals_t2 = [convert(Array{Float32},deepcopy(T2))]
+    diis_errors = [zeros(Float32,0)]
     diis_size = 0
-    max_diis = 8
+    max_diis = 6
     dt = @elapsed for i in 0:maxit-1 #TODO: implement RMS check
         if do_diis
             T2,rms = cciter(
@@ -103,7 +103,7 @@ function do_rccd(refWfn::Wfn; maxit=40, doprint=false, return_T2=false)
                 WmBEj
             )
         end
-        if rms < 1E-9 #TODO have proper kwargs
+        if rms < 1E-7 #TODO have proper kwargs
             break
         end
     end
@@ -117,17 +117,12 @@ function do_rccd(refWfn::Wfn; maxit=40, doprint=false, return_T2=false)
     end
 end
 
-function make_rccd_integrals(gao::Array,Cao,Cav)
-    oovv = tei_transform(gao, Cao, Cav, Cao, Cav, "oovv")
-    vvvv = tei_transform(gao, Cav, Cav, Cav, Cav, "vvvv")
-    ovvo = tei_transform(gao, Cao, Cav, Cav, Cao, "ovvo")
-    ovov = tei_transform(gao, Cao, Cao, Cav, Cav, "oovv")
-    oooo = tei_transform(gao, Cao, Cao, Cao, Cao, "oooo")
-    oovv = permutedims(oovv,[1,3,2,4])
-    ovov = permutedims(ovov,[1,3,2,4])
-    ovvo = permutedims(ovvo,[1,3,2,4])
-    oooo = permutedims(oooo,[1,3,2,4])
-    vvvv = permutedims(vvvv,[1,3,2,4])
+function make_rccd_integrals(wfn)
+    oovv = get_eri(wfn,"OOVV")
+    vvvv = get_eri(wfn,"VVVV")
+    ovvo = get_eri(wfn,"OVVO")
+    ovov = get_eri(wfn,"OVOV")
+    oooo = get_eri(wfn,"OOOO")
     return oovv,ovov,ovvo,oooo,vvvv
 end
 
@@ -170,13 +165,14 @@ end
 
     tiJaB_d = form_T2(tiJaB_i, Fae, Fmi, WmBeJ, WmBEj, Wabef, Wmnij, oovv, Dijab)
     e = ccenergy(tiJaB_d,oovv)
-    println("$e")
+    #println("$e")
     @output "@CCD {:20.17f}" ccenergy(tiJaB_d,oovv)
     e = ccenergy(tiJaB_d,oovv)
-    push!(diis_vals_t2,deepcopy(tiJaB_d))
-    error_t2 = flat(tiJaB_d - tiJaB_i)
+    push!(diis_vals_t2,convert(Array{Float32},deepcopy(tiJaB_d)))
+    error_t2 = reshape(tiJaB_d - tiJaB_i,o^2*v^2)
+    #error_t2 = flat(tiJaB_d - tiJaB_i)
     #println(norm(error_t2))
-    push!(diis_errors,deepcopy(error_t2))
+    push!(diis_errors,convert(Array{Float32},deepcopy(error_t2)))
     i == 0 ? deleteat!(diis_errors,1) : nothing
 
     diis_size = length(diis_errors)
@@ -186,7 +182,7 @@ end
             deleteat!(diis_errors,1)
         end
         diis_size = length(diis_vals_t2) - 1
-        B = ones(diis_size+1, diis_size+1)* -1
+        B = ones(Float32,diis_size+1, diis_size+1)* -1
         B[end,end] = 0
         
         for (n1, e1) in enumerate(diis_errors[1:end])
@@ -196,10 +192,10 @@ end
         end
         E = size(B,1)
         B[1:E-1,1:E-1] ./= maximum(abs.(B[1:E-1,1:E-1]))
-        resid = zeros(diis_size+1)
+        resid = zeros(Float32,diis_size+1)
         resid[end] = -1
-        LAPACK.gesv!(B,resid)
-        ci = resid#inv(B)*resid
+        #LAPACK.gesv!(B,resid)
+        ci = inv(B)*resid
         tiJaB_d .= 0
         for num in 1:diis_size
             tiJaB_d .+= convert(Float32,ci[num])*diis_vals_t2[num+1]
