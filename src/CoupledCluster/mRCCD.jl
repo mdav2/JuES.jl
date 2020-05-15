@@ -14,16 +14,13 @@ using CuArrays
 using JuES
 using TensorOperations
 using LinearAlgebra
-#BLAS.set_num_threads(12)
-#using TensorCast
 using JuES.Transformation
 include("Denominators.jl")
-#include("GSGEMM.jl")
 export do_rccd
 """
     do_rccd
 
-Applies RCCD equations to the input Wfn object. Disk based versus in-core 
+Applies RCCD equations to the input Wfn object. Disk based versus in-core
 algorithm is selected based on the type of atomic orbitals in Wfn.uvsr.
 ---
 ## paramters
@@ -31,10 +28,10 @@ refWfn::Wfn         -> Wfn object to which the RCCD equations will be applied.
 
 maxit::Int          -> maximum number of coupled cluster iterations.
 
-doprint::Bool=false -> whether or not to print energy and timing information to 
+doprint::Bool=false -> whether or not to print energy and timing information to
     stdout.
 ## output
-ccenergy::Float -> final RCCD energy. 
+ccenergy::Float -> final RCCD energy.
 """
 function do_rccd(refWfn::Wfn; maxit=40, doprint=false, return_T2=false)
     JuES.CoupledCluster.print_header()
@@ -42,7 +39,7 @@ function do_rccd(refWfn::Wfn; maxit=40, doprint=false, return_T2=false)
     nvir = refWfn.nvira
     epsa = refWfn.epsa
     T = eltype(refWfn.ao_eri)
-    oovv,ovov,ovvo,oooo,vvvv = make_rccd_integrals(refWfn.ao_eri,refWfn.Cao,refWfn.Cav) 
+    oovv,ovov,ovvo,oooo,vvvv = make_rccd_integrals(refWfn.ao_eri,refWfn.Cao,refWfn.Cav)
     T2 = zeros(T, nocc, nocc, nvir, nvir)
     Dijab = form_Dijab(T2, epsa)
     T2_init!(T2, ovov, Dijab)
@@ -267,7 +264,7 @@ end
     BLAS.gemm!('T','N',1.0f0,scr2,scr4,0.0f0,tmp)
     _tiJaB_d += tmp
     tiJaB_d = permutedims(reshape(_tiJaB_d,o,v,v,o),(1,4,3,2))
-    
+
 
     scr1 = reshape(permutedims(tiJaB_d,(2,3,4,1)),o*v,v*o)
     scr1 += tmp
