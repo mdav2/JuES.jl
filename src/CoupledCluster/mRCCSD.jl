@@ -33,6 +33,13 @@ keyword arguments for various options.
     :diis::Bool     do DIIS extrapolation? currently dummy  
 """
 function do_rccsd(refWfn::Wfn; kwargs...)
+    for arg in keys(JuES.CoupledCluster.defaults)
+        if arg in keys(kwargs)
+            @eval $arg = $(kwargs[arg])
+        else
+            @eval $arg = $(JuES.CoupledCluster.defaults[arg])
+        end
+    end
     JuES.CoupledCluster.print_header()
     @output "*   executing CCSD\n"
     maxit = 40
@@ -47,10 +54,10 @@ function do_rccsd(refWfn::Wfn; kwargs...)
     dtt = eltype(uvsr)
 
     @output "    Forming MO basis integrals ... "
-    t = @elapsed begin
+    begin
         oooo, ooov, oovv, ovov, ovvv, vvvv = make_rccsd_integrals(refWfn)
     end
-    @output "done in {:>5.2f}s\n" t
+    @output "done in {:>5.2f}s\n" 0.0
     epsa = refWfn.epsa
     T2 = zeros(dtt, nocc, nocc, nvir, nvir)
     T1 = zeros(dtt,nocc,nvir)
@@ -161,22 +168,63 @@ function form_Fmi!(Fmi,ooov,oovv,tia,tiatia,tijab)
     return Fmi
 end
 function form_Fme!(Fme,oovv,tia)
-    @tensoropt begin
-        Fme[m,e] = tia[n,f]*(2*oovv[m,n,e,f] - oovv[n,m,e,f])
-    end
+    o = size(oovv,1)
+    v = size(oovv,3)
+    _oovv = 2*reshape(permutedims(oovv,(1,3,2,4)),o*v,o*v) - reshape(permutedims(oovv,(2,3,1,4)),o*v,o*v)
+    _tia = reshape(tia,o*v)
+    _Fme = reshape(Fme,o*v)
+    BLAS.gemm!('N','N',1.0,_oovv,_tia,0.0,_Fme)
+    Fme = reshape(Fme,o,v)
     return Fme
 end
 function form_Wmnij!(Wmnij,oooo,ooov,oovv,tia,tiatia,tijab)
-    @tensoropt begin
-        Wmnij[m,n,i,j] = (oooo[m,n,i,j] + tia[j,e]*ooov[m,n,i,e]
-                          + tia[i,e]*ooov[n,m,j,e]
-                          + 0.5*(tijab[i,j,e,f] + tiatia[i,j,e,f])*oovv[m,n,e,f])
-    end
+    o = size(oovv,1)
+    v = size(oovv,3)
+    Wmnij .= oooo
+    _Wmnij = reshape(Wmnij,o^3,o)
+    _ooov = reshape(ooov,o^3,v)
+    BLAS.gemm!('N','T',1.0,_ooov,tia,1.0,_Wmnij)
+    Wmnij .= reshape(_Wmnij,o,o,o,o)
+
+    _Wmnij = reshape(permutedims(Wmnij,(2,1,4,3)),o^3,o)
+    BLAS.gemm!('N','T',1.0,_ooov,tia,1.0,_Wmnij)
+    Wmnij .= permutedims(reshape(_Wmnij,o,o,o,o),(2,1,4,3))
+
+    _tijab = reshape(tijab,o^2,v^2) + reshape(tiatia,o^2,v^2)
+    _oovv = reshape(oovv,o^2,v^2)
+    _Wmnij = reshape(Wmnij,o^2,o^2)
+    BLAS.gemm!('N','T',0.5,_oovv,_tijab,1.0,_Wmnij)
+    Wmnij = reshape(Wmnij,o,o,o,o)
     return Wmnij
 end
 function form_Wabef!(Wabef,vvvv,ovvv,oovv,tia,tiatia,tijab)
+    o = size(oovv,1)
+    v = size(oovv,3)
+    Wabef .= vvvv
+
+    
+    #_Wabef = reshape(permutedims(Wabef,(2,1,4,3)),v,v^3)
+    _Wabef = Array{eltype(oovv)}(undef,v,v^3)
+    #_Wabef = reshape(Wabef,v,v^3)
+    _ovvv = reshape(ovvv,o,v^3)
+    BLAS.gemm!('T','N',-1.0,tia,_ovvv,0.0,_Wabef)
+    _Wabef = reshape(_Wabef,v,v,v,v)
+    #@tensor Wabef[2,1,4,3] += _Wabef[1,2,3,4]
+    Wabef .+= permutedims(reshape(_Wabef,v,v,v,v),(2,1,4,3))
+    #Wabef .= reshape(_Wabef,v,v,v,v)
+
+    ##_Wabef = reshape(Wabef,v,v^3)
+    #BLAS.gemm!('T','N',-1.0,tia,_ovvv,0.0,_Wabef)
+    #Wabef .+= reshape(_Wabef,v,v,v,v)
+
+    #_Wabef = reshape(Wabef,v^2,v^2)
+    #_tijab = reshape(tijab,o^2,v^2) + reshape(tiatia,o^2,v^2)
+    #_oovv = reshape(oovv,o^2,v^2)
+    #BLAS.gemm!('T','N',0.5,_tijab,_oovv,1.0,_Wabef)
+    #Wabef = reshape(_Wabef,v,v,v,v)
     @tensoropt begin
-        Wabef[a,b,e,f] = (vvvv[a,b,e,f] - tia[m,b]*ovvv[m,a,f,e]
+        Wabef[a,b,e,f] += (#vvvv[a,b,e,f] 
+                          #- tia[m,b]*ovvv[m,a,f,e]
                           - tia[m,a]*ovvv[m,b,e,f]
                           + 0.5*(tijab[m,n,a,b] + tiatia[m,n,a,b])*oovv[m,n,e,f])
     end

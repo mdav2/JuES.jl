@@ -8,7 +8,6 @@ module CoupledCluster
 using JuES.Wavefunction
 using JuES.Transformation
 using JuES.Output
-using Printf
 using Base.Threads
 using TensorOperations
 using LinearAlgebra
@@ -35,9 +34,10 @@ end
 
 defaults = Dict(
                 :cc_max_iter => 50,
-                :cc_max_rms => 10^-10,
+                :cc_max_rms => 10^-12,
                 :cc_e_conv => 10^-10,
-                :diis => false
+                :diis => false,
+                :return_T => false
                )
 
 include("RCCD.jl")
@@ -46,6 +46,7 @@ include("ROCCD.jl")
 include("RCCSD.jl")
 include("UCCSD.jl")
 include("mRCCD.jl")
+include("mRCCSD.jl")
 include("AutoRCCSD.jl")
 include("PerturbativeTriples.jl")
 end #module CC

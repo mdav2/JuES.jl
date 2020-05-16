@@ -1,6 +1,10 @@
+"""
+    JuES.Output
+"""
 module Output
 import JuES
 using Printf
+using Revise
 using Formatting
 import Printf.decode_dec
 import Printf.fix_dec
@@ -8,10 +12,33 @@ import Printf.print_fixed
 #using JuES.Options
 
 #printstyle = JuES.Options.printstyle
-printstyle = ["none"]
+
+if !isdefined(JuES.Output,:printstyle)
+    printstyle = ["none"]
+end
 export output
 export @output
 
+
+"""
+    set_print(pstyle)
+
+Set printing mode to `pstyle` ∈ ["none","file","stdout","both"]
+"""
+function set_print(pstyle)
+    if pstyle in ["none","file","stdout","both"]
+        JuES.Output.printstyle[1] = pstyle
+        revise(JuES.Output)
+    else
+        return false
+    end
+end
+
+"""
+    output(str,args...)
+
+Apply formatting to `str` and direct to appropriate IOStream (if any).
+"""
 function output(str,x...)
     if JuES.Output.printstyle[1] == "stdout"
         f = format(str,x...)
@@ -32,6 +59,12 @@ function output(str,x...)
     elseif JuES.Output.printstyle[1] == "none"
     end
 end
+
+"""
+    @output str x...
+
+Apply formatting to `str` and direct to appropriate IOStream (if any).
+"""
 macro output(str,x...)
     if JuES.Output.printstyle[1] == "stdout"
         return quote

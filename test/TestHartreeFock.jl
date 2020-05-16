@@ -2,7 +2,7 @@ using Test
 using JuES.HartreeFock
 using JuES
 #psi4 = pyimport("psi4")
-#psi4.core.be_quiet() #turn off output
+psi4.core.be_quiet() #turn off output
 mol = psi4.geometry("""
       O
       H 1 1.1
@@ -12,7 +12,6 @@ mol = psi4.geometry("""
 psi4.set_options(Dict("basis" => "sto-3g", "scf_type" => "pk", "d_convergence" => 14))
 #e, wfn = psi4.energy("hf/sto-3g", mol = mol2, return_wfn = true)
 wfn = RHFWfn(mol)
-println("Created wfn")
 RHFCompute(wfn,doprint=true)
 #@testset "CoupledCluster" begin
 #    @testset "Smoke" begin

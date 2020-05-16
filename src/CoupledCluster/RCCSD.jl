@@ -36,18 +36,6 @@ function do_rccsd(refWfn::Wfn; kwargs...)
     maxit = 40
     return_T = false
     diis = false
-    #defaults = Dict(
-    #                :maxit => 40,
-    #                :return_T => false,
-    #                :diis => false
-    #               )
-    #for arg in (:maxit,:return_T,:diis)
-    #    if arg in keys(kwargs)
-    #        @eval $arg = $(kwargs[arg])
-    #    else
-    #        @eval $arg = $(defaults[arg])
-    #    end
-    #end
     set_zero_subnormals(true)
     nocc = refWfn.nalpha
     nvir = refWfn.nvira
@@ -57,14 +45,14 @@ function do_rccsd(refWfn::Wfn; kwargs...)
     dtt = eltype(uvsr)
 
     @output "    Forming MO basis integrals ... "
-    t = @elapsed begin
+    begin
         vvvv, ovvv, vovv,
         vvov, vvvo, oovv,
         ovvo, vovo, ovov,
         voov, ooov, oovo,
         ovoo, vooo, oooo = make_rccsd_integrals(uvsr,Cao,Cav)
     end
-    @output "done in {:>5.2f}s\n" t
+    @output "done in {:>5.2f}s\n" 0.0
     epsa = refWfn.epsa
     T2 = zeros(dtt, nocc, nocc, nvir, nvir)
     T1 = zeros(dtt,nocc,nvir)

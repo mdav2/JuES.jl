@@ -10,7 +10,6 @@ performs coupled cluster doubles (CCD) computations using explicit matrix multip
 module mRCCD
 using Base.Threads
 using JuES.Wavefunction
-using CuArrays
 using JuES
 using JuES.Output
 using TensorOperations
@@ -35,8 +34,16 @@ doprint::Bool=false -> whether or not to print energy and timing information to
 ## output
 ccenergy::Float -> final RCCD energy. 
 """
-function do_rccd(refWfn::Wfn; maxit=40, doprint=false, return_T2=false)
-    do_diis = true
+function do_rccd(refWfn::Wfn; kwargs...)
+    doprint = false
+    maxit = 40
+    for arg in keys(JuES.CoupledCluster.defaults)
+        if arg in keys(kwargs)
+            @eval $arg = $(kwargs[arg])
+        else
+            @eval $arg = $(JuES.CoupledCluster.defaults[arg])
+        end
+    end
     #DIIS ripped straight from psi4numpy
     JuES.CoupledCluster.print_header()
     nocc = refWfn.nalpha
@@ -66,7 +73,7 @@ function do_rccd(refWfn::Wfn; maxit=40, doprint=false, return_T2=false)
     diis_size = 0
     max_diis = 6
     dt = @elapsed for i in 0:maxit-1 #TODO: implement RMS check
-        if do_diis
+        if diis
             T2,rms = cciter(
                 T2,
                 oovv,
@@ -103,14 +110,11 @@ function do_rccd(refWfn::Wfn; maxit=40, doprint=false, return_T2=false)
                 WmBEj
             )
         end
-        if rms < 1E-7 #TODO have proper kwargs
+        if rms < cc_max_rms #TODO have proper kwargs
             break
         end
     end
-    if doprint
-        println("CCD iterations computed in $dt s")
-    end
-    if return_T2
+    if return_T
         return ccenergy(T2, oovv), T2
     else
         return ccenergy(T2, oovv)
@@ -166,7 +170,7 @@ end
     tiJaB_d = form_T2(tiJaB_i, Fae, Fmi, WmBeJ, WmBEj, Wabef, Wmnij, oovv, Dijab)
     e = ccenergy(tiJaB_d,oovv)
     #println("$e")
-    @output "@CCD {:20.17f}" ccenergy(tiJaB_d,oovv)
+    @output "@CCD {:20.17f}\n" ccenergy(tiJaB_d,oovv)
     e = ccenergy(tiJaB_d,oovv)
     push!(diis_vals_t2,convert(Array{Float32},deepcopy(tiJaB_d)))
     error_t2 = reshape(tiJaB_d - tiJaB_i,o^2*v^2)

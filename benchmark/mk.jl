@@ -1,20 +1,9 @@
-#run(`julia mk.jl`)
-#run(`julia aux.jl`)
-#addprocs(1)
-#using JLD
-printdo = false
-using Distributed
-addprocs(1)
 using JuES
-@everywhere using JuES.Wavefunction
-using JuES.CoupledCluster: RCCSD,RCCD,DFRCCD,mRCCD,mRCCSD
+using JLD
 
-using LinearAlgebra
-BLAS.set_num_threads(6)
-# > setup
-tol = 1E-14
-@everywhere function psi_setup()
-    include("Psi4.jl")
+include("Psi4.jl")
+
+function psi_setup()
     Psi4.psi4.core.be_quiet() #turn off output
     Psi4.psi4.set_num_threads(6)
     Psi4.psi4.set_options(Dict("D_CONVERGENCE" => 14,
@@ -28,9 +17,9 @@ tol = 1E-14
     					 """)
     e2,wfn2 = Psi4.psi4.energy("hf/cc-pvtz",mol=mol2,return_wfn=true)
     mints = Psi4.psi4.core.MintsHelper(wfn2.basisset())
-    JuWfn2 = Wfn(wfn2,mints)
+    JuWfn2 = JuES.Wavefunction.Wfn{Float64}(wfn2,mints)
     return JuWfn2
 end
-JuWfn2 = psi_setup()
-println(@btime RCCSD.do_rccsd(JuWfn2; doprint=printdo))
-println(@btime mRCCSD.do_rccsd(JuWfn2; doprint=printdo))
+
+wfn = psi_setup()
+save("/tmp/mywfn.jld","mywfn",wfn)

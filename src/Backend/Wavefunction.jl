@@ -132,21 +132,73 @@ struct DirectWfn{T}
     basis::PyObject
     mints::PyObject
 end
-function Wfn(wfn::PyObject)
-    Wfn{Float64}(wfn)
+function Wfn(wfn::PyObject,mints::PyObject)
+    Wfn{Float64}(wfn,mints)
 end
 
+function Wfn{T}(D::Dict) where T
+    energy = D["energy"]
+    vnuc = D["vnuc"]
+    nocca = D["nocca"]
+    noccb = D["noccb"]
+    nvira = D["nvira"]
+    nvirb = D["nvirb"]
+    nbf = D["nbf"]
+    unrestricted = D["unrestricted"]
+    Ca = D["Ca"]
+    Cb = D["Cb"]
+    Cao = D["Cao"]
+    Cbo = D["Cbo"]
+    Cav = D["Cav"]
+    Cbv = D["Cbv"]
+    hao = D["hao"]
+    epsa = D["epsa"]
+    epsb = D["epsb"]
+    ao_eri = D["ao_eri"]
+    dt = D["T"]
+    owfn = Wfn{dt}(
+        energy,
+        vnuc,
+        nocca,
+        noccb,
+        nvira,
+        nvirb,
+        nbf,
+        unrestricted,
+        nothing,
+        nothing,
+        #basis,
+        #mints,
+        Ca,
+        Cb,
+        Cao,
+        Cav,
+        Cbo,
+        Cbv,
+        hao,
+        epsa,
+        epsb,
+        ao_eri 
+        #ijab,
+        #iJaB,
+        #iJAb,
+        #IJAB,
+        #IjAb,
+        #IjaB,
+    )
+    return owfn
+end
 """
     Wfn{T}(wfn::PyObject; unrestricted::Bool=false, diskbased::Bool=false, name::String = "default", df::Bool=false) where T
 """
-function Wfn{T}(wfn::PyObject; unrestricted::Bool=false, diskbased::Bool=false, name::String = "default", df::Bool=false) where T
+function Wfn{T}(wfn::PyObject, mints::PyObject; unrestricted::Bool=false, diskbased::Bool=false, name::String = "default", df::Bool=false) where T
     dt = T
     energy = wfn.energy()
     dummy2 = Array{dt}(undef, 0, 0) #placeholder 2D array
     dummy4 = Array{dt}(undef, 0, 0, 0, 0) #placeholder 4D array
     vnuc = wfn.molecule().nuclear_repulsion_energy()
     basis = wfn.basisset()
-    mints = psi4.core.MintsHelper(basis) #to generate integrals
+    #mints = JuES.Psi4.psi4.core.MintsHelper(basis) #to generate integrals
     nbf = wfn.nmo()
     nocca = wfn.nalpha()
     nvira = nbf - nocca
@@ -212,8 +264,10 @@ function Wfn{T}(wfn::PyObject; unrestricted::Bool=false, diskbased::Bool=false, 
         nvirb,
         nbf,
         unrestricted,
-        basis,
-        mints,
+        nothing,
+        nothing,
+        #basis,
+        #mints,
         Ca,
         Cb,
         Cao,
