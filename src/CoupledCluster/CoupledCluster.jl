@@ -47,4 +47,5 @@ include("RCCSD.jl")
 include("UCCSD.jl")
 include("AutoRCCSD.jl")
 include("PerturbativeTriples.jl")
+include("ECTools.jl")
 end #module CC
