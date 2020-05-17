@@ -14,7 +14,7 @@ import Printf.print_fixed
 #printstyle = JuES.Options.printstyle
 
 if !isdefined(JuES.Output,:printstyle)
-    printstyle = ["none"]
+    printstyle = ["stdout"]
 end
 export output
 export @output
@@ -28,7 +28,7 @@ Set printing mode to `pstyle` ∈ ["none","file","stdout","both"]
 function set_print(pstyle)
     if pstyle in ["none","file","stdout","both"]
         JuES.Output.printstyle[1] = pstyle
-        revise(JuES.Output)
+        #revise(JuES.Output)
     else
         return false
     end
@@ -66,39 +66,67 @@ end
 Apply formatting to `str` and direct to appropriate IOStream (if any).
 """
 macro output(str,x...)
-    if JuES.Output.printstyle[1] == "stdout"
-        return quote
-            local f = format($str, $([esc(i) for i in x]...))
-            print(f)
-        end
-    elseif JuES.Output.printstyle[1] == "file"
-        return quote
-            local f = format($str, $([esc(i) for i in x]...))
-            open("output.dat","a") do file
-                write(file,f)
-                flush(file)
-            end
-        end
-    elseif JuES.Output.printstyle[1] == "both"
-        if length(x) >= 1
-            return quote
+    return quote
+        if JuES.Output.printstyle[1] == "stdout"
+                local f = format($str, $([esc(i) for i in x]...))
+                print(f)
+        elseif JuES.Output.printstyle[1] == "file"
                 local f = format($str, $([esc(i) for i in x]...))
                 open("output.dat","a") do file
                     write(file,f)
                     flush(file)
                 end
+        elseif JuES.Output.printstyle[1] == "both"
+            if length(x) >= 1
+                local f = format($str, $([esc(i) for i in x]...))
+                open("output.dat","a") do file
+                    write(file,f)
+                    flush(file)
                 print(f)
-            end
-        else
-            return quote
+                end
+            else
                 local f = format($str)
                 open("output.dat","a") do file
                     write(file,f)
                     flush(file)
                 end
             end
+        elseif JuES.Output.printstyle[1] == "none"
         end
-    elseif JuES.Output.printstyle[1] == "none"
     end
+    #if JuES.Output.printstyle[1] == "stdout"
+    #    return quote
+    #        local f = format($str, $([esc(i) for i in x]...))
+    #        print(f)
+    #    end
+    #elseif JuES.Output.printstyle[1] == "file"
+    #    return quote
+    #        local f = format($str, $([esc(i) for i in x]...))
+    #        open("output.dat","a") do file
+    #            write(file,f)
+    #            flush(file)
+    #        end
+    #    end
+    #elseif JuES.Output.printstyle[1] == "both"
+    #    if length(x) >= 1
+    #        return quote
+    #            local f = format($str, $([esc(i) for i in x]...))
+    #            open("output.dat","a") do file
+    #                write(file,f)
+    #                flush(file)
+    #            end
+    #            print(f)
+    #        end
+    #    else
+    #        return quote
+    #            local f = format($str)
+    #            open("output.dat","a") do file
+    #                write(file,f)
+    #                flush(file)
+    #            end
+    #        end
+    #    end
+    #elseif JuES.Output.printstyle[1] == "none"
+    #end
 end
 end #module
