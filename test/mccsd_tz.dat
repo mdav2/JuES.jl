@@ -13,4 +13,4 @@ options = Dict(
     :T => Float64
 )
 --
-command = JuES.CoupledCluster.RCCSD.do_rccsd
+command = JuES.CoupledCluster.mRCCSD.do_rccsd
