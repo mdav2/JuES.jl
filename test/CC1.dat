@@ -1,0 +1,17 @@
+molecule = """
+O
+H 1 1.1
+H 1 1.1 2 104.0
+symmetry c1
+"""
+--
+options = Dict(
+    "reference" => "rhf",
+    "basis" => "cc-pvdz",
+    "d_convergence" => 14,
+    :doprint => false,
+    :quiet => true
+)
+--
+command = JuES.CoupledCluster.RCCD.do_rccd
+

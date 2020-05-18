@@ -1,0 +1,17 @@
+molecule = """
+O
+H 1 1.1
+H 1 1.1 2 104.0
+symmetry c1
+"""
+--
+options = Dict(
+    "reference" => "rhf",
+    "basis" => "sto-3g",
+    :doprint => false,
+    :quiet => true,
+    :T     => Float32
+)
+--
+command = JuES.CoupledCluster.mRCCD.do_rccd
+

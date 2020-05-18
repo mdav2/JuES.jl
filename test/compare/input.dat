@@ -1,0 +1,16 @@
+memory 2 GB
+
+molecule {
+0 1
+pubchem:ethane
+symmetry c1
+}
+set reference rohf
+set D_CONVERGENCE 14
+set e_convergence 14
+set mp2_type conv
+set scf_type pk
+set ccenergy {
+    diis false
+}
+energy('mp2/sto-3g')
