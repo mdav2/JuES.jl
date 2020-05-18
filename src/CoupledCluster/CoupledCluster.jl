@@ -37,9 +37,12 @@ defaults = Dict(
                 :cc_max_iter => 50,
                 :cc_max_rms => 10^-10,
                 :cc_e_conv => 10^-10,
-                :diis => false
+                :diis => false,
+                :do_pT => false,
+                :fcn => 0
                )
 
+include("PerturbativeTriples.jl")
 include("RCCD.jl")
 include("DF-RCCD.jl")
 include("ROCCD.jl")
@@ -47,6 +50,6 @@ include("RCCSD.jl")
 include("UCCSD.jl")
 include("mRCCD.jl")
 include("AutoRCCSD.jl")
-include("PerturbativeTriples.jl")
 include("ECTools.jl")
+
 end #module CC

@@ -35,7 +35,7 @@ From a Wavefunction object, return a specified ERI array.
                 Default: "phys".
 
 """
-function get_eri(wfn::Wfn, eri_string::String; notation::String = "phys")
+function get_eri(wfn::Wfn, eri_string::String; notation::String = "phys", fcn::Int = 0)
 
     # Size of eri_string must be 4.
     if sizeof(eri_string) != 4
@@ -46,14 +46,15 @@ function get_eri(wfn::Wfn, eri_string::String; notation::String = "phys")
     if notation == "phys"
         eri_string = eri_string[[1,3,2,4]]
     end
-
     C = []
     # Get C1, C2, C3, C4 for the integral transformation
     for s in eri_string
         if s == 'o'
-            push!(C, wfn.Cbo)
+            o = 1+fcn:size(wfn.Cbo)[2]
+            push!(C, wfn.Cbo[:,o])
         elseif s == 'O'
-            push!(C, wfn.Cao)
+            o = 1+fcn:size(wfn.Cao)[2]
+            push!(C, wfn.Cao[:,o])
         elseif s == 'v'
             push!(C, wfn.Cbv)
         elseif s == 'V'

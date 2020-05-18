@@ -15,9 +15,14 @@ using JuES
 using JuES.Output
 using JuES.Wavefunction
 using JuES.IntegralTransformation
+using JuES.CoupledCluster.PerturbativeTriples
 using TensorOperations
 using LinearAlgebra
 using Printf
+
+export update_energy
+export update_amp
+export do_rccsd
 
 """
     JuES.CoupledCluster.AutoRCCSD.update_energy(T1::Array{Float64, 2}, T2::Array{Float64, 4}, f::Array{Float64,2}, Voovv::Array{Float64, 4})
@@ -162,8 +167,8 @@ function update_amp(T1::Array{Float64, 2}, T2::Array{Float64, 4}, f::Tuple, V::T
     end
 
     # Apply the resolvent
-    newT1 = newT1.*d
-    newT2 = newT2.*D
+    newT1 = newT1./d
+    newT2 = newT2./D
 
     # Compute residues 
     r1 = sqrt(sum((newT1 - T1).^2))/length(T1)
@@ -190,7 +195,6 @@ function do_rccsd(wfn::Wfn; kwargs...)
     # Print intro
     JuES.CoupledCluster.print_header()
     @output "\n    • Computing CCSD with the AutoRCCSD module.\n\n"
-
     
     # Process options
     for arg in keys(JuES.CoupledCluster.defaults)
@@ -201,7 +205,6 @@ function do_rccsd(wfn::Wfn; kwargs...)
         end
     end
 
-
     # Check if the number of electrons is even
     nelec = wfn.nalpha + wfn.nbeta
     nelec % 2 == 0 ? nothing : error("Number of electrons must be even for RHF. Given $nelec")
@@ -210,7 +213,7 @@ function do_rccsd(wfn::Wfn; kwargs...)
     nvir = nmo - ndocc
     
     # Slices
-    o = 1:ndocc
+    o = 1+fcn:ndocc
     v = ndocc+1:nmo
 
     # Get fock matrix
@@ -231,19 +234,20 @@ function do_rccsd(wfn::Wfn; kwargs...)
     f = (fock_OO, fock_OV, fock_VV)
 
     # Get Necessary ERIs
-    V = (get_eri(wfn, "OOOO"), get_eri(wfn, "OOOV"), get_eri(wfn, "OOVV"), get_eri(wfn, "OVOV"), get_eri(wfn, "OVVV"), get_eri(wfn, "VVVV"))
+    #V = (get_eri(wfn, "OOOO")[o,o,o,o], get_eri(wfn, "OOOV")[o,o,o,:], get_eri(wfn, "OOVV")[o,o,:,:], 
+    #     get_eri(wfn, "OVOV")[o,:,o,:], get_eri(wfn, "OVVV")[o,:,:,:], get_eri(wfn, "VVVV"))
+    V = (get_eri(wfn, "OOOO", fcn=fcn), get_eri(wfn, "OOOV", fcn=fcn), get_eri(wfn, "OOVV", fcn=fcn), 
+         get_eri(wfn, "OVOV", fcn=fcn), get_eri(wfn, "OVVV", fcn=fcn), get_eri(wfn, "VVVV", fcn=fcn))
     
     # Auxiliar D matrix
     fock_Od, fock_Vd = fd
     d = [i - a for i = fock_Od, a = fock_Vd]
-    d = inv.(d)
     
     D = [i + j - a - b for i = fock_Od, j = fock_Od, a = fock_Vd, b = fock_Vd]
-    D = inv.(D)
     
     # Initial Amplitude. Note that f[2] = fock_OV and V[3] = Voovv.
-    T1 = f[2].*d
-    T2 = D.*V[3]
+    T1 = f[2]./d
+    T2 = V[3]./D
     
     # Get MP2 energy. Note that f[2] = fock_OV and V[3] = Voovv.
     Ecc = update_energy(T1, T2, f[2], V[3])
@@ -286,6 +290,13 @@ function do_rccsd(wfn::Wfn; kwargs...)
         @output "\n 🍾 Equations Converged!\n"
     end
     @output "\n⇒ Final CCSD Energy:     {:15.10f}\n" Ecc+wfn.energy
-    return Ecc, T1, T2
+
+    if do_pT
+        Vvvvo = permutedims(V[5], [4,2,3,1])
+        Vvooo = permutedims(V[2], [4,2,1,3])
+        Vvovo = permutedims(V[3], [3,1,4,2])
+        Ept = compute_pT(T1=T1, T2=T2, Vvvvo=Vvvvo, Vvooo=Vvooo, Vvovo=Vvovo, fo=fock_Od, fv=fock_Vd)
+        @output "\n⇒ Final CCSD(T) Energy:  {:15.10f}\n" Ecc+wfn.energy+Ept
+    end
 end
 end #End Module

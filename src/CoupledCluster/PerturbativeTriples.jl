@@ -1,38 +1,14 @@
 module PerturbativeTriples
 using JuES
 using JuES.Output
-using JuES.Wavefunction
-using JuES.IntegralTransformation
-using JuES.CoupledCluster: AutoRCCSD, RCCSD
 using TensorOperations
 using LinearAlgebra
 
 export compute_pT
-export do_pT
 
-function do_pT(wfn::Wfn; kwargs...)
+function compute_pT(;T1::Array{Float64, 2}, T2::Array{Float64, 4}, Vvvvo::Array{Float64,4}, Vvooo::Array{Float64,4}, Vvovo::Array{Float64,4}, fo::Array{Float64,1}, fv::Array{Float64,1})
 
-    Ecc, T1, T2 = AutoRCCSD.do_rccsd(wfn; kwargs...)
-    
-    # Get Integrals (again :()
-    Vvvvo, Vvooo, Vvovo = get_eri(wfn, "VVVO"; notation="chem"), get_eri(wfn, "VOOO"; notation="chem"), get_eri(wfn, "VOVO"; notation="chem")
-
-    f = get_fock(wfn, spin="alpha")
-
-    # Save diagonal terms
-    fo = diag(f)[1:wfn.nalpha]
-    fv = diag(f)[wfn.nalpha+1:wfn.nmo]
-
-    t = @elapsed begin
-        Et = compute_pT(T1, T2, Vvvvo, Vvooo, Vvovo, fo, fv)
-    end
-
-    @output "\nijk method:\n"
-    @output "CCSD(T) Energy: {:15.10f}\n" Ecc+ Et+wfn.energy
-    @output "Time: {:5.5f}\n" t
-end
-
-function compute_pT(T1::Array{Float64, 2}, T2::Array{Float64, 4}, Vvvvo::Array{Float64,4}, Vvooo::Array{Float64,4}, Vvovo::Array{Float64,4}, fo::Array{Float64,1}, fv::Array{Float64,1})
+    @output "\n   • Perturbative Triples Started\n\n"
 
     o,v = size(T1)
     Et = 0.0
@@ -66,7 +42,9 @@ function compute_pT(T1::Array{Float64, 2}, T2::Array{Float64, 4}, Vvvvo::Array{F
     T2_1j       = Array{Float64}(undef,o,v,v) 
     Vvovo_2i_4j = Array{Float64}(undef,v,v) 
     T1_1j       = Array{Float64}(undef,v) 
+    @output "Computing energy contribution from occupied orbitals:\n"
     for i in 1:o
+        @output "→ Orbital {} of {}\n" i o
         Vvvvo_4i .= view(Vvvvo, :,:,:,i)
         T2_1i    .= view(T2, i,:,:,:)
         T1_1i    .= view(T1, i, :)
@@ -129,6 +107,7 @@ function compute_pT(T1::Array{Float64, 2}, T2::Array{Float64, 4}, Vvvvo::Array{F
             end
         end
     end
+    @output "Final (T) contribution: {:15.10f}\n" Et
     return Et
 end
 end #Module
