@@ -33,18 +33,21 @@ keyword arguments for various options.
 function do_rccsd(refWfn::Wfn; kwargs...)
     JuES.CoupledCluster.print_header()
     @output "*   executing CCSD\n"
-    defaults = Dict(
-                    :maxit => 40,
-                    :return_T => false,
-                    :diis => false
-                   )
-    for arg in (:maxit,:return_T,:diis)
-        if arg in keys(kwargs)
-            @eval $arg = $(kwargs[arg])
-        else
-            @eval $arg = $(defaults[arg])
-        end
-    end
+    maxit = 40
+    return_T = false
+    diis = false
+    #defaults = Dict(
+    #                :maxit => 40,
+    #                :return_T => false,
+    #                :diis => false
+    #               )
+    #for arg in (:maxit,:return_T,:diis)
+    #    if arg in keys(kwargs)
+    #        @eval $arg = $(kwargs[arg])
+    #    else
+    #        @eval $arg = $(defaults[arg])
+    #    end
+    #end
     set_zero_subnormals(true)
     nocc = refWfn.nalpha
     nvir = refWfn.nvira
