@@ -27,7 +27,7 @@ function read(fname)
     if isfile(fname)
         lines = readlines(fname)
     else
-        return false
+        error("Input file not found $fname")
     end
     molecule,options,command = parse(lines)
     cont = Dict("molecule"=>molecule,"options"=>options,"command"=>command)
