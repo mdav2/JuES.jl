@@ -12,36 +12,36 @@ syntax --> <nparticle>Electron_<matrix>d<ndiff>
 	   --> 	OneElectron_Hd1
 """
 
-using JuES.Determinant
+using JuES.SecondQuantization
 using JuES.Wavefunction
 
-function OneElectron_Hd0(a::SlaterDeterminant, b::SlaterDeterminant, ref::Wfn)
+function OneElectron_Hd0(a::Determinant, b::Determinant, ref::Wfn)
     """
     Σ <m|h|m>
     """
 end
-function TwoElectron_Hd0(a::SlaterDeterminant, b::SlaterDeterminant, ref::Wfn)
+function TwoElectron_Hd0(a::Determinant, b::Determinant, ref::Wfn)
     """
     1/2 ΣΣ <mn||mn>
     """
 end
-function OneElectron_Hd1(a::SlaterDeterminant, b::SlaterDeterminant, ref::Wfn)
+function OneElectron_Hd1(a::Determinant, b::Determinant, ref::Wfn)
     """
     <m|h|p>
     """
 end
-function TwoElectron_Hd1(a::SlaterDeterminant, b::SlaterDeterminant, ref::Wfn)
+function TwoElectron_Hd1(a::Determinant, b::Determinant, ref::Wfn)
     """
     differ m -> p
     Σ<mn||pn>
     """
 end
-function OneElectron_Hd2(a::SlaterDeterminant, b::SlaterDeterminant, ref::Wfn)
+function OneElectron_Hd2(a::Determinant, b::Determinant, ref::Wfn)
     """
     0
     """
 end
-function TwoElectron_Hd2(a::SlaterDeterminant, b::SlaterDeterminant, ref::Wfn)
+function TwoElectron_Hd2(a::Determinant, b::Determinant, ref::Wfn)
     """
     mn -> pq
     <mn||pq>
