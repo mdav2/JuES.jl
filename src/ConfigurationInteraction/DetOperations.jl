@@ -1,4 +1,4 @@
-module SecondQuantization
+module DetOperations
 
 export Determinant
 export αexcitation_level
@@ -8,6 +8,7 @@ export annihilate
 export create
 export exclusive
 export phase
+export showdet
 
 struct Determinant
     α::Int
@@ -124,10 +125,16 @@ function exclusive(D1::Determinant, D2::Determinant)
 
     out = []
     i = 1
-    while 1<<(i-1) ≤ max(αexcl, βexcl)
+    # Save alphas exclusives, in crescent order
+    while 1<<(i-1) ≤ αexcl
         if 1<<(i-1) & αexcl ≠ 0
             push!(out, (i, 'α'))
         end
+        i += 1
+    end
+    i = 1
+    # Save betas exclusives, in crescent order
+    while 1<<(i-1) ≤ βexcl
         if 1<<(i-1) & βexcl ≠ 0
             push!(out, (i, 'β'))
         end
@@ -140,16 +147,29 @@ function phase(D1::Determinant, D2::Determinant)
 
     p = 1
     _det = Determinant(D1.α, D1.β)
+
+    # For a string of excitation operators: abc...kji. We apply the annihilation operations such that k < j < i
+    # Thus, the reverse function
     for (i,σ) in reverse(exclusive(D1, D2))
         f, _det = annihilate(_det, i, σ)
         p = f*p
     end
-    for (a,σ) in exclusive(D1, D2)
+    # For the creation operations a > b > c. Thus, no reverse.
+    for (a,σ) in exclusive(D2, D1)
         f, _det = create(_det, a, σ)
         p = f*p
     end
-
     return p
 end
 
+function showdet(D::Determinant, l::Int = 0)
+
+    if l == 0
+        l = length(bitstring(D.α))
+    end
+    println(reverse(bitstring(D.α))[1:l])
+    println(reverse(bitstring(D.β))[1:l])
+
 end
+
+end #Module
