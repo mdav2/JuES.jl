@@ -1,5 +1,6 @@
 timer.dat
 *.swp
 *.swo
+*.clean
 docs/build
 
