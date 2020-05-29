@@ -44,6 +44,7 @@ defaults = Dict(
 
 include("PerturbativeTriples.jl")
 include("RCCD.jl")
+include("tblisRCCD.jl")
 include("DF-RCCD.jl")
 include("ROCCD.jl")
 include("RCCSD.jl")

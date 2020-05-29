@@ -8,6 +8,7 @@ performs coupled cluster doubles (CCD) computations.
     JuES.CoupledCluster.RCCD.do_rccd
 """
 module RCCD
+using JuES.Output
 using JuES.Wavefunction
 using TensorOperations
 using JuES.Transformation
@@ -30,48 +31,54 @@ doprint::Bool=false -> whether or not to print energy and timing information to
 ## output
 ccenergy::Float -> final RCCD energy. 
 """
-function do_rccd(refWfn::Wfn; maxit=40, doprint=false, return_T2=false)
+function do_rccd(refWfn::Wfn; kwargs...)
+    maxit = 40
+    doprint = false
+    return_T2 = false
     JuES.CoupledCluster.print_header()
-    nocc = refWfn.nalpha
-    nvir = refWfn.nvira
-    epsa = refWfn.epsa
-    T = eltype(refWfn.ao_eri)
-    oovv,ovov,ovvo,oooo,vvvv = make_rccd_integrals(refWfn.ao_eri,refWfn.Cao,refWfn.Cav) 
-    T2 = zeros(T, nocc, nocc, nvir, nvir)
-    Dijab = form_Dijab(T2, epsa)
-    T2_init!(T2, ovov, Dijab)
-    if doprint
-        println("@RMP2 ", ccenergy(T2, oovv))
-    end
-    Fae = form_Fae(T2, oovv)
-    Fmi = form_Fmi(T2, oovv)
-    Wmnij = form_Wmnij(oooo, oovv, T2)
-    Wabef = form_Wabef(vvvv, oovv, T2)
-    WmBeJ = form_WmBeJ(ovvo, oovv, T2)
-    WmBEj = form_WmBEj(oovv, ovov, T2)
-    dt = @elapsed for i in 0:maxit-1 #TODO: implement RMS check
-        T2 = cciter(
-            T2,
-            oovv,
-            vvvv,
-            oooo,
-            ovov,
-            ovvo,
-            Dijab,
-            Fae,
-            Fmi,
-            Wabef,
-            Wmnij,
-            WmBeJ,
-            WmBEj,
-        )
+    t = @elapsed begin 
+        nocc = refWfn.nalpha
+        nvir = refWfn.nvira
+        epsa = refWfn.epsa
+        T = eltype(refWfn.ao_eri)
+        oovv,ovov,ovvo,oooo,vvvv = make_rccd_integrals(refWfn.ao_eri,refWfn.Cao,refWfn.Cav) 
+        T2 = zeros(T, nocc, nocc, nvir, nvir)
+        Dijab = form_Dijab(T2, epsa)
+        #T2_init!(T2, ovov, Dijab)
+        #if doprint
+        #    println("@RMP2 ", ccenergy(T2, oovv))
+        #end
+        Fae = form_Fae(T2, oovv)
+        Fmi = form_Fmi(T2, oovv)
+        Wmnij = form_Wmnij(oooo, oovv, T2)
+        Wabef = form_Wabef(vvvv, oovv, T2)
+        WmBeJ = form_WmBeJ(ovvo, oovv, T2)
+        WmBEj = form_WmBEj(oovv, ovov, T2)
+        dt = @elapsed for i in 0:maxit-1 #TODO: implement RMS check
+            T2 = cciter(
+                T2,
+                oovv,
+                vvvv,
+                oooo,
+                ovov,
+                ovvo,
+                Dijab,
+                Fae,
+                Fmi,
+                Wabef,
+                Wmnij,
+                WmBeJ,
+                WmBEj,
+            )
+            if doprint
+                println("$i @CCD ", ccenergy(T2, oovv))
+            end
+        end
         if doprint
-            println("$i @CCD ", ccenergy(T2, oovv))
+            println("CCD iterations computed in $dt s")
         end
     end
-    if doprint
-        println("CCD iterations computed in $dt s")
-    end
+    @output "CCD completed in {:>5.2f}s\n" t
     if return_T2
         return ccenergy(T2, oovv), T2
     else

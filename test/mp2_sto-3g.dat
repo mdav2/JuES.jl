@@ -1,0 +1,16 @@
+molecule = """
+O
+H 1 1.1
+H 1 1.1 2 104.0
+"""
+--
+options = Dict(
+    "reference" => "rhf",
+    "basis" => "cc-pv5z",
+    :doprint => true,
+    :quiet => true,
+    :T => Float64,
+    :nthreads => 6
+)
+--
+command = JuES.MollerPlesset.do_rmp2
