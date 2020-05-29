@@ -11,6 +11,8 @@ Module to handle integral transformations from AO to MO.
 """
 module IntegralTransformation
 using TensorOperations
+using TBLIS
+TBLIS.init()
 using JuES.Wavefunction
 
 export get_eri
@@ -47,30 +49,57 @@ function get_eri(wfn::Wfn, eri_string::String; notation::String = "phys", fcn::I
         eri_string = eri_string[[1,3,2,4]]
     end
     C = []
+    S = []
     # Get C1, C2, C3, C4 for the integral transformation
     for s in eri_string
         if s == 'o'
             o = 1+fcn:size(wfn.Cbo)[2]
             push!(C, wfn.Cbo[:,o])
+            push!(S, wfn.nbeta)
         elseif s == 'O'
             o = 1+fcn:size(wfn.Cao)[2]
             push!(C, wfn.Cao[:,o])
+            push!(S, wfn.nalpha)
         elseif s == 'v'
             push!(C, wfn.Cbv)
+            push!(S, wfn.nvirb)
         elseif s == 'V'
             push!(C, wfn.Cav)
+            push!(S, wfn.nvira)
         end
     end
 
     C1, C2, C3, C4 = C
-    gao = wfn.ao_eri
-    @tensoropt V[i,a,j,b] := C4[σ,b]*C3[λ,j]*C2[ν,a]*C1[μ,i]*gao[μ,ν,λ,σ]
+
+    gao = TBLIS.TTensor{eltype(wfn.ao_eri)}(wfn.ao_eri)
+    V = zeros(S[1],wfn.nmo,wfn.nmo,wfn.nmo)
+    v = TBLIS.TTensor{eltype(wfn.ao_eri)}(V)
+    c1 = TBLIS.TTensor{eltype(wfn.ao_eri)}(C1)
+    TBLIS.mul!(v,c1,gao,"ui","uvls","ivls")
+
+    V2 = zeros(S[1],S[2],wfn.nmo,wfn.nmo)
+    v2 = TBLIS.TTensor{eltype(wfn.ao_eri)}(V2)
+    c2 = TBLIS.TTensor{eltype(wfn.ao_eri)}(C2)
+    TBLIS.mul!(v2,c2,v,"va","ivls","ials")
+
+    V = zeros(S[1],S[2],S[3],wfn.nmo)
+    v = TBLIS.TTensor{eltype(wfn.ao_eri)}(V)
+    c3 = TBLIS.TTensor{eltype(wfn.ao_eri)}(C3)
+    TBLIS.mul!(v,c3,v2,"lj","ials","iajs")
+
+    V2 = zeros(S[1],S[2],S[3],S[4])
+    v2 = TBLIS.TTensor{eltype(wfn.ao_eri)}(V2)
+    c4 = TBLIS.TTensor{eltype(wfn.ao_eri)}(C4)
+    TBLIS.mul!(v2,c4,v,"sb","iajs","iajb")
+    Vnew = V2
+    #gao = wfn.ao_eri
+    #@tensoropt Vnew[i,a,j,b] := C4[σ,b]*C3[λ,j]*C2[ν,a]*C1[μ,i]*gao[μ,ν,λ,σ]
 
     if notation == "phys"
-        @tensor V[i,j,a,b] := V[i,a,j,b]
+        @tensor Vnew[i,j,a,b] := Vnew[i,a,j,b]
     end
 
-    return V
+    return Vnew
 end
 
 """
