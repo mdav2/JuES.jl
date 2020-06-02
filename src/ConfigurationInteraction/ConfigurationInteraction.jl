@@ -13,7 +13,10 @@ function print_header()
     @output "CI Module"
 end
 
+default = Dict()
+
 include("DetOperations.jl")
 include("MatrixElement.jl")
+include("FCI.jl")
 
 end #module CI

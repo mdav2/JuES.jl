@@ -1,8 +1,14 @@
 module DetOperations
 
 export Determinant
+export αlist
+export βlist
+export αindex   
+export βindex  
 export αexcitation_level
+export αexclusive_index
 export βexcitation_level
+export βexclusive_index
 export excitation_level
 export annihilate
 export create
@@ -23,6 +29,26 @@ function Determinant(α::String, β::String)
     Determinant(αint, βint)
 end
 
+function αlist(D::Determinant)
+
+    return [parse(Int, ss) for ss in reverse(bitstring(D.α))]
+end
+
+function βlist(D::Determinant)
+
+    return [parse(Int, ss) for ss in reverse(bitstring(D.β))]
+end
+
+function αindex(D::Determinant)
+
+    return findall(x->x=='1', reverse(bitstring(D.α)))
+end
+
+function βindex(D::Determinant)
+
+    return findall(x->x=='1', reverse(bitstring(D.β)))
+end
+
 function αexcitation_level(D1::Determinant, D2::Determinant)
 
     αexc = count(i->(i=='1'), bitstring(D1.α ⊻ D2.α))
@@ -40,6 +66,16 @@ end
 function excitation_level(D1::Determinant, D2::Determinant)
 
     return αexcitation_level(D1, D2) + βexcitation_level(D1,D2)
+end
+
+function αexclusive_index(D1::Determinant, D2::Determinant)
+
+    return findall(i-> i=='1', reverse(bitstring(D1.α ⊻ D2.α)))
+end
+
+function βexclusive_index(D1::Determinant, D2::Determinant)
+
+    return findall(i-> i=='1', reverse(bitstring(D1.β ⊻ D2.β)))
 end
 
 function annihilate(D::Determinant, orb::Int, spin::Char)
