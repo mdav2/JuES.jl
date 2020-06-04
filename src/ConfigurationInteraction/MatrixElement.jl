@@ -42,7 +42,7 @@ function Hd0(αindex::Array{Int64,1}, βindex::Array{Int64,1}, h::Array{Float64,
     _Vβ  = V[βindex, βindex, βindex, βindex]
     _Vαβ = V[αindex, αindex, βindex, βindex]
 
-    @tensor E += _Vα[m,m,n,n] + _Vβ[m,m,n,n] + 2_Vαβ[m,m,n,n] - _Vα[m,n,n,m] - _Vβ[m,n,n,m]
+    @tensor E += 0.5*(_Vα[m,m,n,n] + _Vβ[m,m,n,n] + 2_Vαβ[m,m,n,n] - _Vα[m,n,n,m] - _Vβ[m,n,n,m])
 
     return E
 
@@ -75,7 +75,7 @@ function Hd1(αindex::Array{Int64,1}, βindex::Array{Int64,1}, D1::Determinant, 
 
         _Jα = V[m, p, αindex, αindex]
         _Jβ = V[m, p, βindex, βindex]
-        _Kβ = V[m, αindex, αindex, p]
+        _Kβ = V[m, βindex, βindex, p]
 
         @tensor E = _Jα[n,n] + _Jβ[n,n] - _Kβ[n,n]
 
@@ -93,12 +93,24 @@ function Hd2(D1::Determinant, D2::Determinant, V::Array{Float64, 4})
 
     # If α excitation is one, it means m and n have different spins 
     if αexcitation_level(D1, D2) == 1
-
         m, = αexclusive_index(D1, D2)
         n, = βexclusive_index(D1, D2)
         p, = αexclusive_index(D2, D1)
         q, = βexclusive_index(D2, D1)
 
+        if (D1.α, D1.β) == (1,1) || (D2.α, D2.β) == (1,1)
+            println("\nHd2")
+            showdet(D1, 2)
+            showdet(D2, 2)
+            println("---")
+            println(m)
+            println(n)
+            println(p)
+            println(q)
+            println(p*V[m,p,n,q])
+            println(p*V[p,m,q,n])
+            println("%%%%%%%%%%%")
+        end
         return p*V[m,p,n,q]
 
     # If α excitation is two, it means m,n,p and q are all α.

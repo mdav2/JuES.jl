@@ -70,12 +70,12 @@ end
 
 function αexclusive_index(D1::Determinant, D2::Determinant)
 
-    return findall(i-> i=='1', reverse(bitstring(D1.α ⊻ D2.α)))
+    return findall(i-> i=='1', reverse(bitstring((D1.α ⊻ D2.α) & D1.α)))
 end
 
 function βexclusive_index(D1::Determinant, D2::Determinant)
 
-    return findall(i-> i=='1', reverse(bitstring(D1.β ⊻ D2.β)))
+    return findall(i-> i=='1', reverse(bitstring((D1.β ⊻ D2.β) & D1.β)))
 end
 
 function annihilate(D::Determinant, orb::Int, spin::Char)
@@ -203,8 +203,8 @@ function showdet(D::Determinant, l::Int = 0)
     if l == 0
         l = length(bitstring(D.α))
     end
-    println(reverse(bitstring(D.α))[1:l])
-    println(reverse(bitstring(D.β))[1:l])
+    println("α: "*reverse(bitstring(D.α))[1:l])
+    println("β: "*reverse(bitstring(D.β))[1:l])
 
 end
 

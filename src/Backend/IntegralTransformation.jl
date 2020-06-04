@@ -12,7 +12,7 @@ Module to handle integral transformations from AO to MO.
 module IntegralTransformation
 using TensorOperations
 using TBLIS
-TBLIS.init()
+#TBLIS.init()
 using JuES.Wavefunction
 
 export get_eri
