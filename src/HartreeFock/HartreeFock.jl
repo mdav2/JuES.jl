@@ -12,9 +12,6 @@ function print_header()
     @output "|        {:<70}|\n" "Module by M.M. Davis"
     @output repeat("=",80)*"\n"
 end
-export RHF
-export RHFWfn
-export RHFCompute
 
 end #module
 

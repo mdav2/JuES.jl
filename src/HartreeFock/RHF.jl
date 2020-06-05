@@ -1,3 +1,8 @@
+module RHF
+using Lints
+export RHF
+export RHFWfn
+export RHFCompute
 struct RHFWfn
     molecule::PyObject
     basis::PyObject
@@ -21,10 +26,46 @@ struct RHFWfn
     Grad::Array{Float64,2}
 end
 
+function RHFWfn(basis,molecule,nelec;debug=false,grad=false,hess=false)
+    dummy2 = Array{Float64}(undef,0,0)
+    dummy4 = Array{Float64}(undef,0,0,0,0)
+    nprim = Lints.max_nprim(basis)
+    l = Lints.max_l(basis)
+    S_engine = Lints.OverlapEngine(nprim,l)
+    T_engine = Lints.KineticEngine(nprim,l)
+    V_engine = Lints.NuclearEngine(nprim,l,mol)
+    I_engine = Lints.ERIEngine(nprim,l)
+    sz = Lints.getsize(basis)
+    S = zeros(sz,sz)
+    T = zeros(sz,sz)
+    V = zeros(sz,sz)
+    I = zeros(sz,sz,sz,sz)
+    A = S^(-1/2)
+    Lints.make_2D(S,S_engine,basis)
+    Lints.make_2D(T,T_engine,basis)
+    Lints.make_2D(V,V_engine,basis)
+    Lints.make_4D(I,I_engine,basis)
+    H = T+V
+    C = zeros(sz,sz)
+    D = zeros(sz,sz)
+    if ! grad
+        GradN = dummy2
+        GradS = dummy2
+        GradSp = dummy2
+        GradV = dummy2
+        GradT = dummy2
+        GradJ = dummy2
+        GradK = dummy2
+        Grad = dummy2
+        
+    end
+    RHFWfn(molecule,basis,mints,C,H,S,A,D,vnuc,nelec/2,grad,hess,GradN,GradS,
+          GradSp,GradV,GradT,GradJ,GradK,Grad)
+end
+
 function RHFWfn(molecule::PyObject,basis::String="STO-3G";debug=false,grad=false,hess=false)
     dummy2 = Array{Float64}(undef,0,0)
     dummy4 = Array{Float64}(undef,0,0,0,0)
-    natoms = molecule.natom()
     vnuc = molecule.nuclear_repulsion_energy()
     basis = psi4.core.BasisSet.build(molecule,fitrole="ORBITAL",target="STO-3G")
     mints = psi4.core.MintsHelper(basis)
@@ -137,4 +178,4 @@ function RHFEnergy(D,H,F)
     end
     return E[]
 end
-
+end #module
