@@ -63,9 +63,9 @@ PqRs::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case BABA)
 
 PqrS::Union{Array{T,4},DiskFourTensor} MO basis TEI (spin case BAAB)
 """
-struct Wfn{T}
-    energy
-    vnuc
+struct Wfn{T} where T <: AbstractFloat
+    energy::T
+    vnuc::T
     nalpha::Int
     nbeta::Int
     nvira::Int
@@ -84,54 +84,9 @@ struct Wfn{T}
     epsa::Array{T,1} #orbital eigenvalues
     epsb::Array{T,1} #orbital eigenvalues
     ao_eri::Union{Array{T,4},DiskFourTensor} #AO basis electron repulsion integrals
-
-    #ijab::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
-    #iJaB::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
-    #iJAb::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
-    #IJAB::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
-    #IjAb::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
-    #IjaB::Union{Array{T,4},DiskFourTensor} #MO basis electron repulsion integrals
 end
 
-"""
-	DirectWfn{T}
-Data structure for storing information about a wavefunction for which integral
-direct procedures will be applied. T::Union{Float32,Float64}
 
-## Fields
----
-nalpha::Int number of alpha electrons
-nbeta::Int number of beta electrons
-nvira::Int number of virtual functions of alpha spin
-nvirb::Int number of virtual functions of beta spin
-nmo::Int number of molecular orbitals
-unrestricted::Bool whether or not the alpha and beta spatial extents are required to
-be the same.
-Ca::Array{T,2} AO->MO coefficients for alpha MO's
-Cb::Array{T,2} AO->MO coefficients for beta MO's
-hao::Array{T,2} AO basis core hamiltonian (kinetic + potential)
-epsa::Array{T,1} orbital eigenvalues for alpha MO's
-epsb::Array{T,1} orbtial eigenvalues for beta MO's
-basis::PyObject psi4.core.BasisSet object for accessing basis function info.
-mints::PyObject psi4.core.MintsHelper object for computing integrals.
-"""
-struct DirectWfn{T}
-    #requires the module using this struct to have properly imported
-    #psi4 with pycall
-    nalpha::Int
-    nbeta::Int
-    nvira::Int
-    nvirb::Int
-    nmo::Int
-    unrestricted::Bool
-    Ca::Array{T,2} #AO->MO coefficients
-    Cb::Array{T,2} #AO->MO coefficients
-    hao::Array{T,2} #Core hamiltonian
-    epsa::Array{T,1} #orbital eigenvalues
-    epsb::Array{T,1} #orbital eigenvalues
-    basis::PyObject
-    mints::PyObject
-end
 function Wfn(wfn::PyObject)
     Wfn{Float64}(wfn)
 end
@@ -172,6 +127,67 @@ function Wfn{T}(wfn::PyObject; unrestricted::Bool=false, diskbased::Bool=false, 
         ao_eri = disk_ao(mints, basis, string("jues.", "$name", ".ao_eri.0"))
     elseif !df
         ao_eri = convert(Array{dt,4}, mints.ao_eri().to_array()) #AO basis integrals
+    end
+    # create the Wfn object and return it!
+    owfn = Wfn{dt}(
+        energy,
+        vnuc,
+        nocca,
+        noccb,
+        nvira,
+        nvirb,
+        nbf,
+        unrestricted,
+        basis,
+        mints,
+        Ca,
+        Cb,
+        Cao,
+        Cav,
+        Cbo,
+        Cbv,
+        hao,
+        epsa,
+        epsb,
+        ao_eri 
+    )
+    return owfn
+end
+function Wfn(rhfwfn::JuES.HartreeFock.RHF.RHFWfn)
+    Wfn{Float64}(rhfwfn)
+end
+function Wfn{T}(wfn::JuES.HartreeFock.RHF.RHFWfn; unrestricted::Bool=false, diskbased::Bool=false, name::String = "default", df::Bool=false) where T
+    dt = T
+    energy = wfn.energy[0]
+    dummy2 = Array{dt}(undef, 0, 0) #placeholder 2D array
+    dummy4 = Array{dt}(undef, 0, 0, 0, 0) #placeholder 4D array
+    vnuc = wfn.vnuc
+    basis = wfn.basis
+    nbf = wfn.nao
+    nocca = wfn.nalpha()
+    nvira = nbf - nocca
+    noccb = wfn.nbeta()
+    nvirb = nbf - noccb
+    epsa = convert(Array{dt,1}, wfn.epsilon_a().to_array()) #orbital eigenvalues
+    epsb = convert(Array{dt,1}, wfn.epsilon_b().to_array()) #orbital eigenvalues
+    _Ca = wfn.Ca() #as psi4 Matrix objects for use with MintsHelper
+    _Cb = wfn.Cb() #as psi4 Matrix objects for use with MintsHelper
+    _Cao = wfn.Ca_subset("AO", "OCC")
+    _Cav = wfn.Ca_subset("AO", "VIR")
+    _Cbo = wfn.Cb_subset("AO", "OCC")
+    _Cbv = wfn.Cb_subset("AO", "VIR")
+    Cao = convert(Array{dt,2}, wfn.Ca_subset("AO", "OCC").to_array())
+    Cav = convert(Array{dt,2}, wfn.Ca_subset("AO", "VIR").to_array())
+    Cbo = convert(Array{dt,2}, wfn.Cb_subset("AO", "OCC").to_array())
+    Cbv = convert(Array{dt,2}, wfn.Cb_subset("AO", "VIR").to_array())
+    Ca = convert(Array{dt,2}, _Ca.to_array())
+    Cb = convert(Array{dt,2}, _Cb.to_array())
+    hao = convert(Array{dt,2}, wfn.H().to_array()) #core hamiltonian in AO
+     
+    if diskbased
+        ao_eri = disk_ao(mints, basis, string("jues.", "$name", ".ao_eri.0"))
+    elseif !df
+        ao_eri = convert(Array{dt,4}, rhfwfn.I)#AO basis integrals
     end
     if diskbased
         ijab = tei_transform(ao_eri, Cao, Cav, Cao, Cav, "ijab")

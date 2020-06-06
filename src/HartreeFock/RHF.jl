@@ -1,17 +1,24 @@
 module RHF
+using JuES
+using PyCall
+using TensorOperations
+using LinearAlgebra
 using Lints
+using JuES.Output
 export RHF
 export RHFWfn
 export RHFCompute
 struct RHFWfn
-    molecule::PyObject
-    basis::PyObject
-    mints::PyObject
+    energy::Array{Float64,1}
+    molecule::Lints.MoleculeAllocated
+    basis::Lints.BasisSetAllocated
+    #mints::PyObject
     C::Array{Float64,2}
     H::Array{Float64,2}
     S::Array{Float64,2}
     A::Array{Float64,2}
     D::Array{Float64,2}
+    I::Array{Float64,4}
     vnuc::Float64
     ndocc::Int
     grad::Bool
@@ -29,22 +36,24 @@ end
 function RHFWfn(basis,molecule,nelec;debug=false,grad=false,hess=false)
     dummy2 = Array{Float64}(undef,0,0)
     dummy4 = Array{Float64}(undef,0,0,0,0)
+    vnuc = 0
     nprim = Lints.max_nprim(basis)
     l = Lints.max_l(basis)
+    E = zeros(Float64,1)
     S_engine = Lints.OverlapEngine(nprim,l)
     T_engine = Lints.KineticEngine(nprim,l)
-    V_engine = Lints.NuclearEngine(nprim,l,mol)
+    V_engine = Lints.NuclearEngine(nprim,l,molecule)
     I_engine = Lints.ERIEngine(nprim,l)
-    sz = Lints.getsize(basis)
+    sz = Lints.getsize(S_engine,basis)
     S = zeros(sz,sz)
     T = zeros(sz,sz)
     V = zeros(sz,sz)
     I = zeros(sz,sz,sz,sz)
-    A = S^(-1/2)
     Lints.make_2D(S,S_engine,basis)
     Lints.make_2D(T,T_engine,basis)
     Lints.make_2D(V,V_engine,basis)
     Lints.make_4D(I,I_engine,basis)
+    A = S^(-1/2)
     H = T+V
     C = zeros(sz,sz)
     D = zeros(sz,sz)
@@ -57,9 +66,8 @@ function RHFWfn(basis,molecule,nelec;debug=false,grad=false,hess=false)
         GradJ = dummy2
         GradK = dummy2
         Grad = dummy2
-        
     end
-    RHFWfn(molecule,basis,mints,C,H,S,A,D,vnuc,nelec/2,grad,hess,GradN,GradS,
+    RHFWfn(E,molecule,basis,C,H,S,A,D,I,vnuc,nelec/2,grad,hess,GradN,GradS,
           GradSp,GradV,GradT,GradJ,GradK,Grad)
 end
 
@@ -108,11 +116,13 @@ function RHFWfn(molecule::PyObject,basis::String="STO-3G";debug=false,grad=false
 end
 
 function RHFCompute(wfn::RHFWfn;doprint=false,maxit=50,Etol=1E-7,Dtol=1E-7)
-    print_header()
+    JuES.HartreeFock.print_header()
     @output "    executing RHF\n"
     @output "    computing AO basis integrals ... "
-    t = @elapsed I = wfn.mints.ao_eri().np
+    #t = @elapsed I = wfn.mints.ao_eri().np
+    I = wfn.I
     G = 2*I - permutedims(I,[1,3,2,4])
+    t = 0.0
     @output "done in {:>5.2f}s\n" t
     @output "    Forming initial Fock matrix ... "
     t = @elapsed begin
@@ -155,6 +165,8 @@ function RHFCompute(wfn::RHFWfn;doprint=false,maxit=50,Etol=1E-7,Dtol=1E-7)
         end
     end
     @output repeat("~",80)*"\n"
+    wfn.C .= C 
+    wfn.energy[1] = E
     @output "    RHF done in {:>5.2f}s\n" t
     @output "    @E[RHF] = {:>20.17f}" E
 end

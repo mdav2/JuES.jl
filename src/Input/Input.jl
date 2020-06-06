@@ -1,7 +1,7 @@
 module Input
 
 using JuES
-using JuES.HartreeFock
+using JuES.HartreeFock.RHF
 using Lints
 
 export run #shorthand for read->exec
@@ -49,8 +49,10 @@ function exec(cont)
         cont["molecule"] *= "symmetry c1"
     end
     open("/tmp/molfile.xyz","w") do molfile
+        write(molfile,"3\n\n")
         write(molfile,cont["molecule"])
     end
+    Lints.libint2_init()
     mol = Lints.Molecule("/tmp/molfile.xyz")
     bas = Lints.BasisSet(cont["options"]["basis"],mol)
     JuES_options = Dict{Any,Any}(
@@ -60,10 +62,12 @@ function exec(cont)
                        :quiet=>true
                       )
     #e,wfn = psi4.energy("scf",return_wfn=true)
-    rhfwfn = RHFWfn(bas,mol)
+    rhfwfn = RHFWfn(bas,mol,10)
+    RHFCompute(rhfwfn)
     JuWfn = JuES.Wavefunction.Wfn(rhfwfn)
     com = cont["command"]
     E = com(JuWfn; JuES_options...)
+    Lints.libint2_finalize()
     return E
 end
 
