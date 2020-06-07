@@ -1,6 +1,6 @@
 module HartreeFock
 using JuES
-using PyCall
+#using PyCall
 using TensorOperations
 using LinearAlgebra
 using JuES.Output
@@ -12,6 +12,10 @@ function print_header()
     @output "|        {:<70}|\n" "Module by M.M. Davis"
     @output repeat("=",80)*"\n"
 end
+defaults = Dict{Any,Any}(
+                        :e_convergence => 1E-10,
+                        :d_convergence => 1E-10
+                        )
 
 end #module
 

@@ -8,7 +8,7 @@ refWfn::Wfn -> wavefunction to which MP2 will be applied.
 ## outputs
 dmp2::Float MP2 energy correction
 """
-function do_rmp2(refWfn::Wfn)
+function do_rmp2(refWfn::Wfn;kwargs...)
     print_header()
     dmp2 = 0.0
     nocc = refWfn.nalpha
@@ -17,13 +17,11 @@ function do_rmp2(refWfn::Wfn)
     @output "   nvir: {:>3}\n" refWfn.nvira
     rocc = 1:1:refWfn.nalpha
     rvir = nocc+1:1:nocc+refWfn.nvira
-    #    @views moeri = permutedims(refWfn.pqrs,[1,3,2,4])
-    #
     Cao = refWfn.Cao
     Cav = refWfn.Cav
     epsa = refWfn.epsa
     @output "*  performing AO->MO integral transformation ... "
-    t = @elapsed moeri = permutedims(tei_transform(refWfn.ao_eri, Cao, Cav, Cao, Cav, "oovv"), [1, 3, 2, 4])
+    t = @elapsed moeri = get_eri(refWfn,"OOVV")#permutedims(tei_transform(refWfn.ao_eri, Cao, Cav, Cao, Cav, "oovv"), [1, 3, 2, 4])
     @output "done in {:>5.2f}s\n" t
     @output "*  Computing MP2 energy ... "
     t = @elapsed for b in rvir

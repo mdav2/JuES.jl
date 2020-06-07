@@ -30,7 +30,10 @@ doprint::Bool=false -> whether or not to print energy and timing information to
 ## output
 ccenergy::Float -> final RCCD energy. 
 """
-function do_rccd(refWfn::Wfn; maxit=40, doprint=false, return_T2=false)
+function do_rccd(refWfn::Wfn; kwargs...)
+    maxit = 40
+    doprint = false
+    return_T2 = false
     JuES.CoupledCluster.print_header()
     nocc = refWfn.nalpha
     nvir = refWfn.nvira
