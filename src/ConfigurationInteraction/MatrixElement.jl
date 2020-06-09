@@ -54,7 +54,7 @@ function Hd1(αindex::Array{Int64,1}, βindex::Array{Int64,1}, D1::Determinant, 
     [m|h|p] + Σ[mp|nn] - [mn|np]
     """
 
-    p = phase(D1, D2)
+    ph = phase(D1, D2)
 
     # if m and p are α
     if αexcitation_level(D1, D2) == 1
@@ -67,7 +67,7 @@ function Hd1(αindex::Array{Int64,1}, βindex::Array{Int64,1}, D1::Determinant, 
 
         @tensor E = _Jα[n,n] + _Jβ[n,n] - _Kα[n,n]
 
-        return p*(h[m,p] + E)
+        return ph*(h[m,p] + E)
 
     else
         m, = βexclusive_index(D1, D2)
@@ -79,7 +79,7 @@ function Hd1(αindex::Array{Int64,1}, βindex::Array{Int64,1}, D1::Determinant, 
 
         @tensor E = _Jα[n,n] + _Jβ[n,n] - _Kβ[n,n]
 
-        return p*(h[m,p] + E)
+        return ph*(h[m,p] + E)
     end
 end
 
@@ -89,7 +89,7 @@ function Hd2(D1::Determinant, D2::Determinant, V::Array{Float64, 4})
     [mp|nq] - [mq|np]
     """
 
-    p = phase(D1, D2)
+    ph = phase(D1, D2)
 
     # If α excitation is one, it means m and n have different spins 
     if αexcitation_level(D1, D2) == 1
@@ -98,20 +98,7 @@ function Hd2(D1::Determinant, D2::Determinant, V::Array{Float64, 4})
         p, = αexclusive_index(D2, D1)
         q, = βexclusive_index(D2, D1)
 
-        if (D1.α, D1.β) == (1,1) || (D2.α, D2.β) == (1,1)
-            println("\nHd2")
-            showdet(D1, 2)
-            showdet(D2, 2)
-            println("---")
-            println(m)
-            println(n)
-            println(p)
-            println(q)
-            println(p*V[m,p,n,q])
-            println(p*V[p,m,q,n])
-            println("%%%%%%%%%%%")
-        end
-        return p*V[m,p,n,q]
+        return ph*V[m,p,n,q]
 
     # If α excitation is two, it means m,n,p and q are all α.
     elseif αexcitation_level(D1, D2) == 2
@@ -119,7 +106,7 @@ function Hd2(D1::Determinant, D2::Determinant, V::Array{Float64, 4})
         m,n = αexclusive_index(D1, D2)
         p,q = αexclusive_index(D2, D1)
 
-        return p*(V[m,p,n,q] - V[m,q,n,p])
+        return ph*(V[m,p,n,q] - V[m,q,n,p])
 
     # If α excitation is zero, it means m,n,p and q are all β.
     elseif αexcitation_level(D1, D2) == 0
@@ -127,7 +114,7 @@ function Hd2(D1::Determinant, D2::Determinant, V::Array{Float64, 4})
         m,n = βexclusive_index(D1, D2)
         p,q = βexclusive_index(D2, D1)
 
-        return p*(V[m,p,n,q] - V[m,q,n,p])
+        return ph*(V[m,p,n,q] - V[m,q,n,p])
     end
 end
 
