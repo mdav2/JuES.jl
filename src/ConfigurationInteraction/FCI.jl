@@ -25,11 +25,8 @@ function do_fci(wfn::Wfn; kwargs...)
             @eval $arg = $(kwargs[arg])
         else
             @eval $arg = $(JuES.ConfigurationInteraction.defaults[arg])
-            println(arg)
         end
     end
-
-    @output "SCF Energy: {:10.10f}\n" wfn.energy
 
     nmo = wfn.nmo
 
@@ -52,12 +49,6 @@ function do_fci(wfn::Wfn; kwargs...)
         error("Number of activ orbitals ($active) too small for $(act_elec) activ electrons")
     end
 
-    @output "\n →  ACTIVE SPACE\n"
-    @output "Frozen Orbitals:  {:3d}\n" frozen
-    @output "Active Electrons: {:3d}\n" act_elec
-    @output "Active Orbitals:  {:3d}\n" active
-    
-
     @output "Transforming integrals...\n"
 
     # Integral transformation
@@ -71,33 +62,26 @@ function do_fci(wfn::Wfn; kwargs...)
 
     @output "Done.\n"
 
-
+    @output "\n →  ACTIVE SPACE\n"
+    @output "Frozen Orbitals:  {:3d}\n" frozen
+    @output "Active Electrons: {:3d}\n" act_elec
+    @output "Active Orbitals:  {:3d}\n" active
+    
     dets = get_determinants(act_elec, active, nmo, frozen)
     Ndets = length(dets)
     @output "Number of Determinants: {:10d}\n" Ndets
 
-    @output "Computing using Full Hamiltonian\n"
+    @output "Building Sparse Hamiltonian...\n"
 
     @time begin
-        H = zeros(Ndets, Ndets)
-        H = get_dense_hamiltonian_matrix(dets, H, h, V)
+        H = get_sparse_hamiltonian_matrix(dets, h, V, min_matrix_elem)
     end
-    @time evals, v = eigs(H, nev=1)
+
+    @output "Diagonalizing Hamiltonian for {:3d} eigenvalues...\n" nroot
+    @time λ, Φ = eigs(H, nev=nroot)
     println(Base.summarysize(H))
 
-    @output "\n Final FCI Energy: {:15.10f}\n" evals[1]+wfn.vnuc
-    #@output "Time: {:10.5f}\n" t
-
-
-    @output "Computing using Sparse Hamiltonian\n"
-
-    @time begin
-        Hs = get_sparse_hamiltonian_matrix(dets, h, V)
-    end
-    @time evals, v = eigs(Hs, nev=1)
-    println(Base.summarysize(Hs))
-
-    @output "\n Final FCI Energy: {:15.10f}\n" real(evals[1])+wfn.vnuc
+    @output "\n Final FCI Energy: {:15.10f}\n" λ[1]+wfn.vnuc
     #@output "Time: {:10.5f}\n" t
 
 end
@@ -155,49 +139,64 @@ function get_dense_hamiltonian_matrix(dets::Array{Determinant,1}, H::AbstractArr
     return Symmetric(H)
 end
 
-function get_sparse_hamiltonian_matrix(dets::Array{Determinant,1}, h::Array{Float64,2}, V::Array{Float64,4})
-
-    tol = 1e-9
+function get_sparse_hamiltonian_matrix(dets::Array{Determinant,1}, h::Array{Float64,2}, V::Array{Float64,4}, tol::Float64)
 
     Ndets = length(dets)
+    Nα = sum(αlist(dets[1]))
+    Nβ = sum(αlist(dets[1]))
 
+    αind = Array{Int64,1}(undef,Nα)
+    βind = Array{Int64,1}(undef,Nβ)
     vals = Float64[]
     ivals = Int64[]
     jvals = Int64[]
+    tHd0 = 0
+    tHd1 = 0
+    tHd2 = 0
 
-    for i in 1:length(dets)
+    for i in 1:Ndets
         D1 = dets[i]
-        αind = αindex(D1)
-        βind = βindex(D1)
-        for j in i:length(dets)
+        αind .= αindex(D1)
+        βind .= βindex(D1)
+        for j in i:Ndets
             D2 = dets[j]
             el = excitation_level(D1,D2)
             if el > 2
+                #if excitation_level(dets[1], D2) > excitation_level(dets[1], D1) + 2
+                #    break
+                #end
                 nothing
             elseif el == 2
-                elem = Hd2(D1, D2, V)
+                t = @elapsed elem = Hd2(D1, D2, V)
                 if abs(elem) > tol
                     push!(vals, elem)
                     push!(ivals, i)
                     push!(jvals, j)
                 end
+                tHd2 += t
             elseif el == 1
-                elem = Hd1(αind, βind, D1, D2, h, V)
+                t = @elapsed elem = Hd1(αind, βind, D1, D2, h, V)
                 if abs(elem) > tol
                     push!(vals, elem)
                     push!(ivals, i)
                     push!(jvals, j)
                 end
+                tHd1 += t
             else
-                elem = Hd0(αind, βind, h, V)
+                t = @elapsed elem = Hd0(αind, βind, h, V)
                 if abs(elem) > tol
                     push!(vals, elem)
                     push!(ivals, i)
                     push!(jvals, j)
                 end
+                tHd0 += t
             end
         end
     end
+
+    @output "\n Total Time spent in Hd0: {:10.5f}" tHd0
+    @output "\n Total Time spent in Hd1: {:10.5f}" tHd1
+    @output "\n Total Time spent in Hd2: {:10.5f}\n" tHd2
 
     return Symmetric(sparse(ivals, jvals, vals))
 end

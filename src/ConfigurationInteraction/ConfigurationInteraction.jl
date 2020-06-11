@@ -33,7 +33,9 @@ end
 
 defaults = Dict(
                 :frozen => 0,
-                :active => -1
+                :active => -1,
+                :nroot => 1,
+                :min_matrix_elem => 1e-9
 )
 
 include("DetOperations.jl")
