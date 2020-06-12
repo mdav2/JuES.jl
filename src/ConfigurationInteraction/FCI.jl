@@ -76,11 +76,10 @@ function do_fci(wfn::Wfn; kwargs...)
     @time begin
         H = get_sparse_hamiltonian_matrix(dets, h, V, min_matrix_elem)
     end
+    @output "Hamiltonian Matrix size: {:10.6f} Mb\n" Base.summarysize(H)/10^6
 
     @output "Diagonalizing Hamiltonian for {:3d} eigenvalues...\n" nroot
     @time λ, Φ = eigs(H, nev=nroot)
-    println(Base.summarysize(H))
-
     @output "\n Final FCI Energy: {:15.10f}\n" λ[1]+wfn.vnuc
     #@output "Time: {:10.5f}\n" t
 
@@ -115,8 +114,6 @@ end
 
 function get_dense_hamiltonian_matrix(dets::Array{Determinant,1}, H::AbstractArray{Float64,2}, h::Array{Float64,2}, V::Array{Float64,4})
 
-    Ndets = length(dets)
-
     for i in 1:length(dets)
         D1 = dets[i]
         αind = αindex(D1)
@@ -150,6 +147,7 @@ function get_sparse_hamiltonian_matrix(dets::Array{Determinant,1}, h::Array{Floa
     vals = Float64[]
     ivals = Int64[]
     jvals = Int64[]
+    elem = 0.0
     tHd0 = 0
     tHd1 = 0
     tHd2 = 0
@@ -162,9 +160,6 @@ function get_sparse_hamiltonian_matrix(dets::Array{Determinant,1}, h::Array{Floa
             D2 = dets[j]
             el = excitation_level(D1,D2)
             if el > 2
-                #if excitation_level(dets[1], D2) > excitation_level(dets[1], D1) + 2
-                #    break
-                #end
                 nothing
             elseif el == 2
                 t = @elapsed elem = Hd2(D1, D2, V)
