@@ -1,6 +1,8 @@
 module Input
 
 using JuES
+using JuES.HartreeFock.RHF
+using Lints
 
 export run #shorthand for read->exec
 export read
@@ -46,31 +48,26 @@ function exec(cont)
     if !occursin("symmetry c1",lowercase(cont["molecule"]))
         cont["molecule"] *= "symmetry c1"
     end
-    mol = psi4.geometry(cont["molecule"])
-    psi4_options = Dict{Any,Any}(
-                       "scf_type"=>"pk"
-    )
+    open("/tmp/molfile.xyz","w") do molfile
+        write(molfile,"3\n\n")
+        write(molfile,cont["molecule"])
+    end
+    Lints.libint2_init()
+    mol = Lints.Molecule("/tmp/molfile.xyz")
+    bas = Lints.BasisSet(cont["options"]["basis"],mol)
     JuES_options = Dict{Any,Any}(
                        :doprint=>false,
                        :maxit=>40,
                        :return_T=>false,
                        :quiet=>true
                       )
-    for option in keys(cont["options"]) #sort through options to discern psi4 keywords vs JuES keywords
-        if option in psi4_opt_list
-            psi4_options[option] = cont["options"][option]
-        else
-            JuES_options[option] = cont["options"][option]
-        end
-    end
-    if JuES_options[:quiet] == true
-        psi4.core.be_quiet()
-    end
-    psi4.set_options(psi4_options)
-    e,wfn = psi4.energy("scf",return_wfn=true)
-    JuWfn = JuES.Wavefunction.Wfn(wfn)
+    #e,wfn = psi4.energy("scf",return_wfn=true)
+    rhfwfn = RHFWfn(bas,mol,10)
+    RHFCompute(rhfwfn)
+    JuWfn = JuES.Wavefunction.Wfn(rhfwfn)
     com = cont["command"]
     E = com(JuWfn; JuES_options...)
+    Lints.libint2_finalize()
     return E
 end
 

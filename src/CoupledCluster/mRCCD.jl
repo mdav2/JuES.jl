@@ -10,7 +10,7 @@ performs coupled cluster doubles (CCD) computations using explicit matrix multip
 module mRCCD
 using Base.Threads
 using JuES.Wavefunction
-using CuArrays
+#using CuArrays
 using JuES
 using JuES.Output
 using TensorOperations
