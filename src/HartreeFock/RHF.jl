@@ -82,7 +82,7 @@ function RHFCompute(wfn::RHFWfn;doprint=false,maxit=50,Etol=1E-7,Dtol=1E-7)
     nprim = Lints.max_nprim(wfn.basis)
     l = Lints.max_l(wfn.basis)
     engines = []
-    for i in Threads.nthreads()
+    for i in 1:Threads.nthreads()
         push!(engines,Lints.ERIEngine(nprim,l))
     end
     Lints.make_ERI(wfn.I,engines,wfn.basis)
