@@ -10,8 +10,8 @@ module MollerPlesset
 
 using JuES.Wavefunction
 using JuES.DiskTensors
-using JuES.Direct
-using JuES.Transformation
+#using JuES.Direct
+using JuES.IntegralTransformation
 using JuES.DF
 using JuES.Output
 using JuES
@@ -31,7 +31,7 @@ end
 
 include("RMP2.jl")
 include("UMP2.jl")
-include("DirectRMP2.jl")
+#include("DirectRMP2.jl")
 include("DF-RMP2.jl")
 
 end #module

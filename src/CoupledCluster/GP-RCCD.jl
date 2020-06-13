@@ -9,7 +9,7 @@ module for performing GPU accelerated RCCD computations
 """
 module GPRCCD
 using JuES.Wavefunction
-using CuArrays
+#using CuArrays
 using TensorOperations
 using JuES.Transformation
 include("Denominators.jl")
