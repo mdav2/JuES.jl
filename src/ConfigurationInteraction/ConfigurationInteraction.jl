@@ -31,7 +31,7 @@ raw"""
     @output "\n{}\n" banner
 end
 
-defaults = Dict(
+defaults = Dict{Any,Any}(
                 :frozen => 0,
                 :active => -1,
                 :nroot => 1,

@@ -83,6 +83,8 @@ function do_fci(wfn::Wfn; kwargs...)
     @output "\n Final FCI Energy: {:15.10f}\n" λ[1]+wfn.vnuc
     #@output "Time: {:10.5f}\n" t
 
+    println(wfn.vnuc)
+
 end
 
 function get_determinants(Ne::Int, No::Int, nmo::Int, nfrozen::Int)

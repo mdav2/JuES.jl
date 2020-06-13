@@ -4,9 +4,11 @@ using TensorOperations
 using LinearAlgebra
 using Lints
 using JuES.Output
+
 export RHF
 export RHFWfn
 export RHFCompute
+
 struct RHFWfn
     energy::Array{Float64,1}
     molecule::Lints.MoleculeAllocated
@@ -37,6 +39,7 @@ function RHFWfn(basis,molecule,nelec;debug=false,grad=false,hess=false)
     dummy2 = Array{Float64}(undef,0,0)
     dummy4 = Array{Float64}(undef,0,0,0,0)
     vnuc = 0
+    get_nuclear_repulsion()
     nprim = Lints.max_nprim(basis)
     l = Lints.max_l(basis)
     E = zeros(Float64,1)
@@ -153,4 +156,13 @@ function RHFEnergy(D,H,F)
     end
     return E[]
 end
+
+function get_nuclear_repulsion()
+    open("/tmp/molfile.xyz","w") do molfile
+        for l in eachline(molfile)
+            println(l)
+        end
+    end
+end
+
 end #module
