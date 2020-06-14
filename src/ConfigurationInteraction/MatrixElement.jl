@@ -58,8 +58,8 @@ function Hd1(αindex::Array{Int64,1}, βindex::Array{Int64,1}, D1::Determinant, 
 
     # if m and p are α
     if αexcitation_level(D1, D2) == 1
-        m, = αexclusive_index(D1, D2)
-        p, = αexclusive_index(D2, D1)
+        m, = αexclusive(D1, D2)
+        p, = αexclusive(D2, D1)
 
         _Jα = V[m, p, αindex, αindex]
         _Jβ = V[m, p, βindex, βindex]
@@ -70,8 +70,8 @@ function Hd1(αindex::Array{Int64,1}, βindex::Array{Int64,1}, D1::Determinant, 
         return ph*(h[m,p] + E)
 
     else
-        m, = βexclusive_index(D1, D2)
-        p, = βexclusive_index(D2, D1)
+        m, = βexclusive(D1, D2)
+        p, = βexclusive(D2, D1)
 
         _Jα = V[m, p, αindex, αindex]
         _Jβ = V[m, p, βindex, βindex]
@@ -93,26 +93,26 @@ function Hd2(D1::Determinant, D2::Determinant, V::Array{Float64, 4})
 
     # If α excitation is one, it means m and n have different spins 
     if αexcitation_level(D1, D2) == 1
-        m, = αexclusive_index(D1, D2)
-        n, = βexclusive_index(D1, D2)
-        p, = αexclusive_index(D2, D1)
-        q, = βexclusive_index(D2, D1)
+        m, = αexclusive(D1, D2)
+        n, = βexclusive(D1, D2)
+        p, = αexclusive(D2, D1)
+        q, = βexclusive(D2, D1)
 
         return ph*V[m,p,n,q]
 
     # If α excitation is two, it means m,n,p and q are all α.
     elseif αexcitation_level(D1, D2) == 2
 
-        m,n = αexclusive_index(D1, D2)
-        p,q = αexclusive_index(D2, D1)
+        m,n = αexclusive(D1, D2)
+        p,q = αexclusive(D2, D1)
 
         return ph*(V[m,p,n,q] - V[m,q,n,p])
 
     # If α excitation is zero, it means m,n,p and q are all β.
     elseif αexcitation_level(D1, D2) == 0
 
-        m,n = βexclusive_index(D1, D2)
-        p,q = βexclusive_index(D2, D1)
+        m,n = βexclusive(D1, D2)
+        p,q = βexclusive(D2, D1)
 
         return ph*(V[m,p,n,q] - V[m,q,n,p])
     end

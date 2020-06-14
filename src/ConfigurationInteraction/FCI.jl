@@ -116,11 +116,17 @@ end
 
 function get_dense_hamiltonian_matrix(dets::Array{Determinant,1}, H::AbstractArray{Float64,2}, h::Array{Float64,2}, V::Array{Float64,4})
 
-    for i in 1:length(dets)
+    Ndets = length(dets)
+    Nα = sum(αlist(dets[1]))
+    Nβ = sum(αlist(dets[1]))
+
+    αind = Array{Int64,1}(undef,Nα)
+    βind = Array{Int64,1}(undef,Nβ)
+    for i in 1:Ndets
         D1 = dets[i]
-        αind = αindex(D1)
-        βind = βindex(D1)
-        for j in i:length(dets)
+        αind .= αindex(D1, Nα)
+        βind .= βindex(D1, Nβ)
+        for j in i:Ndets
             D2 = dets[j]
             el = excitation_level(D1,D2)
             if el > 2
@@ -156,8 +162,8 @@ function get_sparse_hamiltonian_matrix(dets::Array{Determinant,1}, h::Array{Floa
 
     for i in 1:Ndets
         D1 = dets[i]
-        αind .= αindex(D1)
-        βind .= βindex(D1)
+        αind .= αindex(D1, Nα)
+        βind .= βindex(D1, Nβ)
         for j in i:Ndets
             D2 = dets[j]
             el = excitation_level(D1,D2)
