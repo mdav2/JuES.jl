@@ -430,6 +430,8 @@ function create(D::Determinant, orb::Int, spin::Char)
     end
 end
 
+#function α1phase
+
 """
     JuES.ConfigurationInteraction.DetOperations.phase(D1::Determinant, D2::Determinant)
 

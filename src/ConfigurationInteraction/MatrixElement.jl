@@ -1,6 +1,7 @@
 module MatrixElement
 using TensorOperations
 using JuES.ConfigurationInteraction.DetOperations
+using LinearAlgebra
 
 export Hd0
 export Hd1
@@ -32,9 +33,7 @@ function Hd0(αindex::Array{Int64,1}, βindex::Array{Int64,1}, h::Array{Float64,
     """
 
     # One-electron contribution
-    _hαα = h[αindex, αindex]
-    _hββ = h[βindex, βindex]
-    @tensor E = _hαα[m,m] + _hββ[m,m]
+    E = tr(h[αindex, αindex]) + tr(h[βindex, βindex])
 
     # Two-electron contributions
 
@@ -48,73 +47,156 @@ function Hd0(αindex::Array{Int64,1}, βindex::Array{Int64,1}, h::Array{Float64,
 
 end
 
-function Hd1(αindex::Array{Int64,1}, βindex::Array{Int64,1}, D1::Determinant, D2::Determinant, h::Array{Float64,2}, V::Array{Float64, 4})
+function Hd1(αindex::Array{Int64,1}, βindex::Array{Int64,1}, D1::Determinant, D2::Determinant, h::Array{Float64,2}, V::Array{Float64, 4}, αexc::Float64)
     """
     differ m -> p
     [m|h|p] + Σ[mp|nn] - [mn|np]
     """
 
-    ph = phase(D1, D2)
-
     # if m and p are α
-    if αexcitation_level(D1, D2) == 1
+    if αexc == 1
         m, = αexclusive(D1, D2)
         p, = αexclusive(D2, D1)
 
-        _Jα = V[m, p, αindex, αindex]
-        _Jβ = V[m, p, βindex, βindex]
-        _Kα = V[m, αindex, αindex, p]
+        # Compute phase by counting the number of occupied orbitals between m and p
 
-        @tensor E = _Jα[n,n] + _Jβ[n,n] - _Kα[n,n]
+        i = 1 << min(m,p)
+        f = 1 << (max(m,p) - 1)
 
-        return ph*(h[m,p] + E)
+        ph = 1
+
+        while i < f
+            if i & D1.α ≠ 0
+                ph = -ph
+            end
+            i = i << 1 
+        end
+
+        # αindex and βindex are use to mask the two electron integrals such that we can take the trace
+        # over the occupied electrons. The two electron terms are, respectively: Jα, Jβ, and Kα
+        @inbounds E = ph*(h[m,p] + tr(V[m, p, αindex, αindex]) + tr(V[m, p, βindex, βindex]) - tr(V[m, αindex, αindex, p]))
+        return E
 
     else
         m, = βexclusive(D1, D2)
         p, = βexclusive(D2, D1)
 
-        _Jα = V[m, p, αindex, αindex]
-        _Jβ = V[m, p, βindex, βindex]
-        _Kβ = V[m, βindex, βindex, p]
+        # Compute phase by counting the number of occupied orbitals between m and p
 
-        @tensor E = _Jα[n,n] + _Jβ[n,n] - _Kβ[n,n]
+        i = 1 << min(m,p)
+        f = 1 << (max(m,p) - 1)
 
-        return ph*(h[m,p] + E)
+        ph = 1
+
+        while i < f
+            if i & D1.β ≠ 0
+                ph = -ph
+            end
+            i = i << 1 
+        end
+
+        # αindex and βindex are use to mask the two electron integrals such that we can take the trace
+        # over the occupied electrons. The two electron terms are, respectively: Jα, Jβ, and Kα
+        @inbounds E = ph*(h[m,p] + tr(V[m, p, αindex, αindex]) + tr(V[m, p, βindex, βindex]) - tr(V[m, βindex, βindex, p]))
+        return E
     end
 end
 
-function Hd2(D1::Determinant, D2::Determinant, V::Array{Float64, 4})
+function Hd2(D1::Determinant, D2::Determinant, V::Array{Float64, 4}, αexc::Float64)
     """
     mn -> pq
     [mp|nq] - [mq|np]
     """
 
-    ph = phase(D1, D2)
 
     # If α excitation is one, it means m and n have different spins 
-    if αexcitation_level(D1, D2) == 1
+    if αexc == 1
         m, = αexclusive(D1, D2)
         n, = βexclusive(D1, D2)
         p, = αexclusive(D2, D1)
         q, = βexclusive(D2, D1)
 
-        return ph*V[m,p,n,q]
+        i = 1 << min(m,p)
+        f = 1 << (max(m,p) - 1)
+
+        ph = 1
+
+        while i < f
+            if i & D1.α ≠ 0
+                ph = -ph
+            end
+            i = i << 1 
+        end
+
+        i = 1 << min(n,q)
+        f = 1 << (max(n,q) - 1)
+
+        while i < f
+            if i & D1.β ≠ 0
+                ph = -ph
+            end
+            i = i << 1 
+        end
+
+        return @fastmath @inbounds ph*V[m,p,n,q]
 
     # If α excitation is two, it means m,n,p and q are all α.
-    elseif αexcitation_level(D1, D2) == 2
-
+    elseif αexc == 2
         m,n = αexclusive(D1, D2)
         p,q = αexclusive(D2, D1)
 
-        return ph*(V[m,p,n,q] - V[m,q,n,p])
+        i = 1 << min(min(m,n),min(p,q))
+        f = 1 << (max(min(m,n),min(p,q)) - 1)
+
+        ph = 1
+
+        while i < f
+            if i & D1.α ≠ 0
+                ph = -ph
+            end
+            i = i << 1 
+        end
+
+        i = 1 << min(max(m,n),max(p,q))
+        f = 1 << (max(max(m,n),max(p,q)) - 1)
+
+        while i < f
+            if i & D1.α ≠ 0
+                ph = -ph
+            end
+            i = i << 1 
+        end
+
+        return @fastmath @inbounds ph*(V[m,p,n,q] - V[m,q,n,p])
 
     # If α excitation is zero, it means m,n,p and q are all β.
-    elseif αexcitation_level(D1, D2) == 0
-
+    elseif αexc == 0
         m,n = βexclusive(D1, D2)
         p,q = βexclusive(D2, D1)
 
-        return ph*(V[m,p,n,q] - V[m,q,n,p])
+        i = 1 << min(min(m,n),min(p,q))
+        f = 1 << (max(min(m,n),min(p,q)) - 1)
+
+        ph = 1
+
+        while i < f
+            if i & D1.β ≠ 0
+                ph = -ph
+            end
+            i = i << 1 
+        end
+
+        i = 1 << min(max(m,n),max(p,q))
+        f = 1 << (max(max(m,n),max(p,q)) - 1)
+
+        while i < f
+            if i & D1.β ≠ 0
+                ph = -ph
+            end
+            i = i << 1 
+        end
+
+        return @fastmath @inbounds ph*(V[m,p,n,q] - V[m,q,n,p])
     end
 end
 

@@ -46,7 +46,7 @@ function do_fci(wfn::Wfn; kwargs...)
     end
 
     if active ≤ act_elec/2
-        error("Number of activ orbitals ($active) too small for $(act_elec) activ electrons")
+        error("Number of active orbitals ($active) too small for $(act_elec) activ electrons")
     end
 
     @output "Transforming integrals...\n"
@@ -82,8 +82,6 @@ function do_fci(wfn::Wfn; kwargs...)
     @time λ, Φ = eigs(H, nev=nroot)
     @output "\n Final FCI Energy: {:15.10f}\n" λ[1]+wfn.vnuc
     #@output "Time: {:10.5f}\n" t
-
-    println(wfn.vnuc)
 
 end
 
@@ -159,6 +157,7 @@ function get_sparse_hamiltonian_matrix(dets::Array{Determinant,1}, h::Array{Floa
     tHd0 = 0
     tHd1 = 0
     tHd2 = 0
+    t = 0
 
     for i in 1:Ndets
         D1 = dets[i]
@@ -166,20 +165,22 @@ function get_sparse_hamiltonian_matrix(dets::Array{Determinant,1}, h::Array{Floa
         βind .= βindex(D1, Nβ)
         for j in i:Ndets
             D2 = dets[j]
-            el = excitation_level(D1,D2)
+            αexc = αexcitation_level(D1,D2)
+            βexc = βexcitation_level(D1,D2)
+            el = αexc + βexc
             if el > 2
                 nothing
             elseif el == 2
-                t = @elapsed elem = Hd2(D1, D2, V)
-                if abs(elem) > tol
+                t = @elapsed elem = Hd2(D1, D2, V, αexc)
+                if elem > tol || -elem > tol
                     push!(vals, elem)
                     push!(ivals, i)
                     push!(jvals, j)
                 end
                 tHd2 += t
             elseif el == 1
-                t = @elapsed elem = Hd1(αind, βind, D1, D2, h, V)
-                if abs(elem) > tol
+                t = @elapsed elem = Hd1(αind, βind, D1, D2, h, V, αexc)
+                if elem > tol || -elem > tol
                     push!(vals, elem)
                     push!(ivals, i)
                     push!(jvals, j)
@@ -187,7 +188,7 @@ function get_sparse_hamiltonian_matrix(dets::Array{Determinant,1}, h::Array{Floa
                 tHd1 += t
             else
                 t = @elapsed elem = Hd0(αind, βind, h, V)
-                if abs(elem) > tol
+                if elem > tol || -elem > tol
                     push!(vals, elem)
                     push!(ivals, i)
                     push!(jvals, j)

@@ -59,7 +59,9 @@ function exec(cont)
                        :doprint=>false,
                        :maxit=>40,
                        :return_T=>false,
-                       :quiet=>true
+                       :quiet=>true,
+                       :frozen => 1,
+                       :active => 8
                       )
     #e,wfn = psi4.energy("scf",return_wfn=true)
     rhfwfn = RHFWfn(bas,mol,10)
