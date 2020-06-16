@@ -62,6 +62,8 @@ function do_fci(wfn::Wfn; kwargs...)
 
     @output "Done.\n"
 
+    @output "NMO: {:3d}\n" wfn.nmo
+
     @output "\n →  ACTIVE SPACE\n"
     @output "Frozen Orbitals:  {:3d}\n" frozen
     @output "Active Electrons: {:3d}\n" act_elec
