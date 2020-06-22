@@ -1,3 +1,13 @@
+"""
+    JuES.CoupledCluster.PerturbativeTriples
+
+Module to compute energy corretion due to perturbative triples.
+
+**Functions:**
+
+    compute_pT      Compute (T) contribution from CCSD amplitudes and integrals.
+
+"""
 module PerturbativeTriples
 using JuES
 using JuES.Output
@@ -6,6 +16,22 @@ using LinearAlgebra
 
 export compute_pT
 
+"""
+    JuES.CoupledCluster.compute_pT(;T1::Array{Float64, 2}, T2::Array{Float64, 4}, Vvvvo::Array{Float64,4}, Vvooo::Array{Float64,4}, Vvovo::Array{Float64,4}, fo::Array{Float64,1}, fv::Array{Float64,1})
+
+Compute (T) contribution from CCSD amplitudes and integrals.
+
+**Arguments**
+
+    T1      T1 CCSD amplitudes array.
+    T2      T2 CCSD amplitudes array.
+    Vvvvo   ERI used in the CCSD computation in Chemists' notation.
+    Vvooo   ERI used in the CCSD computation in Chemists' notation.
+    Vvovo   ERI used in the CCSD computation in Chemists' notation.
+    fo      Diagonal of the Fock matrix, occupied orbital only.
+    fv      Diagonal of the Fock matrix, virtual orbital only.
+
+"""
 function compute_pT(;T1::Array{Float64, 2}, T2::Array{Float64, 4}, Vvvvo::Array{Float64,4}, Vvooo::Array{Float64,4}, Vvovo::Array{Float64,4}, fo::Array{Float64,1}, fv::Array{Float64,1})
 
     @output "\n   • Perturbative Triples Started\n\n"
