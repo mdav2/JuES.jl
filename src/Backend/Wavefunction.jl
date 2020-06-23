@@ -25,6 +25,8 @@ a reference (HF) wavefunction.
 ## Fields
 energy::T energy of the reference wavefunction
 
+vnuc::T nuclear repulsion
+
 nalpha::Int number of alpha electrons
 
 nbeta::Int number of beta electrons
@@ -88,6 +90,7 @@ end
 function Wfn(rhfwfn::JuES.HartreeFock.RHF.RHFWfn)
     Wfn{Float64}(rhfwfn)
 end
+
 function Wfn{T}(wfn::JuES.HartreeFock.RHF.RHFWfn; unrestricted::Bool=false, diskbased::Bool=false, name::String = "default", df::Bool=false) where T
     dt = T
     energy = wfn.energy[1]

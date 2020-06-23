@@ -50,6 +50,6 @@ include("RCCSD.jl")
 include("UCCSD.jl")
 include("mRCCD.jl")
 include("AutoRCCSD.jl")
-include("ECTools.jl")
+include("ecRCCSD.jl")
 
 end #module CC
