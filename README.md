@@ -1,6 +1,10 @@
-# JuES : Documentation
+~~# JuES : Documentation
 ## Overview and Motivations
 > **(!)** This project is preliminary. I'm still quite new to Julia, and any feedback is very welcome! 
+~~
+
+> JuES is **DEPRECATED**! The project has been renamed and migrated to (github.com/FermiQC/Fermi.jl)[Fermi.jl].
+
 
 JuES (pronounced "juice") is a programming environment for writing arbitrary electronic structure and quantum chemical computations in the Julia programming language. Julia shows a lot of promise as a language for scientific computing, with many fields writing domain-specific applications in Julia. This project is intended to demonstrate some ways of working in this language, and showcase a proposed style of programming for expansion into a complete set of electronic structure programs.
 
