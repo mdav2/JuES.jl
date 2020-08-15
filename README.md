@@ -1,7 +1,7 @@
-~~# JuES : Documentation
-## Overview and Motivations
-> **(!)** This project is preliminary. I'm still quite new to Julia, and any feedback is very welcome! 
-~~
+~~# JuES : Documentation~~
+~~## Overview and Motivations~~
+~~> **(!)** This project is preliminary. I'm still quite new to Julia, and any feedback is very welcome! ~~
+
 
 > JuES is **DEPRECATED**! The project has been renamed and migrated to (github.com/FermiQC/Fermi.jl)[Fermi.jl].
 
